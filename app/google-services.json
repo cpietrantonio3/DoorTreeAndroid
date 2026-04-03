@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "714077093692",
+    "firebase_url": "https://doortree-44647-default-rtdb.firebaseio.com",
+    "project_id": "doortree-44647",
+    "storage_bucket": "doortree-44647.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:714077093692:android:5ae4b855643f69ba5ca839",
+        "android_client_info": {
+          "package_name": "codewhale.doortreeandroid"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "714077093692-de2795aot6sh3k17r1fiulm8tvl0psop.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4ADGHQlFvT09lic6tKgoz1gIXPog1WKY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "714077093692-de2795aot6sh3k17r1fiulm8tvl0psop.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "714077093692-l8icfts49lgdshm5puijhgfrpgbrc026.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "codewhale.DoorTreeiOS"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

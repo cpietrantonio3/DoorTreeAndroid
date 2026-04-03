@@ -1,0 +1,42 @@
+[
+    {
+        "merged": "codewhale.doortreeandroid.app-debug-77:/drawable_doortree_logo_black.png.flat",
+        "source": "codewhale.doortreeandroid.app-main-79:/drawable/doortree_logo_black.png"
+    },
+    {
+        "merged": "codewhale.doortreeandroid.app-debug-77:/drawable_doortree_logo.png.flat",
+        "source": "codewhale.doortreeandroid.app-main-79:/drawable/doortree_logo.png"
+    },
+    {
+        "merged": "codewhale.doortreeandroid.app-debug-77:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "codewhale.doortreeandroid.app-main-79:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "codewhale.doortreeandroid.app-debug-77:/drawable_ic_launcher_background.xml.flat",
+        "source": "codewhale.doortreeandroid.app-main-79:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "codewhale.doortreeandroid.app-debug-77:/xml_data_extraction_rules.xml.flat",
+        "source": "codewhale.doortreeandroid.app-main-79:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "codewhale.doortreeandroid.app-debug-77:/xml_backup_rules.xml.flat",
+        "source": "codewhale.doortreeandroid.app-main-79:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "codewhale.doortreeandroid.app-debug-77:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "codewhale.doortreeandroid.app-main-79:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "codewhale.doortreeandroid.app-debug-77:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "codewhale.doortreeandroid.app-main-79:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "codewhale.doortreeandroid.app-debug-77:/drawable_codewhale_logo.png.flat",
+        "source": "codewhale.doortreeandroid.app-main-79:/drawable/codewhale_logo.png"
+    },
+    {
+        "merged": "codewhale.doortreeandroid.app-debug-77:/drawable_google_g.png.flat",
+        "source": "codewhale.doortreeandroid.app-main-79:/drawable/google_g.png"
+    }
+]
