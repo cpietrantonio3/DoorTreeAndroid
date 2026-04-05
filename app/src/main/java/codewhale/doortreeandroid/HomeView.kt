@@ -38,83 +38,89 @@ fun HomeView(
     var showingMaintenanceRequest by remember { mutableStateOf(false) }
     var showingNotificationCenter by remember { mutableStateOf(false) }
 
-    Column(
+    RefreshableScreen(
+        onRefresh = { tenantDataStore.refresh() },
         modifier = Modifier
             .fillMaxSize()
             .background(DoorTreeTheme.backgroundPrimary)
-            .verticalScroll(rememberScrollState())
-            .topSafeAreaPadding()
-            .padding(horizontal = DoorTreeTheme.screenHorizontalPadding, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            DoorTreeLogoLockup(
-                width = 75.dp,
-                modifier = Modifier.align(Alignment.Center)
-            )
-            Box(modifier = Modifier.align(Alignment.CenterEnd)) {
-                Box(
-                    modifier = Modifier.clickable { showingNotificationCenter = true }
-                ) {
-                    HeaderIconButton(systemName = "bell", onClick = { showingNotificationCenter = true })
-                    if (tenantDataStore.unreadNotificationCount > 0) {
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(end = 4.dp, top = 4.dp)
-                                .size(9.dp)
-                                .background(DoorTreeTheme.destructive, CircleShape)
-                        )
-                    }
-                }
-            }
-        }
-
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .glassCard(cornerRadius = 20.dp)
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .topSafeAreaPadding()
+                .padding(horizontal = DoorTreeTheme.screenHorizontalPadding, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    text = LF("home.greeting.format", greetingLabel(), firstName(tenantDataStore.tenantProfile.name)),
-                    color = DoorTreeTheme.textPrimary
+            Box(modifier = Modifier.fillMaxWidth()) {
+                DoorTreeLogoLockup(
+                    width = 75.dp,
+                    modifier = Modifier.align(Alignment.Center)
                 )
-                Text(text = tenantDataStore.propertyInfo.subtitle, color = DoorTreeTheme.textSecondary)
-            }
-            AvatarCircle(initials = tenantDataStore.tenantProfile.initials, size = 46.dp)
-        }
-
-        Column(verticalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
-                tenantDataStore.quickActions.take(2).forEach { item ->
-                    Box(modifier = Modifier.weight(1f)) {
-                        QuickActionCard(item = item, height = 128.dp) {
-                            onSelectAction(item.route)
+                Box(modifier = Modifier.align(Alignment.CenterEnd)) {
+                    Box(
+                        modifier = Modifier.clickable { showingNotificationCenter = true }
+                    ) {
+                        HeaderIconButton(systemName = "bell", onClick = { showingNotificationCenter = true })
+                        if (tenantDataStore.unreadNotificationCount > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(end = 4.dp, top = 4.dp)
+                                    .size(9.dp)
+                                    .background(DoorTreeTheme.destructive, CircleShape)
+                            )
                         }
                     }
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
-                tenantDataStore.quickActions.drop(2).forEach { item ->
-                    Box(modifier = Modifier.weight(1f)) {
-                        QuickActionCard(item = item, height = 128.dp) {
-                            onSelectAction(item.route)
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .glassCard(cornerRadius = 20.dp)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = LF("home.greeting.format", greetingLabel(), firstName(tenantDataStore.tenantProfile.name)),
+                        color = DoorTreeTheme.textPrimary
+                    )
+                    Text(text = tenantDataStore.propertyInfo.subtitle, color = DoorTreeTheme.textSecondary)
+                }
+                AvatarCircle(initials = tenantDataStore.tenantProfile.initials, size = 46.dp)
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
+                    tenantDataStore.quickActions.take(2).forEach { item ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            QuickActionCard(item = item, height = 128.dp) {
+                                onSelectAction(item.route)
+                            }
+                        }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
+                    tenantDataStore.quickActions.drop(2).forEach { item ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            QuickActionCard(item = item, height = 128.dp) {
+                                onSelectAction(item.route)
+                            }
                         }
                     }
                 }
             }
-        }
 
-        HomePaymentHistorySection(tenantDataStore = tenantDataStore)
-        HomeRequestsSection(
-            tenantDataStore = tenantDataStore,
-            onNewRequest = { showingMaintenanceRequest = true },
-            onOpenRequest = onOpenRequest
-        )
+            HomePaymentHistorySection(tenantDataStore = tenantDataStore)
+            HomeRequestsSection(
+                tenantDataStore = tenantDataStore,
+                onNewRequest = { showingMaintenanceRequest = true },
+                onOpenRequest = onOpenRequest
+            )
+        }
     }
 
     if (showingMaintenanceRequest) {
@@ -197,9 +203,12 @@ private fun HomeRequestsSection(
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 tenantDataStore.maintenanceRequests.forEach { request ->
-                    RequestRow(
+                    DismissiblePendingRequestRow(
                         request = request,
-                        onClick = { onOpenRequest(request) }
+                        onClick = { onOpenRequest(request) },
+                        onDeleteConfirmed = {
+                            tenantDataStore.deleteMaintenanceRequest(request)
+                        }
                     )
                 }
             }

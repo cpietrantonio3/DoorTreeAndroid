@@ -1,5 +1,6 @@
 package codewhale.doortreeandroid
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,12 +22,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
@@ -38,6 +41,12 @@ fun MaintenanceDetailView(
     onClose: () -> Unit
 ) {
     var selectedPhotoUrl by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(request.id, request.photos) {
+        debugMaintenanceImageLog(
+            "detail opened requestId=${request.id} photoCount=${request.photos.size} urls=${request.photos.joinToString(" | ")}"
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -55,7 +64,12 @@ fun MaintenanceDetailView(
             Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 HeaderIconButton(systemName = "chevron.left", onClick = onClose)
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(text = L("maintenance.detail.title"), color = DoorTreeTheme.textPrimary)
+                    Text(
+                        text = L("maintenance.detail.title"),
+                        color = DoorTreeTheme.textPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 30.sp
+                    )
                     Text(text = request.id, color = DoorTreeTheme.textSecondary)
                 }
                 StatusBadge(status = request.status)
@@ -151,10 +165,7 @@ private fun MaintenanceMetricCard(
 @Composable
 private fun MaintenanceIssueSection(request: MaintenanceRequestItem) {
     MaintenanceSection(title = L("maintenance.detail.issue")) {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(text = request.issue, color = DoorTreeTheme.textPrimary, fontWeight = FontWeight.SemiBold)
-            Text(text = request.details, color = DoorTreeTheme.textSecondary)
-        }
+        Text(text = request.details, color = DoorTreeTheme.textSecondary)
     }
 }
 
@@ -192,11 +203,15 @@ private fun MaintenancePhotosSection(
 ) {
     MaintenanceSection(title = L("maintenance.detail.photos")) {
         request.photos.forEach { photoUrl ->
+            debugMaintenanceImageLog("detail rendering photo url=$photoUrl")
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .liquidGlassSurface(cornerRadius = 16.dp, tint = DoorTreeTheme.barGlassTint)
-                    .clickable { onOpenPhoto(photoUrl) }
+                    .clickable {
+                        debugMaintenanceImageLog("detail tapped photo url=$photoUrl")
+                        onOpenPhoto(photoUrl)
+                    }
                     .padding(10.dp)
             ) {
                 AsyncImage(
@@ -206,7 +221,16 @@ private fun MaintenancePhotosSection(
                         .fillMaxWidth()
                         .height(184.dp)
                         .background(DoorTreeTheme.backgroundSecondary, RoundedCornerShape(14.dp)),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    onSuccess = {
+                        debugMaintenanceImageLog("detail photo success url=$photoUrl")
+                    },
+                    onError = { state ->
+                        debugMaintenanceImageLog("detail photo failure url=$photoUrl error=${state.result.throwable.message.orEmpty()}")
+                    },
+                    onLoading = {
+                        debugMaintenanceImageLog("detail photo loading url=$photoUrl")
+                    }
                 )
             }
         }
@@ -279,4 +303,8 @@ private fun MaintenancePhotoViewer(
             }
         }
     }
+}
+
+private fun debugMaintenanceImageLog(message: String) {
+    Log.d("MaintenanceImages", message)
 }

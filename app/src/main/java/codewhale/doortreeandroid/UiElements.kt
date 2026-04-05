@@ -33,9 +33,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -53,6 +58,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import codewhale.doortreeandroid.ui.theme.DoorTreeTheme
+import kotlinx.coroutines.launch
 
 @Composable
 fun AuthBackground(modifier: Modifier = Modifier) {
@@ -235,4 +241,34 @@ fun LiquidBarBackground(modifier: Modifier = Modifier) {
 @Composable
 fun Modifier.topSafeAreaPadding(): Modifier {
     return windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RefreshableScreen(
+    onRefresh: suspend () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable BoxScope.() -> Unit
+) {
+    var isRefreshing by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            if (isRefreshing) {
+                return@PullToRefreshBox
+            }
+            coroutineScope.launch {
+                isRefreshing = true
+                try {
+                    onRefresh()
+                } finally {
+                    isRefreshing = false
+                }
+            }
+        },
+        modifier = modifier,
+        content = content
+    )
 }

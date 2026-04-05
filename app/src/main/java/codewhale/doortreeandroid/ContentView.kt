@@ -6,12 +6,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +40,11 @@ fun ContentView(
     var showingMaintenanceRequest by remember { mutableStateOf(false) }
     var selectedInvoice by remember { mutableStateOf<PendingInvoiceItem?>(null) }
     var selectedRequest by remember { mutableStateOf<MaintenanceRequestItem?>(null) }
+    val chatBadgeCount = if (selectedTab == DoorTreeTab.Chat) 0 else tenantDataStore.unreadChatCount
+
+    LaunchedEffect(selectedTab) {
+        tenantDataStore.setChatOpen(selectedTab == DoorTreeTab.Chat)
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(DoorTreeTheme.backgroundPrimary)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -76,11 +84,27 @@ fun ContentView(
                         selected = selectedTab == tab,
                         onClick = { selectedTab = tab },
                         icon = {
-                            Icon(
-                                imageVector = systemIcon(tab.icon),
-                                contentDescription = null,
-                                tint = if (selectedTab == tab) DoorTreeTheme.gradientStart else DoorTreeTheme.textSecondary
-                            )
+                            if (tab == DoorTreeTab.Chat && chatBadgeCount > 0) {
+                                BadgedBox(
+                                    badge = {
+                                        Badge {
+                                            Text(text = chatBadgeCount.coerceAtMost(99).toString())
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = systemIcon(tab.icon),
+                                        contentDescription = null,
+                                        tint = if (selectedTab == tab) DoorTreeTheme.gradientStart else DoorTreeTheme.textSecondary
+                                    )
+                                }
+                            } else {
+                                Icon(
+                                    imageVector = systemIcon(tab.icon),
+                                    contentDescription = null,
+                                    tint = if (selectedTab == tab) DoorTreeTheme.gradientStart else DoorTreeTheme.textSecondary
+                                )
+                            }
                         },
                         label = { Text(L(tab.titleKey)) }
                     )

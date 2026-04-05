@@ -5,6 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -19,6 +21,7 @@ class AuthSessionStore(context: Context) {
     private val prefs = appContext.getSharedPreferences("door_tree_auth", Context.MODE_PRIVATE)
     private val restClient = FirebaseRestClient()
     private val firebaseAuth = FirebaseAuth.getInstance()
+    private val database = FirebaseDatabase.getInstance(FirebaseConfig.databaseUrl).reference
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val serializer = Json { ignoreUnknownKeys = true }
 
@@ -224,6 +227,25 @@ class AuthSessionStore(context: Context) {
         completion(null)
     }
 
+    suspend fun deleteCurrentAccount() {
+        val firebaseUser = firebaseAuth.currentUser ?: throw IllegalStateException(L("auth.error.sign_in_again"))
+        val uid = firebaseUser.uid.trim()
+        if (uid.isBlank()) {
+            throw IllegalStateException(L("auth.error.sign_in_again"))
+        }
+
+        isAuthenticating = true
+        try {
+            database.child("users").child(uid).removeValue().await()
+            firebaseUser.delete().await()
+            signOut()
+        } catch (throwable: Throwable) {
+            throw IllegalStateException(readableDeleteAccountMessage(throwable), throwable)
+        } finally {
+            isAuthenticating = false
+        }
+    }
+
     suspend fun ensureValidIdToken(): String? {
         val session = currentSession ?: return null
         if (session.expiresAtEpochSeconds - Instant.now().epochSecond > 60) {
@@ -367,6 +389,13 @@ class AuthSessionStore(context: Context) {
             "TOO_MANY_ATTEMPTS_TRY_LATER" -> L("auth.error.too_many_attempts")
             "INVALID_ID_TOKEN", "TOKEN_EXPIRED", "USER_NOT_FOUND" -> L("auth.error.sign_in_again")
             else -> L(fallbackKey)
+        }
+    }
+
+    private fun readableDeleteAccountMessage(throwable: Throwable): String {
+        return when (throwable) {
+            is FirebaseAuthRecentLoginRequiredException -> L("profile.delete_account.error.recent_login")
+            else -> L("profile.delete_account.error.generic")
         }
     }
 

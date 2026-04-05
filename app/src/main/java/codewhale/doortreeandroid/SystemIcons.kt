@@ -4,7 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountBalance
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.ArrowDownward
+import androidx.compose.material.icons.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.AttachFile
 import androidx.compose.material.icons.rounded.Bolt
@@ -33,6 +33,7 @@ import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.NotificationsOff
+import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Opacity
 import androidx.compose.material.icons.rounded.Park
 import androidx.compose.material.icons.rounded.Person
@@ -70,6 +71,7 @@ fun systemIcon(name: String): ImageVector {
         "bell.slash" -> Icons.Rounded.NotificationsOff
         "clock.arrow.circlepath" -> Icons.Rounded.History
         "square.and.arrow.up" -> Icons.Rounded.IosShare
+        "arrow.up.right.square" -> Icons.Rounded.OpenInNew
         "paperplane.fill" -> Icons.Rounded.Send
         "envelope.fill", "envelope.badge.fill" -> Icons.Rounded.Email
         "lock.fill" -> Icons.Rounded.Lock
@@ -77,7 +79,7 @@ fun systemIcon(name: String): ImageVector {
         "eye" -> Icons.Rounded.Visibility
         "eye.slash" -> Icons.Rounded.VisibilityOff
         "chevron.left" -> Icons.Rounded.ArrowBack
-        "chevron.right" -> Icons.Rounded.ArrowDownward
+        "chevron.right" -> Icons.Rounded.ArrowForward
         "xmark" -> Icons.Rounded.Close
         "person.crop.rectangle.stack.fill" -> Icons.Rounded.Person
         "key.fill" -> Icons.Rounded.Key

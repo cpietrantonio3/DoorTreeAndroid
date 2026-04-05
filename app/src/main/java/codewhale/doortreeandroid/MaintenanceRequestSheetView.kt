@@ -6,7 +6,11 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -98,6 +102,8 @@ fun MaintenanceRequestSheetView(
         bitmap?.toMaintenancePhotoUpload()?.let { photo ->
             attachedPhotos = appendPhotos(attachedPhotos, listOf(photo), Limits.maxPhotos)
             photoError = null
+            debugMaintenanceImageLog("camera photo appended bytes=${photo.bytes.size} total=${attachedPhotos.size}")
+            logAttachmentState(attachedPhotos)
         }
     }
     val cameraPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -110,14 +116,24 @@ fun MaintenanceRequestSheetView(
     val photoPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia(Limits.maxPhotos)
     ) { uris ->
+        debugMaintenanceImageLog("photo picker returned count=${uris.size}")
         val remainingSlots = Limits.maxPhotos - attachedPhotos.size
         val pickedPhotos = uris
             .take(remainingSlots)
-            .mapNotNull { uri -> uri.toMaintenancePhotoUpload(context) }
+            .mapIndexedNotNull { index, uri ->
+                val photo = uri.toMaintenancePhotoUpload(context)
+                if (photo == null) {
+                    debugMaintenanceImageLog("photo picker item=$index failed normalization uri=$uri")
+                } else {
+                    debugMaintenanceImageLog("photo picker item=$index normalized bytes=${photo.bytes.size} uri=$uri")
+                }
+                photo
+            }
 
         if (pickedPhotos.isNotEmpty()) {
             attachedPhotos = appendPhotos(attachedPhotos, pickedPhotos, Limits.maxPhotos)
             photoError = null
+            logAttachmentState(attachedPhotos)
         }
     }
 
@@ -290,6 +306,8 @@ fun MaintenanceRequestSheetView(
                     photos = attachedPhotos,
                     onRemovePhoto = { index ->
                         attachedPhotos = attachedPhotos.toMutableList().also { it.removeAt(index) }
+                        debugMaintenanceImageLog("removed preview at index=$index")
+                        logAttachmentState(attachedPhotos)
                     }
                 )
             }
@@ -367,6 +385,11 @@ fun MaintenanceRequestSheetView(
             }
         }
     }
+}
+
+private fun logAttachmentState(photos: List<MaintenancePhotoUpload>) {
+    val byteSizes = photos.joinToString(",") { it.bytes.size.toString() }
+    debugMaintenanceImageLog("sheet attachments updated count=${photos.size} byteSizes=$byteSizes")
 }
 
 @Composable
@@ -606,13 +629,37 @@ private fun Bitmap.toMaintenancePhotoUpload(): MaintenancePhotoUpload? {
 
 private fun Uri.toMaintenancePhotoUpload(context: Context): MaintenancePhotoUpload? {
     val resolver = context.contentResolver
-    val bytes = resolver.openInputStream(this)?.use { stream -> stream.readBytes() } ?: return null
+    val normalizedBitmap = decodeNormalizedBitmap(context) ?: return null
+    val outputStream = ByteArrayOutputStream()
+    val compressed = normalizedBitmap.compress(Bitmap.CompressFormat.JPEG, 82, outputStream)
+    if (!compressed) {
+        return null
+    }
+
     val mimeType = resolver.getType(this).orEmpty().ifBlank { "image/jpeg" }
     return MaintenancePhotoUpload(
-        bytes = bytes,
-        contentType = mimeType,
-        fileExtension = fileExtensionForMimeType(mimeType)
+        bytes = outputStream.toByteArray(),
+        contentType = "image/jpeg",
+        fileExtension = "jpg"
     )
+}
+
+private fun Uri.decodeNormalizedBitmap(context: Context): Bitmap? {
+    return runCatching {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val source = ImageDecoder.createSource(context.contentResolver, this)
+            ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                decoder.isMutableRequired = false
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            MediaStore.Images.Media.getBitmap(context.contentResolver, this)
+        }
+    }.getOrNull()
+}
+
+private fun debugMaintenanceImageLog(message: String) {
+    Log.d("MaintenanceImages", message)
 }
 
 private fun fileExtensionForMimeType(mimeType: String): String {

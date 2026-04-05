@@ -4,6 +4,11 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.StorageException
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageMetadata
@@ -203,10 +208,15 @@ class TenantDataStore(
     private val authSession: AuthSessionStore
 ) {
     private val restClient = FirebaseRestClient()
+    private val realtimeDatabase = FirebaseDatabase.getInstance(FirebaseConfig.databaseUrl).reference
     private val storage = FirebaseStorage.getInstance("gs://${FirebaseConfig.storageBucket}")
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private var activeUid: String? = null
+    private var chatConversationReference: DatabaseReference? = null
+    private var chatConversationListener: ValueEventListener? = null
+    private var unreadChatMessageIds: List<String> = emptyList()
+    private var isChatOpen = false
 
     var tenantRecord by mutableStateOf<TenantRecord?>(null)
         private set
@@ -216,9 +226,15 @@ class TenantDataStore(
         private set
     var maintenanceRequests by mutableStateOf<List<MaintenanceRequestItem>>(emptyList())
         private set
+    var chatSections by mutableStateOf<List<ChatSection>>(emptyList())
+        private set
+    var unreadChatCount by mutableStateOf(0)
+        private set
     var isLoading by mutableStateOf(false)
         private set
     var loadError by mutableStateOf<String?>(null)
+        private set
+    var chatParticipantNameOverride by mutableStateOf<String?>(null)
         private set
 
     val tenantProfile: TenantProfile
@@ -231,10 +247,16 @@ class TenantDataStore(
         get() = tenantRecord?.leaseDetails ?: LeaseDetails("-", "-", "-", "-", "Lease information is unavailable.")
 
     val propertyManagerName: String
-        get() = tenantRecord?.propertyManagerDisplayName ?: "Property Manager"
+        get() = chatParticipantNameOverride?.trim().takeUnless { it.isNullOrBlank() }
+            ?: tenantRecord?.propertyManagerDisplayName
+            ?: "Property Manager"
 
     val propertyManagerInitials: String
-        get() = tenantRecord?.propertyManagerInitials ?: "PM"
+        get() = propertyManagerName.split(" ")
+            .filter { it.isNotBlank() }
+            .take(2)
+            .joinToString("") { it.first().uppercaseChar().toString() }
+            .ifBlank { "PM" }
 
     val quickActions: List<QuickActionItem>
         get() = DoorTreeSampleData.quickActions
@@ -247,9 +269,6 @@ class TenantDataStore(
 
     val completedPayments: List<PaymentItem>
         get() = paymentHistory.filter { it.status == StatusBadgeStyle.Paid }
-
-    val chatSections: List<ChatSection>
-        get() = emptyList()
 
     val documents: List<DocumentItem>
         get() = emptyList()
@@ -333,6 +352,17 @@ class TenantDataStore(
         loadTenantRecord(uid)
     }
 
+    fun setChatOpen(isOpen: Boolean) {
+        isChatOpen = isOpen
+        if (isOpen && unreadChatMessageIds.isNotEmpty()) {
+            unreadChatCount = 0
+            val messageIds = unreadChatMessageIds
+            scope.launch {
+                runCatching { markChatMessagesRead(messageIds) }
+            }
+        }
+    }
+
     suspend fun submitMaintenanceRequest(
         category: MaintenanceCategory,
         customCategoryName: String,
@@ -368,7 +398,13 @@ class TenantDataStore(
             requestId = requestId
         )
         val payload = buildJsonObject {
-            put("category", JsonPrimitive(if (isRefundRequest) "Refund Request" else resolvedMaintenanceCategoryValue(category, customCategoryName)))
+            put(
+                "category",
+                JsonPrimitive(
+                    if (isRefundRequest) "Refund Request"
+                    else resolvedMaintenanceCategoryValue(category, customCategoryName)
+                )
+            )
             put("createdAt", JsonPrimitive(timestamp))
             put("date", JsonPrimitive(requestDate))
             put("description", JsonPrimitive(trimmedDescription))
@@ -403,6 +439,169 @@ class TenantDataStore(
         refresh()
     }
 
+    suspend fun deleteMaintenanceRequest(request: MaintenanceRequestItem) {
+        if (request.status != StatusBadgeStyle.Pending) {
+            throw IllegalStateException("Only pending requests can be deleted.")
+        }
+
+        val uid = activeUid ?: throw IllegalStateException(L("maintenance.submit_error.sign_in"))
+        val record = tenantRecord ?: throw IllegalStateException(L("maintenance.submit_error.tenant_unavailable"))
+        val requestDate = request.sortDate ?: throw IllegalStateException("Unable to determine this request date.")
+        val idToken = authSession.ensureValidIdToken()
+            ?: throw IllegalStateException(L("maintenance.submit_error.sign_in"))
+        val landlordUid = resolveLandlordUid(record)
+        val tenantPath = maintenanceRequestPath(uid = uid, date = requestDate, requestId = request.id)
+        val landlordPath = maintenanceRequestPath(uid = landlordUid, date = requestDate, requestId = request.id)
+
+        val updated = restClient.patchDatabaseRoot(
+            idToken = idToken,
+            body = buildJsonObject {
+                put(tenantPath, JsonNull)
+                put(landlordPath, JsonNull)
+            }
+        )
+        if (!updated) {
+            throw IllegalStateException("Unable to delete request.")
+        }
+
+        refresh()
+    }
+
+    suspend fun sendChatMessage(rawText: String) {
+        val uid = activeUid ?: throw IllegalStateException(L("maintenance.submit_error.sign_in"))
+        val record = tenantRecord ?: throw IllegalStateException(L("maintenance.submit_error.tenant_unavailable"))
+        val text = rawText.trim()
+        if (text.isBlank()) {
+            return
+        }
+
+        val moderationResult = ObjectionableContentFilter.evaluate(text)
+        if (!moderationResult.allowed) {
+            throw IllegalStateException(ObjectionableContentFilter.warningMessage(moderationResult.hits))
+        }
+
+        val idToken = authSession.ensureValidIdToken()
+            ?: throw IllegalStateException(L("maintenance.submit_error.sign_in"))
+        val landlordUid = resolveLandlordUid(record)
+        val now = Instant.now()
+        val timestamp = System.currentTimeMillis()
+        val messageId = UUID.randomUUID().toString()
+        val sentAt = now.toString()
+        val participantName = propertyManagerName
+        val tenantName = tenantProfile.name
+
+        val tenantConversationPath = "users/$uid/messages/$landlordUid"
+        val landlordConversationPath = "users/$landlordUid/messages/$uid"
+        val tenantMessagePayload = buildJsonObject {
+            put("read", JsonPrimitive(true))
+            put("senderRole", JsonPrimitive("tenant"))
+            put("senderUserId", JsonPrimitive(uid))
+            put("sentAt", JsonPrimitive(sentAt))
+            put("text", JsonPrimitive(text))
+            put("timestamp", JsonPrimitive(timestamp))
+        }
+        val landlordMessagePayload = buildJsonObject {
+            put("read", JsonPrimitive(false))
+            put("senderRole", JsonPrimitive("tenant"))
+            put("senderUserId", JsonPrimitive(uid))
+            put("sentAt", JsonPrimitive(sentAt))
+            put("text", JsonPrimitive(text))
+            put("timestamp", JsonPrimitive(timestamp))
+        }
+
+        val updated = restClient.patchDatabaseRoot(
+            idToken = idToken,
+            body = buildJsonObject {
+                put("$tenantConversationPath/lastMessage", JsonPrimitive(text))
+                put("$tenantConversationPath/lastMessageTimestamp", JsonPrimitive(timestamp))
+                put("$tenantConversationPath/participantId", JsonPrimitive(landlordUid))
+                put("$tenantConversationPath/participantName", JsonPrimitive(participantName))
+                put("$tenantConversationPath/propertyName", JsonPrimitive(record.propertyName))
+                put("$tenantConversationPath/unitNumber", JsonPrimitive(record.unitNumber))
+                put("$tenantConversationPath/updatedAt", JsonPrimitive(timestamp))
+                put("$tenantConversationPath/messages/$messageId", tenantMessagePayload)
+                put("$landlordConversationPath/lastMessage", JsonPrimitive(text))
+                put("$landlordConversationPath/lastMessageTimestamp", JsonPrimitive(timestamp))
+                put("$landlordConversationPath/participantId", JsonPrimitive(uid))
+                put("$landlordConversationPath/participantName", JsonPrimitive(tenantName))
+                put("$landlordConversationPath/propertyName", JsonPrimitive(record.propertyName))
+                put("$landlordConversationPath/unitNumber", JsonPrimitive(record.unitNumber))
+                put("$landlordConversationPath/updatedAt", JsonPrimitive(timestamp))
+                put("$landlordConversationPath/messages/$messageId", landlordMessagePayload)
+            }
+        )
+        if (!updated) {
+            throw IllegalStateException("Unable to send message.")
+        }
+
+        refresh()
+    }
+
+    suspend fun reportChatMessage(message: ChatMessageItem) {
+        if (message.sender != ChatParticipant.Landlord) {
+            return
+        }
+
+        val uid = activeUid ?: throw IllegalStateException(L("maintenance.submit_error.sign_in"))
+        val record = tenantRecord ?: throw IllegalStateException(L("maintenance.submit_error.tenant_unavailable"))
+        val idToken = authSession.ensureValidIdToken()
+            ?: throw IllegalStateException(L("maintenance.submit_error.sign_in"))
+        val landlordUid = resolveLandlordUid(record)
+        val now = Instant.now()
+        val reportId = UUID.randomUUID().toString()
+        val reportedTimestamp = System.currentTimeMillis()
+        val messageTimestamp = if (message.sentTimestamp > 0L) message.sentTimestamp else reportedTimestamp
+        val messageSentAt = message.sentAtIso8601.ifBlank { now.toString() }
+        val offenderUid = message.senderUserId.trim().ifBlank { landlordUid }
+
+        val updated = restClient.patchDatabaseRoot(
+            idToken = idToken,
+            body = buildJsonObject {
+                put("ChatReports/$reportId/messageContent", JsonPrimitive(message.text))
+                put("ChatReports/$reportId/messageId", JsonPrimitive(message.id))
+                put("ChatReports/$reportId/messageTime", JsonPrimitive(messageTimestamp))
+                put("ChatReports/$reportId/messageTimeISO8601", JsonPrimitive(messageSentAt))
+                put("ChatReports/$reportId/offenderName", JsonPrimitive(propertyManagerName))
+                put("ChatReports/$reportId/offenderUid", JsonPrimitive(offenderUid))
+                put("ChatReports/$reportId/participantId", JsonPrimitive(landlordUid))
+                put("ChatReports/$reportId/participantName", JsonPrimitive(propertyManagerName))
+                put("ChatReports/$reportId/propertyName", JsonPrimitive(record.propertyName))
+                put("ChatReports/$reportId/reportedTime", JsonPrimitive(reportedTimestamp))
+                put("ChatReports/$reportId/reportedTimeISO8601Local", JsonPrimitive(now.toString()))
+                put("ChatReports/$reportId/reporterName", JsonPrimitive(record.tenantProfile.name))
+                put("ChatReports/$reportId/reporterUid", JsonPrimitive(uid))
+                put("ChatReports/$reportId/source", JsonPrimitive("DoorTreeAndroid"))
+                put("ChatReports/$reportId/status", JsonPrimitive("Needs Review"))
+                put("ChatReports/$reportId/unitNumber", JsonPrimitive(record.unitNumber))
+            }
+        )
+        if (!updated) {
+            throw IllegalStateException("Unable to report message.")
+        }
+    }
+
+    private suspend fun markChatMessagesRead(messageIds: List<String>) {
+        if (messageIds.isEmpty()) {
+            return
+        }
+
+        val uid = activeUid ?: return
+        val record = tenantRecord ?: return
+        val idToken = authSession.ensureValidIdToken() ?: return
+        val landlordUid = resolveLandlordUid(record)
+        val updated = restClient.patchDatabaseRoot(
+            idToken = idToken,
+            body = buildJsonObject {
+                messageIds.forEach { messageId ->
+                    put("users/$uid/messages/$landlordUid/messages/$messageId/read", JsonPrimitive(true))
+                }
+            }
+        )
+        if (!updated) {
+            throw IllegalStateException("Unable to mark messages as read.")
+        }
+    }
+
     fun updateNotificationSetting(key: NotificationSettingKey, isEnabled: Boolean) {
         val uid = activeUid ?: return
         val previous = notificationPreferences
@@ -424,10 +623,15 @@ class TenantDataStore(
 
         val idToken = authSession.ensureValidIdToken()
         if (idToken.isNullOrBlank()) {
+            stopObservingChatConversation()
             tenantRecord = null
             notificationPreferences = DoorTreeSampleData.notificationPreferences
             pendingInvoices = emptyList()
             maintenanceRequests = emptyList()
+            chatSections = emptyList()
+            chatParticipantNameOverride = null
+            unreadChatCount = 0
+            unreadChatMessageIds = emptyList()
             loadError = L("auth.error.sign_in_again")
             isLoading = false
             debugMaintenanceRequestLog("loadTenantRecord missing auth token for uid $uid")
@@ -438,10 +642,15 @@ class TenantDataStore(
         val objectValue = snapshot?.jsonObject
         debugMaintenanceRequestLog("loadTenantRecord user snapshot keys=${objectValue?.keys?.sorted()?.joinToString(",").orEmpty()} raw=${snapshot?.toString() ?: "null"}")
         if (objectValue == null || objectValue.isEmpty()) {
+            stopObservingChatConversation()
             tenantRecord = null
             notificationPreferences = DoorTreeSampleData.notificationPreferences
             pendingInvoices = emptyList()
             maintenanceRequests = emptyList()
+            chatSections = emptyList()
+            chatParticipantNameOverride = null
+            unreadChatCount = 0
+            unreadChatMessageIds = emptyList()
             loadError = "We couldn't find tenant data for this account."
             isLoading = false
             debugMaintenanceRequestLog("loadTenantRecord failed to decode tenant record for uid $uid")
@@ -451,6 +660,12 @@ class TenantDataStore(
         tenantRecord = TenantRecord.fromSnapshot(uid, objectValue)
         pendingInvoices = parsePendingInvoices(objectValue)
         debugMaintenanceRequestLog("loadTenantRecord pendingInvoices count=${pendingInvoices.size}")
+        val chatConversation = parseChatConversation(
+            messagesRoot = objectValue["messages"] as? JsonObject,
+            landlordUid = tenantRecord?.landlordUID.orEmpty()
+        )
+        applyChatConversation(chatConversation)
+        observeChatConversation(uid = uid, landlordUid = tenantRecord?.landlordUID.orEmpty())
         val maintenanceRequestsSnapshot = runCatching {
             restClient.fetchMaintenanceRequests(uid, idToken)
         }.getOrNull()
@@ -473,11 +688,17 @@ class TenantDataStore(
     }
 
     private fun reset() {
+        stopObservingChatConversation()
         activeUid = null
         tenantRecord = null
         notificationPreferences = DoorTreeSampleData.notificationPreferences
         pendingInvoices = emptyList()
         maintenanceRequests = emptyList()
+        chatSections = emptyList()
+        chatParticipantNameOverride = null
+        unreadChatCount = 0
+        unreadChatMessageIds = emptyList()
+        isChatOpen = false
         isLoading = false
         loadError = null
     }
@@ -491,6 +712,212 @@ class TenantDataStore(
     private fun currentMonthLabel(): String {
         return java.time.LocalDate.now()
             .format(DateTimeFormatter.ofPattern("LLLL yyyy", Locale.getDefault()))
+    }
+
+    private fun observeChatConversation(uid: String, landlordUid: String) {
+        val trimmedLandlordUid = landlordUid.trim()
+        if (trimmedLandlordUid.isEmpty()) {
+            stopObservingChatConversation()
+            chatSections = emptyList()
+            chatParticipantNameOverride = null
+            return
+        }
+
+        val reference = realtimeDatabase
+            .child("users")
+            .child(uid)
+            .child("messages")
+            .child(trimmedLandlordUid)
+
+        if (chatConversationReference?.path.toString() == reference.path.toString() && chatConversationListener != null) {
+            return
+        }
+
+        stopObservingChatConversation()
+        chatConversationReference = reference
+        chatConversationListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val conversation = parseRealtimeChatConversation(snapshot.value)
+                applyChatConversation(conversation)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                if (BuildConfig.DEBUG) {
+                    Log.d("TenantDataStore", "chat listener cancelled: ${error.message}")
+                }
+            }
+        }.also { listener ->
+            reference.addValueEventListener(listener)
+        }
+    }
+
+    private fun stopObservingChatConversation() {
+        val listener = chatConversationListener
+        val reference = chatConversationReference
+        if (listener != null && reference != null) {
+            reference.removeEventListener(listener)
+        }
+        chatConversationListener = null
+        chatConversationReference = null
+    }
+
+    private fun applyChatConversation(conversation: ParsedChatConversation) {
+        chatParticipantNameOverride = conversation.participantName
+        chatSections = conversation.sections
+        unreadChatMessageIds = conversation.unreadMessageIds
+        unreadChatCount = if (isChatOpen) 0 else conversation.unreadMessageIds.size
+
+        if (isChatOpen && conversation.unreadMessageIds.isNotEmpty()) {
+            val messageIds = conversation.unreadMessageIds
+            scope.launch {
+                runCatching { markChatMessagesRead(messageIds) }
+            }
+        }
+    }
+
+    private fun parseChatConversation(
+        messagesRoot: JsonObject?,
+        landlordUid: String
+    ): ParsedChatConversation {
+        if (messagesRoot == null || messagesRoot.isEmpty()) {
+            return ParsedChatConversation(null, emptyList(), emptyList())
+        }
+
+        val conversation = messagesRoot[landlordUid] as? JsonObject
+            ?: messagesRoot.entries
+                .mapNotNull { (_, value) -> value as? JsonObject }
+                .maxByOrNull { conversationObject ->
+                    conversationObject["updatedAt"].longValue()
+                        ?: conversationObject["lastMessageTimestamp"].longValue()
+                        ?: 0L
+                }
+            ?: return ParsedChatConversation(null, emptyList(), emptyList())
+
+        val participantName = conversation["participantName"].stringValue()
+            .ifBlank { tenantRecord?.propertyManagerDisplayName.orEmpty() }
+            .ifBlank { null }
+        val messagesNode = conversation["messages"] as? JsonObject ?: return ParsedChatConversation(participantName, emptyList(), emptyList())
+        val parsedMessages = messagesNode.entries.mapNotNull { (messageId, value) ->
+            val message = value as? JsonObject ?: return@mapNotNull null
+            val text = message["text"].stringValue()
+            if (text.isBlank()) {
+                return@mapNotNull null
+            }
+
+            val sortInstant = parseChatInstant(message["sentAt"].stringValue(), message["timestamp"].longValue())
+                ?: Instant.EPOCH
+            val sender = if (message["senderRole"].stringValue().trim().equals("tenant", ignoreCase = true)) {
+                ChatParticipant.Tenant
+            } else {
+                ChatParticipant.Landlord
+            }
+            ParsedChatMessage(
+                item = ChatMessageItem(
+                    id = messageId,
+                    sender = sender,
+                    text = text,
+                    timestamp = chatTimeFormatter.format(sortInstant.atZone(ZoneId.systemDefault())),
+                    senderUserId = message["senderUserId"].stringValue(),
+                    sentAtIso8601 = message["sentAt"].stringValue(),
+                    sentTimestamp = message["timestamp"].longValue() ?: 0L,
+                    isRead = message["read"]?.jsonPrimitive?.booleanOrNull ?: true
+                ),
+                sortInstant = sortInstant,
+                isUnreadIncoming = sender == ChatParticipant.Landlord &&
+                    message["read"]?.jsonPrimitive?.booleanOrNull != true
+            )
+        }.sortedBy { it.sortInstant }
+
+        val sections = parsedMessages
+            .groupBy { chatSectionFormatter.format(it.sortInstant.atZone(ZoneId.systemDefault())) }
+            .map { (title, messages) ->
+                ParsedChatSection(
+                    title = title,
+                    sortInstant = messages.firstOrNull()?.sortInstant ?: Instant.EPOCH,
+                    messages = messages.map { it.item }
+                )
+            }
+            .sortedBy { it.sortInstant }
+            .map { section ->
+                ChatSection(
+                    id = section.title,
+                    title = section.title,
+                    messages = section.messages
+                )
+            }
+
+        val unreadMessageIds = parsedMessages
+            .filter { it.isUnreadIncoming }
+            .map { it.item.id }
+
+        return ParsedChatConversation(participantName, sections, unreadMessageIds)
+    }
+
+    private fun parseRealtimeChatConversation(snapshotValue: Any?): ParsedChatConversation {
+        val conversation = snapshotValue as? Map<*, *> ?: return ParsedChatConversation(null, emptyList(), emptyList())
+        val participantName = (conversation["participantName"] as? String)
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+            ?: tenantRecord?.propertyManagerDisplayName
+        val messageNodes = conversation["messages"] as? Map<*, *> ?: return ParsedChatConversation(participantName, emptyList(), emptyList())
+        val parsedMessages = messageNodes.mapNotNull { (messageId, value) ->
+            val id = (messageId as? String)?.trim().orEmpty()
+            val message = value as? Map<*, *> ?: return@mapNotNull null
+            val text = (message["text"] as? String)?.trim().orEmpty()
+            if (id.isEmpty() || text.isEmpty()) {
+                return@mapNotNull null
+            }
+
+            val sortInstant = parseChatInstant(
+                sentAt = (message["sentAt"] as? String).orEmpty(),
+                timestamp = anyLongValue(message["timestamp"])
+            ) ?: Instant.EPOCH
+            val sender = if ((message["senderRole"] as? String)?.trim()?.equals("tenant", ignoreCase = true) == true) {
+                ChatParticipant.Tenant
+            } else {
+                ChatParticipant.Landlord
+            }
+
+            ParsedChatMessage(
+                item = ChatMessageItem(
+                    id = id,
+                    sender = sender,
+                    text = text,
+                    timestamp = chatTimeFormatter.format(sortInstant.atZone(ZoneId.systemDefault())),
+                    senderUserId = (message["senderUserId"] as? String).orEmpty(),
+                    sentAtIso8601 = (message["sentAt"] as? String).orEmpty(),
+                    sentTimestamp = anyLongValue(message["timestamp"]) ?: 0L,
+                    isRead = anyBooleanValue(message["read"]) ?: true
+                ),
+                sortInstant = sortInstant,
+                isUnreadIncoming = sender == ChatParticipant.Landlord &&
+                    anyBooleanValue(message["read"]) != true
+            )
+        }.sortedBy { it.sortInstant }
+
+        val sections = parsedMessages
+            .groupBy { chatSectionFormatter.format(it.sortInstant.atZone(ZoneId.systemDefault())) }
+            .map { (title, messages) ->
+                ParsedChatSection(
+                    title = title,
+                    sortInstant = messages.firstOrNull()?.sortInstant ?: Instant.EPOCH,
+                    messages = messages.map { it.item }
+                )
+            }
+            .sortedBy { it.sortInstant }
+            .map { section ->
+                ChatSection(
+                    id = section.title,
+                    title = section.title,
+                    messages = section.messages
+                )
+            }
+
+        val unreadMessageIds = parsedMessages
+            .filter { it.isUnreadIncoming }
+            .map { it.item.id }
+
+        return ParsedChatConversation(participantName, sections, unreadMessageIds)
     }
 
     private fun parsePendingInvoices(snapshot: JsonObject): List<PendingInvoiceItem> {
@@ -627,10 +1054,16 @@ class TenantDataStore(
             snapshot["preferredDate"].stringValue(),
             snapshot["date"].stringValue()
         )
+        val title = firstNonBlank(
+            category,
+            issue,
+            snapshot["description"].stringValue(),
+            L("maintenance.title")
+        )
 
         return MaintenanceRequestItem(
             id = fallbackId,
-            title = issue,
+            title = title,
             category = category,
             submittedDate = formatMaintenanceDate(requestDate),
             submittedDateShort = formatMaintenanceDate(requestDate, short = true),
@@ -706,7 +1139,6 @@ class TenantDataStore(
 
     private fun localizedMaintenanceCategory(rawCategory: String): String {
         return when (rawCategory.trim().lowercase(Locale.ROOT)) {
-            "refund request", "refund_request" -> "Refund Request"
             "plumbing" -> MaintenanceCategory.Plumbing.localizedTitle
             "electrical" -> MaintenanceCategory.Electrical.localizedTitle
             "hvac" -> MaintenanceCategory.Hvac.localizedTitle
@@ -730,6 +1162,7 @@ class TenantDataStore(
             "inspection" -> MaintenanceCategory.Inspection.localizedTitle
             "preventive maintenance", "preventive_maintenance" -> MaintenanceCategory.PreventiveMaintenance.localizedTitle
             "emergency" -> MaintenanceCategory.Emergency.localizedTitle
+            "refund request", "refund_request" -> "Refund Request"
             "other" -> MaintenanceCategory.Other.localizedTitle
             else -> rawCategory.trim().ifBlank { MaintenanceCategory.Other.localizedTitle }
         }
@@ -925,20 +1358,28 @@ class TenantDataStore(
             throw IllegalStateException("Enter a refund amount.")
         }
 
-        val sanitized = trimmed.replace("$", "").replace(" ", "")
-        val parsed = NumberFormat.getNumberInstance(Locale.getDefault()).parse(sanitized, ParsePosition(0))?.toDouble()
-        if (parsed != null && parsed > 0) {
+        val sanitized = trimmed
+            .replace("$", "")
+            .replace(" ", "")
+
+        val formatter = NumberFormat.getNumberInstance(Locale.getDefault())
+        val parsePosition = ParsePosition(0)
+        val parsed = formatter.parse(sanitized, parsePosition)?.toDouble()
+        if (parsed != null && parsed > 0 && parsePosition.index == sanitized.length) {
             return parsed
         }
 
-        val normalized = sanitized.replace(",", ".").replace(Regex("[^0-9.]"), "")
-        val fallback = normalized.toDoubleOrNull()
-        if (fallback != null && fallback > 0) {
-            return fallback
+        val normalized = sanitized
+            .replace(",", ".")
+            .replace(Regex("[^0-9.]"), "")
+        val normalizedValue = normalized.toDoubleOrNull()
+        if (normalizedValue != null && normalizedValue > 0) {
+            return normalizedValue
         }
 
         throw IllegalStateException("Enter a valid refund amount.")
     }
+
 
     private fun firstNonBlank(vararg values: String): String {
         return values.firstOrNull { it.isNotBlank() }.orEmpty()
@@ -952,7 +1393,69 @@ class TenantDataStore(
         return this?.jsonPrimitive?.doubleOrNull
             ?: this?.jsonPrimitive?.content?.toDoubleOrNull()
     }
+
+    private fun JsonElement?.longValue(): Long? {
+        return this?.jsonPrimitive?.content?.toLongOrNull()
+    }
+
+    private fun anyLongValue(value: Any?): Long? {
+        return when (value) {
+            is Long -> value
+            is Int -> value.toLong()
+            is Double -> value.toLong()
+            is Float -> value.toLong()
+            is Number -> value.toLong()
+            is String -> value.trim().toLongOrNull()
+            else -> null
+        }
+    }
+
+    private fun anyBooleanValue(value: Any?): Boolean? {
+        return when (value) {
+            is Boolean -> value
+            is Number -> value.toInt() != 0
+            is String -> value.trim().lowercase(Locale.ROOT).let {
+                when (it) {
+                    "true", "1" -> true
+                    "false", "0" -> false
+                    else -> null
+                }
+            }
+            else -> null
+        }
+    }
+
+    private fun parseChatInstant(sentAt: String, timestamp: Long?): Instant? {
+        if (sentAt.isNotBlank()) {
+            runCatching { Instant.parse(sentAt) }.getOrNull()?.let { return it }
+        }
+        return timestamp?.let { Instant.ofEpochMilli(it) }
+    }
+
+    private val chatTimeFormatter: DateTimeFormatter
+        get() = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(Locale.getDefault())
+
+    private val chatSectionFormatter: DateTimeFormatter
+        get() = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.getDefault())
 }
+
+private data class ParsedChatConversation(
+    val participantName: String?,
+    val sections: List<ChatSection>,
+    val unreadMessageIds: List<String>
+)
+
+private data class ParsedChatMessage(
+    val item: ChatMessageItem,
+    val sortInstant: Instant,
+    val isUnreadIncoming: Boolean
+)
+
+private data class ParsedChatSection(
+    val title: String,
+    val sortInstant: Instant,
+    val messages: List<ChatMessageItem>
+)
 
 internal object MaintenanceRequestParser {
     fun parse(
@@ -1066,10 +1569,16 @@ internal object MaintenanceRequestParser {
             ?: parseMaintenanceDate(requestObject["updatedAt"].stringValue())
         val secondarySortInstant = parseInstant(requestObject["updatedAt"].stringValue())
             ?: parseInstant(requestObject["createdAt"].stringValue())
+        val title = firstNonBlank(
+            category,
+            issue,
+            requestObject["description"].stringValue(),
+            L("maintenance.title")
+        )
 
         val item = MaintenanceRequestItem(
             id = snapshot.id,
-            title = issue,
+            title = title,
             category = category,
             submittedDate = formatMaintenanceDate(requestDate),
             submittedDateShort = formatMaintenanceDate(requestDate, short = true),
@@ -1187,7 +1696,6 @@ internal object MaintenanceRequestParser {
 
     private fun localizedMaintenanceCategory(rawCategory: String): String {
         return when (rawCategory.trim().lowercase(Locale.ROOT)) {
-            "refund request", "refund_request" -> "Refund Request"
             "plumbing" -> MaintenanceCategory.Plumbing.localizedTitle
             "electrical" -> MaintenanceCategory.Electrical.localizedTitle
             "hvac" -> MaintenanceCategory.Hvac.localizedTitle
@@ -1211,6 +1719,7 @@ internal object MaintenanceRequestParser {
             "inspection" -> MaintenanceCategory.Inspection.localizedTitle
             "preventive maintenance", "preventive_maintenance" -> MaintenanceCategory.PreventiveMaintenance.localizedTitle
             "emergency" -> MaintenanceCategory.Emergency.localizedTitle
+            "refund request", "refund_request" -> "Refund Request"
             "other" -> MaintenanceCategory.Other.localizedTitle
             else -> rawCategory.trim().ifBlank { MaintenanceCategory.Other.localizedTitle }
         }

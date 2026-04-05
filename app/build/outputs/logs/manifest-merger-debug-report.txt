@@ -29,11 +29,13 @@ MERGED from [androidx.compose.ui:ui-android:1.7.8] /Users/claudiopietrantonio/.g
 MERGED from [androidx.compose.ui:ui-test-manifest:1.7.8] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/58300edd30bef27d8fe401230b8ddfa4/transformed/ui-test-manifest-1.7.8/AndroidManifest.xml:17:1-28:12
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e59b84e72aaa9a5175c47b777aca4a0b/transformed/constraintlayout-2.0.1/AndroidManifest.xml:2:1-11:12
 MERGED from [io.coil-kt.coil3:coil-android:3.0.4] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e93097c70da567c3181c6cf30871a4cc/transformed/coil-release/AndroidManifest.xml:2:1-7:12
+MERGED from [io.coil-kt.coil3:coil-network-core-android:3.0.4] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/b397da9d549917447707974451332e3e/transformed/coil-network-core-release/AndroidManifest.xml:2:1-7:12
 MERGED from [io.coil-kt.coil3:coil-core-android:3.0.4] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/a92bf232fc0c61a12069fae8750f74f1/transformed/coil-core-release/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.appcompat:appcompat-resources:1.7.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/3e94e5ba7da83b34f5974e801f2338a3/transformed/appcompat-resources-1.7.0/AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.appcompat:appcompat:1.7.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/9d709da1b6bd617d258427a45fd4d6e6/transformed/appcompat-1.7.0/AndroidManifest.xml:2:1-7:12
 MERGED from [com.google.firebase:firebase-auth:24.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/57ab2cba5f39c3c6e3cebb8ee5eb6ef5/transformed/firebase-auth-24.0.1/AndroidManifest.xml:17:1-75:12
 MERGED from [androidx.viewpager2:viewpager2:1.0.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/63a9b9f1e8eb37840754df61450c729a/transformed/viewpager2-1.0.0/AndroidManifest.xml:17:1-24:12
+MERGED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:15:1-38:12
 MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/4bc8242b9316077dfea21f90d1c1b406/transformed/coordinatorlayout-1.1.0/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/c3a21a483042d91787cb38c7e4726ba7/transformed/drawerlayout-1.1.1/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.transition:transition:1.5.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/a2f873782e78562203f02bb6054bcba5/transformed/transition-1.5.0/AndroidManifest.xml:2:1-7:12
@@ -48,6 +50,7 @@ MERGED from [com.google.android.gms:play-services-auth:20.7.0] /Users/claudiopie
 MERGED from [com.google.android.gms:play-services-auth-api-phone:18.0.2] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/7f94b6ea03c4d72b672380f578ba6dc8/transformed/play-services-auth-api-phone-18.0.2/AndroidManifest.xml:2:1-7:12
 MERGED from [com.google.firebase:firebase-appcheck:19.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/9d95a70bc971d088e25c86112496626f/transformed/firebase-appcheck-19.0.1/AndroidManifest.xml:15:1-34:12
 MERGED from [com.google.firebase:firebase-appcheck-interop:17.1.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/a778aa8015ed83e7492f6c5d6abd86fb/transformed/firebase-appcheck-interop-17.1.0/AndroidManifest.xml:15:1-23:12
+MERGED from [com.google.firebase:firebase-database-collection:18.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/0c72e3e4f2b1b1481a67644038046d9d/transformed/firebase-database-collection-18.0.1/AndroidManifest.xml:2:1-9:12
 MERGED from [com.google.android.gms:play-services-fido:20.1.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/7c6dc64939974babd4ce2bec20b7a8f3/transformed/play-services-fido-20.1.0/AndroidManifest.xml:2:1-10:12
 MERGED from [com.google.android.gms:play-services-auth-base:18.0.4] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/3e36d88523269245f679b00916dc52a3/transformed/play-services-auth-base-18.0.4/AndroidManifest.xml:2:1-7:12
 MERGED from [com.google.android.gms:play-services-base:18.1.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/50403bf43b7b75411116db5f9633efbd/transformed/play-services-base-18.1.0/AndroidManifest.xml:16:1-24:12
@@ -121,6 +124,8 @@ uses-permission#android.permission.INTERNET
 ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:4:5-67
 MERGED from [com.google.firebase:firebase-auth:24.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/57ab2cba5f39c3c6e3cebb8ee5eb6ef5/transformed/firebase-auth-24.0.1/AndroidManifest.xml:25:5-67
 MERGED from [com.google.firebase:firebase-auth:24.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/57ab2cba5f39c3c6e3cebb8ee5eb6ef5/transformed/firebase-auth-24.0.1/AndroidManifest.xml:25:5-67
+MERGED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:23:5-67
+MERGED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:23:5-67
 MERGED from [com.google.firebase:firebase-storage:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/ae6b085cd9a806464f7c1b1b956e59db/transformed/firebase-storage-22.0.1/AndroidManifest.xml:24:5-67
 MERGED from [com.google.firebase:firebase-storage:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/ae6b085cd9a806464f7c1b1b956e59db/transformed/firebase-storage-22.0.1/AndroidManifest.xml:24:5-67
 MERGED from [com.google.android.recaptcha:recaptcha:18.6.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/b8884d8a70f830581bf8fa5e0ddbc258/transformed/recaptcha-18.6.1/AndroidManifest.xml:7:5-67
@@ -144,6 +149,8 @@ MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /Users/claudiopie
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e59b84e72aaa9a5175c47b777aca4a0b/transformed/constraintlayout-2.0.1/AndroidManifest.xml:9:5-20
 MERGED from [com.google.firebase:firebase-auth:24.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/57ab2cba5f39c3c6e3cebb8ee5eb6ef5/transformed/firebase-auth-24.0.1/AndroidManifest.xml:28:5-73:19
 MERGED from [com.google.firebase:firebase-auth:24.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/57ab2cba5f39c3c6e3cebb8ee5eb6ef5/transformed/firebase-auth-24.0.1/AndroidManifest.xml:28:5-73:19
+MERGED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:25:5-36:19
+MERGED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:25:5-36:19
 MERGED from [com.google.firebase:firebase-storage:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/ae6b085cd9a806464f7c1b1b956e59db/transformed/firebase-storage-22.0.1/AndroidManifest.xml:26:5-37:19
 MERGED from [com.google.firebase:firebase-storage:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/ae6b085cd9a806464f7c1b1b956e59db/transformed/firebase-storage-22.0.1/AndroidManifest.xml:26:5-37:19
 MERGED from [androidx.credentials:credentials-play-services-auth:1.2.0-rc01] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/b9595243fb93cfea98c906fe381c56d5/transformed/credentials-play-services-auth-1.2.0-rc01/AndroidManifest.xml:23:5-42:19
@@ -274,6 +281,8 @@ MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /Users/claudiopie
 MERGED from [androidx.constraintlayout:constraintlayout:2.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e59b84e72aaa9a5175c47b777aca4a0b/transformed/constraintlayout-2.0.1/AndroidManifest.xml:5:5-7:41
 MERGED from [io.coil-kt.coil3:coil-android:3.0.4] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e93097c70da567c3181c6cf30871a4cc/transformed/coil-release/AndroidManifest.xml:5:5-44
 MERGED from [io.coil-kt.coil3:coil-android:3.0.4] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e93097c70da567c3181c6cf30871a4cc/transformed/coil-release/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt.coil3:coil-network-core-android:3.0.4] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/b397da9d549917447707974451332e3e/transformed/coil-network-core-release/AndroidManifest.xml:5:5-44
+MERGED from [io.coil-kt.coil3:coil-network-core-android:3.0.4] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/b397da9d549917447707974451332e3e/transformed/coil-network-core-release/AndroidManifest.xml:5:5-44
 MERGED from [io.coil-kt.coil3:coil-core-android:3.0.4] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/a92bf232fc0c61a12069fae8750f74f1/transformed/coil-core-release/AndroidManifest.xml:5:5-44
 MERGED from [io.coil-kt.coil3:coil-core-android:3.0.4] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/a92bf232fc0c61a12069fae8750f74f1/transformed/coil-core-release/AndroidManifest.xml:5:5-44
 MERGED from [androidx.appcompat:appcompat-resources:1.7.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/3e94e5ba7da83b34f5974e801f2338a3/transformed/appcompat-resources-1.7.0/AndroidManifest.xml:5:5-44
@@ -284,6 +293,8 @@ MERGED from [com.google.firebase:firebase-auth:24.0.1] /Users/claudiopietrantoni
 MERGED from [com.google.firebase:firebase-auth:24.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/57ab2cba5f39c3c6e3cebb8ee5eb6ef5/transformed/firebase-auth-24.0.1/AndroidManifest.xml:21:5-23:151
 MERGED from [androidx.viewpager2:viewpager2:1.0.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/63a9b9f1e8eb37840754df61450c729a/transformed/viewpager2-1.0.0/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.viewpager2:viewpager2:1.0.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/63a9b9f1e8eb37840754df61450c729a/transformed/viewpager2-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:18:5-44
+MERGED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:18:5-44
 MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/4bc8242b9316077dfea21f90d1c1b406/transformed/coordinatorlayout-1.1.0/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/4bc8242b9316077dfea21f90d1c1b406/transformed/coordinatorlayout-1.1.0/AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/c3a21a483042d91787cb38c7e4726ba7/transformed/drawerlayout-1.1.1/AndroidManifest.xml:20:5-22:41
@@ -312,6 +323,8 @@ MERGED from [com.google.firebase:firebase-appcheck:19.0.1] /Users/claudiopietran
 MERGED from [com.google.firebase:firebase-appcheck:19.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/9d95a70bc971d088e25c86112496626f/transformed/firebase-appcheck-19.0.1/AndroidManifest.xml:18:5-44
 MERGED from [com.google.firebase:firebase-appcheck-interop:17.1.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/a778aa8015ed83e7492f6c5d6abd86fb/transformed/firebase-appcheck-interop-17.1.0/AndroidManifest.xml:18:5-44
 MERGED from [com.google.firebase:firebase-appcheck-interop:17.1.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/a778aa8015ed83e7492f6c5d6abd86fb/transformed/firebase-appcheck-interop-17.1.0/AndroidManifest.xml:18:5-44
+MERGED from [com.google.firebase:firebase-database-collection:18.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/0c72e3e4f2b1b1481a67644038046d9d/transformed/firebase-database-collection-18.0.1/AndroidManifest.xml:5:5-7:41
+MERGED from [com.google.firebase:firebase-database-collection:18.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/0c72e3e4f2b1b1481a67644038046d9d/transformed/firebase-database-collection-18.0.1/AndroidManifest.xml:5:5-7:41
 MERGED from [com.google.android.gms:play-services-fido:20.1.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/7c6dc64939974babd4ce2bec20b7a8f3/transformed/play-services-fido-20.1.0/AndroidManifest.xml:5:5-44
 MERGED from [com.google.android.gms:play-services-fido:20.1.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/7c6dc64939974babd4ce2bec20b7a8f3/transformed/play-services-fido-20.1.0/AndroidManifest.xml:5:5-44
 MERGED from [com.google.android.gms:play-services-auth-base:18.0.4] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/3e36d88523269245f679b00916dc52a3/transformed/play-services-auth-base-18.0.4/AndroidManifest.xml:5:5-44
@@ -454,6 +467,8 @@ ADDED from [androidx.compose.ui:ui-test-manifest:1.7.8] /Users/claudiopietranton
 		ADDED from [androidx.compose.ui:ui-test-manifest:1.7.8] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/58300edd30bef27d8fe401230b8ddfa4/transformed/ui-test-manifest-1.7.8/AndroidManifest.xml:24:13-63
 uses-permission#android.permission.ACCESS_NETWORK_STATE
 ADDED from [com.google.firebase:firebase-auth:24.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/57ab2cba5f39c3c6e3cebb8ee5eb6ef5/transformed/firebase-auth-24.0.1/AndroidManifest.xml:26:5-79
+MERGED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:22:5-79
+MERGED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:22:5-79
 MERGED from [com.google.firebase:firebase-storage:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/ae6b085cd9a806464f7c1b1b956e59db/transformed/firebase-storage-22.0.1/AndroidManifest.xml:23:5-79
 MERGED from [com.google.firebase:firebase-storage:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/ae6b085cd9a806464f7c1b1b956e59db/transformed/firebase-storage-22.0.1/AndroidManifest.xml:23:5-79
 MERGED from [com.google.android.recaptcha:recaptcha:18.6.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/b8884d8a70f830581bf8fa5e0ddbc258/transformed/recaptcha-18.6.1/AndroidManifest.xml:8:5-79
@@ -510,6 +525,8 @@ intent-filter#action:name:android.intent.action.VIEW+category:name:android.inten
 ADDED from [com.google.firebase:firebase-auth:24.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/57ab2cba5f39c3c6e3cebb8ee5eb6ef5/transformed/firebase-auth-24.0.1/AndroidManifest.xml:53:13-63:29
 service#com.google.firebase.components.ComponentDiscoveryService
 ADDED from [com.google.firebase:firebase-auth:24.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/57ab2cba5f39c3c6e3cebb8ee5eb6ef5/transformed/firebase-auth-24.0.1/AndroidManifest.xml:66:9-72:19
+MERGED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:26:9-35:19
+MERGED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:26:9-35:19
 MERGED from [com.google.firebase:firebase-storage:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/ae6b085cd9a806464f7c1b1b956e59db/transformed/firebase-storage-22.0.1/AndroidManifest.xml:27:9-36:19
 MERGED from [com.google.firebase:firebase-storage:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/ae6b085cd9a806464f7c1b1b956e59db/transformed/firebase-storage-22.0.1/AndroidManifest.xml:27:9-36:19
 MERGED from [com.google.firebase:firebase-appcheck:19.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/9d95a70bc971d088e25c86112496626f/transformed/firebase-appcheck-19.0.1/AndroidManifest.xml:22:9-31:19
@@ -530,6 +547,18 @@ ADDED from [com.google.firebase:firebase-auth:24.0.1] /Users/claudiopietrantonio
 		ADDED from [com.google.firebase:firebase-auth:24.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/57ab2cba5f39c3c6e3cebb8ee5eb6ef5/transformed/firebase-auth-24.0.1/AndroidManifest.xml:71:17-82
 	android:name
 		ADDED from [com.google.firebase:firebase-auth:24.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/57ab2cba5f39c3c6e3cebb8ee5eb6ef5/transformed/firebase-auth-24.0.1/AndroidManifest.xml:70:17-109
+meta-data#com.google.firebase.components:com.google.firebase.database.FirebaseDatabaseKtxRegistrar
+ADDED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:29:13-31:85
+	android:value
+		ADDED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:31:17-82
+	android:name
+		ADDED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:30:17-120
+meta-data#com.google.firebase.components:com.google.firebase.database.DatabaseRegistrar
+ADDED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:32:13-34:85
+	android:value
+		ADDED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:34:17-82
+	android:name
+		ADDED from [com.google.firebase:firebase-database:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/e5c3914fce2f1402d92ac986cc9aab9d/transformed/firebase-database-22.0.1/AndroidManifest.xml:33:17-109
 meta-data#com.google.firebase.components:com.google.firebase.storage.FirebaseStorageKtxRegistrar
 ADDED from [com.google.firebase:firebase-storage:22.0.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/ae6b085cd9a806464f7c1b1b956e59db/transformed/firebase-storage-22.0.1/AndroidManifest.xml:30:13-32:85
 	android:value

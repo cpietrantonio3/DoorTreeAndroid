@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import codewhale.doortreeandroid.ui.theme.DoorTreeTheme
 import java.time.LocalDate
 
@@ -44,7 +45,12 @@ fun InvoiceView(
             Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 HeaderIconButton(systemName = "chevron.left", onClick = onClose)
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(text = L("maintenance.invoice.title"), color = DoorTreeTheme.textPrimary)
+                    Text(
+                        text = L("maintenance.invoice.title"),
+                        color = DoorTreeTheme.textPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 30.sp
+                    )
                     Text(text = invoice.invoiceNumber, color = DoorTreeTheme.textSecondary)
                 }
                 InvoiceStatusPill(

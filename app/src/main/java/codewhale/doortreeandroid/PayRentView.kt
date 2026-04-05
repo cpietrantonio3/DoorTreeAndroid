@@ -34,67 +34,73 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
         mutableStateOf(tenantDataStore.paymentMethods.firstOrNull()?.id)
     }
 
-    Column(
+    RefreshableScreen(
+        onRefresh = { tenantDataStore.refresh() },
         modifier = Modifier
             .fillMaxSize()
             .background(DoorTreeTheme.backgroundPrimary)
-            .verticalScroll(rememberScrollState())
-            .topSafeAreaPadding()
-            .padding(horizontal = DoorTreeTheme.screenHorizontalPadding, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
-        Text(
-            text = L("tab.payments"),
-            color = DoorTreeTheme.textPrimary,
-            fontWeight = FontWeight.Bold,
-            fontSize = 28.sp
-        )
-        PayRentHeroCard(tenantDataStore = tenantDataStore)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .topSafeAreaPadding()
+                .padding(horizontal = DoorTreeTheme.screenHorizontalPadding, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
+        ) {
+            Text(
+                text = L("tab.payments"),
+                color = DoorTreeTheme.textPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 28.sp
+            )
+            PayRentHeroCard(tenantDataStore = tenantDataStore)
 
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(text = L("payments.method_section"), color = DoorTreeTheme.textSecondary)
-            tenantDataStore.paymentMethods.forEach { method ->
-                PaymentMethodRow(
-                    method = method,
-                    isSelected = selectedMethodId == method.id,
-                    onClick = { selectedMethodId = method.id }
-                )
-            }
-        }
-
-        GradientButton(title = L("payments.pay_now"), onClick = {})
-
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(text = L("payments.schedule_section"), color = DoorTreeTheme.textSecondary)
-            val entries = RentScheduleBuilder.entries(tenantRecord = tenantDataStore.tenantRecord, leaseDetails = tenantDataStore.leaseDetails)
-            if (entries.isEmpty()) {
-                SectionPlaceholder(
-                    systemName = "calendar.badge.clock",
-                    title = L("payments.schedule.empty_title"),
-                    message = L("payments.schedule.empty_message")
-                )
-            } else {
-                entries.forEach { entry ->
-                    RentScheduleRow(entry = entry)
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(text = L("payments.method_section"), color = DoorTreeTheme.textSecondary)
+                tenantDataStore.paymentMethods.forEach { method ->
+                    PaymentMethodRow(
+                        method = method,
+                        isSelected = selectedMethodId == method.id,
+                        onClick = { selectedMethodId = method.id }
+                    )
                 }
             }
-        }
 
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(text = L("payments.history_section"), color = DoorTreeTheme.textSecondary)
-            if (tenantDataStore.completedPayments.isEmpty()) {
-                SectionPlaceholder(
-                    systemName = "clock.arrow.circlepath",
-                    title = "No completed payments yet",
-                    message = "Past rent payments will appear here once payments are recorded."
-                )
-            } else {
-                tenantDataStore.completedPayments.forEach { payment ->
-                    PaymentRow(
-                        payment = payment,
-                        badgeForegroundOverride = if (payment.status == StatusBadgeStyle.Paid) DoorTreeTheme.paidText else null,
-                        badgeBackgroundOverride = if (payment.status == StatusBadgeStyle.Paid) DoorTreeTheme.paidBackground else null
+            GradientButton(title = L("payments.pay_now"), onClick = {})
+
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(text = L("payments.schedule_section"), color = DoorTreeTheme.textSecondary)
+                val entries = RentScheduleBuilder.entries(tenantRecord = tenantDataStore.tenantRecord, leaseDetails = tenantDataStore.leaseDetails)
+                if (entries.isEmpty()) {
+                    SectionPlaceholder(
+                        systemName = "calendar.badge.clock",
+                        title = L("payments.schedule.empty_title"),
+                        message = L("payments.schedule.empty_message")
                     )
+                } else {
+                    entries.forEach { entry ->
+                        RentScheduleRow(entry = entry)
+                    }
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(text = L("payments.history_section"), color = DoorTreeTheme.textSecondary)
+                if (tenantDataStore.completedPayments.isEmpty()) {
+                    SectionPlaceholder(
+                        systemName = "clock.arrow.circlepath",
+                        title = "No completed payments yet",
+                        message = "Past rent payments will appear here once payments are recorded."
+                    )
+                } else {
+                    tenantDataStore.completedPayments.forEach { payment ->
+                        PaymentRow(
+                            payment = payment,
+                            badgeForegroundOverride = if (payment.status == StatusBadgeStyle.Paid) DoorTreeTheme.paidText else null,
+                            badgeBackgroundOverride = if (payment.status == StatusBadgeStyle.Paid) DoorTreeTheme.paidBackground else null
+                        )
+                    }
                 }
             }
         }

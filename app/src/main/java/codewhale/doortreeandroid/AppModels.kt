@@ -192,14 +192,18 @@ enum class ChatParticipant {
 }
 
 data class ChatMessageItem(
-    val id: String = UUID.randomUUID().toString(),
+    val id: String,
     val sender: ChatParticipant,
     val text: String,
-    val timestamp: String
+    val timestamp: String,
+    val senderUserId: String = "",
+    val sentAtIso8601: String = "",
+    val sentTimestamp: Long = 0L,
+    val isRead: Boolean = true
 )
 
 data class ChatSection(
-    val id: String = UUID.randomUUID().toString(),
+    val id: String,
     val title: String,
     val messages: List<ChatMessageItem>
 )
