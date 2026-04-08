@@ -108,6 +108,11 @@ class FirebaseRestClient {
         return executeNullableJsonGet("${FirebaseConfig.databaseUrl}/users/$uid/maintenance/requests.json?auth=$token")
     }
 
+    suspend fun fetchInteracSettings(uid: String, idToken: String): JsonElement? {
+        val token = URLEncoder.encode(idToken, StandardCharsets.UTF_8.toString())
+        return executeNullableJsonGet("${FirebaseConfig.databaseUrl}/users/$uid/interacSettings.json?auth=$token")
+    }
+
     suspend fun fetchUsers(idToken: String): JsonElement? {
         val token = URLEncoder.encode(idToken, StandardCharsets.UTF_8.toString())
         return executeNullableJsonGet("${FirebaseConfig.databaseUrl}/users.json?auth=$token")

@@ -167,6 +167,7 @@ private fun HomePaymentHistorySection(tenantDataStore: TenantDataStore) {
                 tenantDataStore.paymentHistory.forEach { payment ->
                     PaymentRow(
                         payment = payment,
+                        titleOverride = "Rent",
                         badgeForegroundOverride = if (payment.status == StatusBadgeStyle.Due) DoorTreeTheme.destructive else null,
                         badgeBackgroundOverride = if (payment.status == StatusBadgeStyle.Due) DoorTreeTheme.destructive.copy(alpha = 0.14f) else null
                     )

@@ -1,6 +1,7 @@
 package codewhale.doortreeandroid
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,12 +28,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import codewhale.doortreeandroid.ui.theme.DoorTreeTheme
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun PayRentView(tenantDataStore: TenantDataStore) {
     var selectedMethodId by remember(tenantDataStore.paymentMethods) {
         mutableStateOf(tenantDataStore.paymentMethods.firstOrNull()?.id)
     }
+    var checkoutRequest by remember { mutableStateOf<HostedCheckoutRequest?>(null) }
 
     RefreshableScreen(
         onRefresh = { tenantDataStore.refresh() },
@@ -67,11 +70,36 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
                 }
             }
 
-            GradientButton(title = L("payments.pay_now"), onClick = {})
+            GradientButton(
+                title = L("payments.pay_now"),
+                enabled = canStartPaymentFlow(tenantDataStore, selectedMethodId),
+                onClick = {
+                    when (tenantDataStore.paymentMethods.firstOrNull { it.id == selectedMethodId }?.kind) {
+                        PaymentMethodItem.Kind.OnlinePayment -> {
+                            val request = hostedCheckoutRequest(tenantDataStore, selectedMethodId)
+                            if (request != null) {
+                                checkoutRequest = request
+                            }
+                        }
+
+                        PaymentMethodItem.Kind.BankTransfer -> {
+                            Unit
+                        }
+
+                        null -> Unit
+                    }
+                }
+            )
+            checkoutUnavailableMessage(tenantDataStore, selectedMethodId)?.let { message ->
+                Text(
+                    text = message,
+                    color = DoorTreeTheme.textSecondary
+                )
+            }
 
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(text = L("payments.schedule_section"), color = DoorTreeTheme.textSecondary)
-                val entries = RentScheduleBuilder.entries(tenantRecord = tenantDataStore.tenantRecord, leaseDetails = tenantDataStore.leaseDetails)
+                val entries = tenantDataStore.rentScheduleEntries
                 if (entries.isEmpty()) {
                     SectionPlaceholder(
                         systemName = "calendar.badge.clock",
@@ -105,11 +133,20 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
             }
         }
     }
+
+    checkoutRequest?.let { request ->
+        HostedCheckoutSheetView(
+            url = request.url,
+            title = request.title,
+            onDismiss = { checkoutRequest = null }
+        )
+    }
 }
 
 @Composable
 private fun PayRentHeroCard(tenantDataStore: TenantDataStore) {
     val lease = tenantDataStore.leaseDetails
+    val currentRentEntry = tenantDataStore.nextRentEntry ?: tenantDataStore.currentRentEntry
     val leaseEnded = tenantDataStore.tenantRecord?.leaseEnded == true
     Column(
         modifier = Modifier
@@ -118,19 +155,67 @@ private fun PayRentHeroCard(tenantDataStore: TenantDataStore) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(text = L("payments.hero.title"), color = DoorTreeTheme.textPrimary)
+        Text(
+            text = currentRentEntry?.sortDate?.format(DateTimeFormatter.ofPattern("LLLL yyyy", java.util.Locale.getDefault()))
+                ?: L("payments.hero.title"),
+            color = DoorTreeTheme.textPrimary
+        )
         Text(text = lease.monthlyRent, color = DoorTreeTheme.textPrimary)
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = if (lease.endDate == "-") "Current monthly rent" else "Lease ends ${lease.endDate}",
+                text = currentRentEntry?.dueDateDisplay
+                    ?: if (lease.endDate == "-") "Current monthly rent" else "Lease ends ${lease.endDate}",
                 color = DoorTreeTheme.textSecondary
             )
             Spacer(modifier = Modifier.weight(1f))
             StatusBadge(
-                status = if (leaseEnded) StatusBadgeStyle.Completed else StatusBadgeStyle.Due,
-                label = if (leaseEnded) "Lease ended" else "Current rent"
+                status = currentRentEntry?.statusStyle ?: if (leaseEnded) StatusBadgeStyle.Completed else StatusBadgeStyle.Due,
+                label = currentRentEntry?.statusLabel ?: if (leaseEnded) "Lease ended" else "Current rent"
             )
         }
+    }
+}
+
+private data class HostedCheckoutRequest(
+    val url: String,
+    val title: String
+)
+
+private fun hostedCheckoutRequest(
+    tenantDataStore: TenantDataStore,
+    selectedMethodId: String?
+): HostedCheckoutRequest? {
+    val selectedMethod = tenantDataStore.paymentMethods.firstOrNull { it.id == selectedMethodId } ?: return null
+    if (selectedMethod.kind != PaymentMethodItem.Kind.OnlinePayment) {
+        return null
+    }
+    val url = tenantDataStore.hostedCheckoutUrl(selectedMethod.kind)?.takeIf { it.isNotBlank() } ?: return null
+    return HostedCheckoutRequest(
+        url = url,
+        title = selectedMethod.title
+    )
+}
+
+private fun canStartPaymentFlow(
+    tenantDataStore: TenantDataStore,
+    selectedMethodId: String?
+): Boolean {
+    val selectedMethod = tenantDataStore.paymentMethods.firstOrNull { it.id == selectedMethodId } ?: return false
+    return when (selectedMethod.kind) {
+        PaymentMethodItem.Kind.OnlinePayment -> hostedCheckoutRequest(tenantDataStore, selectedMethodId) != null
+        PaymentMethodItem.Kind.BankTransfer -> false
+    }
+}
+
+private fun checkoutUnavailableMessage(
+    tenantDataStore: TenantDataStore,
+    selectedMethodId: String?
+): String? {
+    val selectedMethod = tenantDataStore.paymentMethods.firstOrNull { it.id == selectedMethodId } ?: return null
+
+    return when (selectedMethod.kind) {
+        PaymentMethodItem.Kind.OnlinePayment -> null
+        PaymentMethodItem.Kind.BankTransfer -> null
     }
 }
 
@@ -166,9 +251,23 @@ private fun PaymentMethodRow(
             Text(text = method.subtitle, color = DoorTreeTheme.textSecondary)
         }
 
-        StatusBadge(
-            status = if (isSelected) StatusBadgeStyle.Paid else StatusBadgeStyle.Pending,
-            label = if (isSelected) L("status.paid") else L("status.pending")
-        )
+        Box(
+            modifier = Modifier
+                .border(
+                    width = 2.dp,
+                    color = if (isSelected) DoorTreeTheme.gradientStart else DoorTreeTheme.textSecondary.copy(alpha = 0.35f),
+                    shape = RoundedCornerShape(999.dp)
+                )
+                .padding(5.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = if (isSelected) DoorTreeTheme.gradientStart else Color.Transparent,
+                        shape = RoundedCornerShape(999.dp)
+                    )
+                    .padding(6.dp)
+            )
+        }
     }
 }

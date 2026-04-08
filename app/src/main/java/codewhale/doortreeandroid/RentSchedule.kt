@@ -8,7 +8,29 @@ object RentScheduleBuilder {
     private const val maxEntries = 240
     private val parser = DateTimeFormatter.ISO_LOCAL_DATE
 
-    fun entries(tenantRecord: TenantRecord?, leaseDetails: LeaseDetails): List<RentScheduleEntry> {
+    fun entries(
+        rentEntries: List<RentLedgerEntry> = emptyList(),
+        tenantRecord: TenantRecord?,
+        leaseDetails: LeaseDetails
+    ): List<RentScheduleEntry> {
+        if (rentEntries.isNotEmpty()) {
+            return rentEntries
+                .sortedBy { it.sortDate ?: LocalDate.MIN }
+                .mapNotNull { entry ->
+                    val dueDate = entry.sortDate ?: runCatching {
+                        LocalDate.parse(entry.dueDate, parser)
+                    }.getOrNull() ?: return@mapNotNull null
+                    val status = liveStatusFor(entry, dueDate)
+                    RentScheduleEntry(
+                        dueDate = dueDate,
+                        amount = entry.amount,
+                        statusLabel = status.label,
+                        accentColor = status.accentColor,
+                        accentBackground = status.accentBackground
+                    )
+                }
+        }
+
         val record = tenantRecord ?: return emptyList()
         val startDate = runCatching { LocalDate.parse(record.leaseStart, parser) }.getOrNull() ?: return emptyList()
         val endDate = runCatching { LocalDate.parse(record.leaseEnd, parser) }.getOrNull()
@@ -39,6 +61,32 @@ object RentScheduleBuilder {
                 statusLabel = status.label,
                 accentColor = status.accentColor,
                 accentBackground = status.accentBackground
+            )
+        }
+    }
+
+    private fun liveStatusFor(entry: RentLedgerEntry, dueDate: LocalDate): ScheduleStatus {
+        val now = LocalDate.now()
+        return when {
+            entry.isPaid -> ScheduleStatus(
+                label = L("status.paid"),
+                accentColor = DoorTreeTheme.paidText,
+                accentBackground = DoorTreeTheme.paidBackground
+            )
+            dueDate.isAfter(now) -> ScheduleStatus(
+                label = L("payments.schedule.status.upcoming"),
+                accentColor = DoorTreeTheme.dueText,
+                accentBackground = DoorTreeTheme.dueBackground
+            )
+            dueDate.isEqual(now) -> ScheduleStatus(
+                label = L("status.due"),
+                accentColor = DoorTreeTheme.pendingText,
+                accentBackground = DoorTreeTheme.pendingBackground
+            )
+            else -> ScheduleStatus(
+                label = L("status.overdue"),
+                accentColor = DoorTreeTheme.destructive,
+                accentBackground = DoorTreeTheme.destructive.copy(alpha = 0.14f)
             )
         }
     }

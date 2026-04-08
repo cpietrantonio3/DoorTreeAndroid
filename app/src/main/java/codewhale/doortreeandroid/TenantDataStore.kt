@@ -26,7 +26,6 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.text.NumberFormat
 import java.text.ParsePosition
@@ -220,6 +219,8 @@ class TenantDataStore(
 
     var tenantRecord by mutableStateOf<TenantRecord?>(null)
         private set
+    var rentEntries by mutableStateOf<List<RentLedgerEntry>>(emptyList())
+        private set
     var notificationPreferences by mutableStateOf(DoorTreeSampleData.notificationPreferences)
         private set
     var pendingInvoices by mutableStateOf<List<PendingInvoiceItem>>(emptyList())
@@ -227,6 +228,8 @@ class TenantDataStore(
     var maintenanceRequests by mutableStateOf<List<MaintenanceRequestItem>>(emptyList())
         private set
     var chatSections by mutableStateOf<List<ChatSection>>(emptyList())
+        private set
+    var landlordInteracSettings by mutableStateOf<InteracRecipientSettings?>(null)
         private set
     var unreadChatCount by mutableStateOf(0)
         private set
@@ -244,7 +247,18 @@ class TenantDataStore(
         get() = tenantRecord?.propertyInfo ?: PropertyInfo("Property", "Unit -", "", "")
 
     val leaseDetails: LeaseDetails
-        get() = tenantRecord?.leaseDetails ?: LeaseDetails("-", "-", "-", "-", "Lease information is unavailable.")
+        get() {
+            val record = tenantRecord ?: return LeaseDetails("-", "-", "-", "-", "Lease information is unavailable.")
+            val base = record.leaseDetails
+            val rentEntry = nextRentEntry ?: currentRentEntry
+            return LeaseDetails(
+                startDate = base.startDate,
+                endDate = base.endDate,
+                monthlyRent = rentEntry?.amount ?: base.monthlyRent,
+                unitLabel = base.unitLabel,
+                renewalNotice = base.renewalNotice
+            )
+        }
 
     val propertyManagerName: String
         get() = chatParticipantNameOverride?.trim().takeUnless { it.isNullOrBlank() }
@@ -265,13 +279,99 @@ class TenantDataStore(
         get() = DoorTreeSampleData.paymentMethods
 
     val paymentHistory: List<PaymentItem>
-        get() = emptyList()
+        get() = rentEntries
+            .filter { it.isPaid }
+            .sortedByDescending { it.sortDate ?: LocalDate.MIN }
+            .map { entry ->
+                PaymentItem(
+                    month = monthFormatter.format(entry.sortDate ?: LocalDate.now()),
+                    date = entry.dueDateDisplay,
+                    amount = entry.amount,
+                    status = StatusBadgeStyle.Paid
+                )
+            }
 
     val completedPayments: List<PaymentItem>
         get() = paymentHistory.filter { it.status == StatusBadgeStyle.Paid }
 
     val documents: List<DocumentItem>
         get() = emptyList()
+
+    val rentScheduleEntries: List<RentScheduleEntry>
+        get() = RentScheduleBuilder.entries(
+            rentEntries = rentEntries,
+            tenantRecord = tenantRecord,
+            leaseDetails = leaseDetails
+        )
+
+    val currentRentEntry: RentLedgerEntry?
+        get() {
+            val sortedEntries = rentEntries.sortedBy { it.sortDate ?: LocalDate.MAX }
+            val today = LocalDate.now()
+            val nextDue = sortedEntries.firstOrNull { entry ->
+                !entry.isPaid && ((entry.sortDate ?: LocalDate.MIN) >= today)
+            }
+            if (nextDue != null) {
+                return nextDue
+            }
+
+            return sortedEntries.lastOrNull { !it.isPaid } ?: sortedEntries.lastOrNull()
+        }
+
+    val nextRentEntry: RentLedgerEntry?
+        get() {
+            val sortedEntries = rentEntries.sortedBy { it.sortDate ?: LocalDate.MAX }
+            val today = LocalDate.now()
+            val nextDue = sortedEntries.firstOrNull { entry ->
+                !entry.isPaid && ((entry.sortDate ?: LocalDate.MIN) >= today)
+            }
+            return nextDue ?: sortedEntries.firstOrNull { !it.isPaid } ?: sortedEntries.lastOrNull()
+        }
+
+    fun payableRentEntry(kind: PaymentMethodItem.Kind): RentLedgerEntry? {
+        val next = nextRentEntry
+        if (next != null && !next.isPaid && next.hostedCheckoutUrl(kind) != null) {
+            return next
+        }
+
+        return rentEntries
+            .filter { !it.isPaid && it.hostedCheckoutUrl(kind) != null }
+            .sortedBy { it.sortDate ?: LocalDate.MAX }
+            .firstOrNull()
+    }
+
+    val payableRentEntry: RentLedgerEntry?
+        get() = payableRentEntry(PaymentMethodItem.Kind.OnlinePayment)
+
+    fun hostedCheckoutUrl(kind: PaymentMethodItem.Kind): String? =
+        payableRentEntry(kind)?.hostedCheckoutUrl(kind)
+
+    val interacTransferDetails: InteracTransferDetails?
+        get() {
+            val settings = landlordInteracSettings
+            val rentEntry = nextRentEntry ?: currentRentEntry
+            if (settings == null || !settings.isEnabled || settings.email.isBlank() || rentEntry == null) {
+                return null
+            }
+
+            val propertyName = rentEntry.propertyName.ifBlank { propertyInfo.name }
+            val unitNumber = rentEntry.unitNumber.ifBlank { tenantRecord?.unitNumber.orEmpty() }.trim()
+            val reference = if (unitNumber.isBlank()) {
+                "$propertyName • ${rentEntry.dueDateDisplay}"
+            } else {
+                "$propertyName • Unit $unitNumber • ${rentEntry.dueDateDisplay}"
+            }
+
+            return InteracTransferDetails(
+                id = rentEntry.id,
+                recipientEmail = settings.email,
+                recipientName = settings.displayName.ifBlank { propertyManagerName },
+                amount = if (rentEntry.balance == "-") rentEntry.amount else rentEntry.balance,
+                dueDate = rentEntry.dueDateDisplay,
+                reference = reference,
+                autodepositEnabled = settings.autodepositEnabled
+            )
+        }
 
     val notificationCenterItems: List<NotificationCenterItem>
         get() {
@@ -625,10 +725,12 @@ class TenantDataStore(
         if (idToken.isNullOrBlank()) {
             stopObservingChatConversation()
             tenantRecord = null
+            rentEntries = emptyList()
             notificationPreferences = DoorTreeSampleData.notificationPreferences
             pendingInvoices = emptyList()
             maintenanceRequests = emptyList()
             chatSections = emptyList()
+            landlordInteracSettings = null
             chatParticipantNameOverride = null
             unreadChatCount = 0
             unreadChatMessageIds = emptyList()
@@ -639,11 +741,12 @@ class TenantDataStore(
         }
 
         val snapshot = runCatching { restClient.fetchUser(uid, idToken) }.getOrNull()
-        val objectValue = snapshot?.jsonObject
+        val objectValue = snapshot.asJsonObjectOrNull()
         debugMaintenanceRequestLog("loadTenantRecord user snapshot keys=${objectValue?.keys?.sorted()?.joinToString(",").orEmpty()} raw=${snapshot?.toString() ?: "null"}")
         if (objectValue == null || objectValue.isEmpty()) {
             stopObservingChatConversation()
             tenantRecord = null
+            rentEntries = emptyList()
             notificationPreferences = DoorTreeSampleData.notificationPreferences
             pendingInvoices = emptyList()
             maintenanceRequests = emptyList()
@@ -658,6 +761,7 @@ class TenantDataStore(
         }
 
         tenantRecord = TenantRecord.fromSnapshot(uid, objectValue)
+        rentEntries = parseRentEntries(objectValue)
         pendingInvoices = parsePendingInvoices(objectValue)
         debugMaintenanceRequestLog("loadTenantRecord pendingInvoices count=${pendingInvoices.size}")
         val chatConversation = parseChatConversation(
@@ -666,15 +770,24 @@ class TenantDataStore(
         )
         applyChatConversation(chatConversation)
         observeChatConversation(uid = uid, landlordUid = tenantRecord?.landlordUID.orEmpty())
+        landlordInteracSettings = tenantRecord
+            ?.landlordUID
+            ?.takeIf { it.isNotBlank() }
+            ?.let { landlordUid ->
+                runCatching { restClient.fetchInteracSettings(landlordUid, idToken) }
+                    .getOrNull()
+                    .asJsonObjectOrNull()
+                    ?.let(::parseInteracRecipientSettings)
+            }
         val maintenanceRequestsSnapshot = runCatching {
             restClient.fetchMaintenanceRequests(uid, idToken)
         }.getOrNull()
         debugMaintenanceRequestLog("loadMaintenanceRequests raw=${maintenanceRequestsSnapshot?.toString() ?: "null"}")
-        maintenanceRequests = MaintenanceRequestParser.parseRequestsRoot(maintenanceRequestsSnapshot?.jsonObject) { message ->
+        maintenanceRequests = MaintenanceRequestParser.parseRequestsRoot(maintenanceRequestsSnapshot.asJsonObjectOrNull()) { message ->
             debugMaintenanceRequestLog(message)
         }
         debugMaintenanceRequestLog("loadMaintenanceRequests parsed count=${maintenanceRequests.size} ids=${maintenanceRequests.joinToString(",") { it.id }}")
-        val notificationSettings = objectValue["notificationSettings"]?.jsonObject
+        val notificationSettings = objectValue["notificationSettings"].asJsonObjectOrNull()
         notificationPreferences = NotificationPreferences(
             paymentReminders = notificationSettings?.get("paymentReminders")?.jsonPrimitive?.booleanOrNull
                 ?: DoorTreeSampleData.notificationPreferences.paymentReminders,
@@ -691,10 +804,12 @@ class TenantDataStore(
         stopObservingChatConversation()
         activeUid = null
         tenantRecord = null
+        rentEntries = emptyList()
         notificationPreferences = DoorTreeSampleData.notificationPreferences
         pendingInvoices = emptyList()
         maintenanceRequests = emptyList()
         chatSections = emptyList()
+        landlordInteracSettings = null
         chatParticipantNameOverride = null
         unreadChatCount = 0
         unreadChatMessageIds = emptyList()
@@ -707,6 +822,10 @@ class TenantDataStore(
         if (BuildConfig.DEBUG) {
             Log.d("TenantDataStore", message)
         }
+    }
+
+    private fun JsonElement?.asJsonObjectOrNull(): JsonObject? {
+        return this as? JsonObject
     }
 
     private fun currentMonthLabel(): String {
@@ -918,6 +1037,103 @@ class TenantDataStore(
             .map { it.item.id }
 
         return ParsedChatConversation(participantName, sections, unreadMessageIds)
+    }
+
+    private fun parseRentEntries(snapshot: JsonObject): List<RentLedgerEntry> {
+        val rentRoot = snapshot["rent"] as? JsonObject ?: return emptyList()
+        return rentRoot.entries
+            .mapNotNull { (dueDate, value) ->
+                val rentObject = value as? JsonObject ?: return@mapNotNull null
+                rentEntryFromSnapshot(dueDate, rentObject)
+            }
+            .sortedBy { it.sortDate ?: LocalDate.MIN }
+    }
+
+    private fun rentEntryFromSnapshot(
+        fallbackDate: String,
+        snapshot: JsonObject
+    ): RentLedgerEntry {
+        val dueDate = firstNonBlank(
+            snapshot["dueDate"].stringValue(),
+            snapshot["date"].stringValue(),
+            fallbackDate
+        )
+        val parsedDueDate = parseLocalDate(dueDate) ?: parseMaintenanceDate(dueDate)
+        val amountValue = snapshot["amount"].doubleValue()
+        val balanceValue = snapshot["balance"].doubleValue()
+        val statusStyle = rentStatusStyle(
+            snapshot = snapshot,
+            dueDate = parsedDueDate,
+            amountValue = amountValue,
+            balanceValue = balanceValue
+        )
+        val interacSnapshot = snapshot["interac"] as? JsonObject
+        val requestId = interacSnapshot?.get("requestId").stringValue()
+        val requestUrl = interacSnapshot?.get("requestUrl").stringValue()
+        val interac = if (interacSnapshot == null) {
+            null
+        } else {
+            RentInteracDetails(
+                isActive = interacSnapshot["active"]?.jsonPrimitive?.booleanOrNull ?: false,
+                requestId = requestId,
+                requestUrl = requestUrl,
+                currency = interacSnapshot["currency"].stringValue(),
+                collectibleAmount = interacSnapshot["collectibleAmount"].doubleValue(),
+                status = interacSnapshot["status"].stringValue(),
+                completedAt = interacSnapshot["completedAt"].stringValue().ifBlank { null }
+            )
+        }
+        val stripeSnapshot = snapshot["stripe"] as? JsonObject
+        val paymentLinkId = stripeSnapshot?.get("paymentLinkId").stringValue()
+        val paymentLinkUrl = stripeSnapshot?.get("paymentLinkUrl").stringValue()
+        val stripe = if (stripeSnapshot == null && paymentLinkId.isBlank() && paymentLinkUrl.isBlank()) {
+            null
+        } else {
+            RentStripeDetails(
+                isActive = stripeSnapshot?.get("active")?.jsonPrimitive?.booleanOrNull ?: false,
+                paymentLinkId = paymentLinkId,
+                paymentLinkUrl = paymentLinkUrl
+            )
+        }
+
+        return RentLedgerEntry(
+            id = fallbackDate,
+            dueDate = dueDate,
+            dueDateDisplay = formatDate(dueDate),
+            amountValue = amountValue,
+            amount = formatCurrency(amountValue),
+            balanceValue = balanceValue,
+            balance = formatCurrency(balanceValue),
+            statusLabel = localizedRentStatus(statusStyle, snapshot["status"].stringValue(), parsedDueDate),
+            statusStyle = statusStyle,
+            propertyName = snapshot["propertyName"].stringValue(),
+            propertyManager = snapshot["propertyManager"].stringValue(),
+            leaseStart = formatDate(snapshot["leaseStart"].stringValue()),
+            leaseEnd = formatDate(snapshot["leaseEnd"].stringValue()),
+            tenantName = snapshot["tenantName"].stringValue(),
+            tenantEmail = snapshot["tenantEmail"].stringValue(),
+            tenantUid = snapshot["tenantUid"].stringValue(),
+            unitNumber = snapshot["unitNumber"].stringValue(),
+            interac = interac,
+            stripe = stripe,
+            sortDate = parsedDueDate
+                ?: parseMaintenanceDate(snapshot["createdAt"].stringValue())
+                ?: parseMaintenanceDate(snapshot["updatedAt"].stringValue())
+        )
+    }
+
+    private fun parseInteracRecipientSettings(snapshot: JsonObject): InteracRecipientSettings? {
+        val email = snapshot["email"].stringValue()
+        if (email.isBlank()) {
+            return null
+        }
+
+        return InteracRecipientSettings(
+            email = email,
+            displayName = snapshot["displayName"].stringValue(),
+            autodepositEnabled = snapshot["autodepositEnabled"]?.jsonPrimitive?.booleanOrNull ?: false,
+            isEnabled = snapshot["isEnabled"]?.jsonPrimitive?.booleanOrNull ?: false
+        )
     }
 
     private fun parsePendingInvoices(snapshot: JsonObject): List<PendingInvoiceItem> {
@@ -1137,6 +1353,34 @@ class TenantDataStore(
         }
     }
 
+    private fun localizedRentStatus(
+        statusStyle: StatusBadgeStyle,
+        rawStatus: String,
+        dueDate: LocalDate?
+    ): String {
+        return when (statusStyle) {
+            StatusBadgeStyle.Paid -> L("status.paid")
+            StatusBadgeStyle.Completed -> L("status.completed")
+            StatusBadgeStyle.InProgress -> L("status.in_progress")
+            StatusBadgeStyle.Pending, StatusBadgeStyle.Due -> {
+                if (dueDate != null) {
+                    val today = LocalDate.now()
+                    when {
+                        dueDate.isAfter(today) -> L("payments.schedule.status.upcoming")
+                        dueDate.isEqual(today) -> L("status.due")
+                        else -> L("status.overdue")
+                    }
+                } else {
+                    rawStatus.trim()
+                        .replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                        }
+                        .ifBlank { L("status.pending") }
+                }
+            }
+        }
+    }
+
     private fun localizedMaintenanceCategory(rawCategory: String): String {
         return when (rawCategory.trim().lowercase(Locale.ROOT)) {
             "plumbing" -> MaintenanceCategory.Plumbing.localizedTitle
@@ -1193,6 +1437,28 @@ class TenantDataStore(
             else -> {
                 if (snapshot["assign"].stringValue().isNotBlank()) StatusBadgeStyle.InProgress else StatusBadgeStyle.Pending
             }
+        }
+    }
+
+    private fun rentStatusStyle(
+        snapshot: JsonObject,
+        dueDate: LocalDate?,
+        amountValue: Double?,
+        balanceValue: Double?
+    ): StatusBadgeStyle {
+        val normalizedStatus = snapshot["status"].stringValue().trim().lowercase(Locale.ROOT)
+        if (normalizedStatus in setOf("paid", "completed", "complete")) {
+            return StatusBadgeStyle.Paid
+        }
+
+        if (balanceValue != null && amountValue != null && balanceValue <= 0.0) {
+            return StatusBadgeStyle.Paid
+        }
+
+        return if (dueDate != null && !dueDate.isAfter(LocalDate.now())) {
+            StatusBadgeStyle.Due
+        } else {
+            StatusBadgeStyle.Pending
         }
     }
 
@@ -1437,6 +1703,9 @@ class TenantDataStore(
 
     private val chatSectionFormatter: DateTimeFormatter
         get() = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.getDefault())
+
+    private val monthFormatter: DateTimeFormatter
+        get() = DateTimeFormatter.ofPattern("LLLL yyyy", Locale.getDefault())
 }
 
 private data class ParsedChatConversation(

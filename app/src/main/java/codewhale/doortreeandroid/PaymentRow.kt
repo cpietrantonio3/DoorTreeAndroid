@@ -16,6 +16,7 @@ import codewhale.doortreeandroid.ui.theme.DoorTreeTheme
 @Composable
 fun PaymentRow(
     payment: PaymentItem,
+    titleOverride: String? = null,
     badgeForegroundOverride: Color? = null,
     badgeBackgroundOverride: Color? = null
 ) {
@@ -27,7 +28,7 @@ fun PaymentRow(
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(text = payment.month, color = DoorTreeTheme.textPrimary)
+            Text(text = titleOverride ?: payment.month, color = DoorTreeTheme.textPrimary)
             Text(text = payment.date, color = DoorTreeTheme.textSecondary)
         }
 

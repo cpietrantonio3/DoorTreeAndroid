@@ -38,6 +38,75 @@ data class LeaseDetails(
     val renewalNotice: String
 )
 
+data class RentStripeDetails(
+    val isActive: Boolean,
+    val paymentLinkId: String,
+    val paymentLinkUrl: String
+)
+
+data class RentInteracDetails(
+    val isActive: Boolean,
+    val requestId: String,
+    val requestUrl: String,
+    val currency: String,
+    val collectibleAmount: Double?,
+    val status: String,
+    val completedAt: String?
+)
+
+data class InteracRecipientSettings(
+    val email: String,
+    val displayName: String,
+    val autodepositEnabled: Boolean,
+    val isEnabled: Boolean
+)
+
+data class InteracTransferDetails(
+    val id: String,
+    val recipientEmail: String,
+    val recipientName: String,
+    val amount: String,
+    val dueDate: String,
+    val reference: String,
+    val autodepositEnabled: Boolean
+)
+
+data class RentLedgerEntry(
+    val id: String,
+    val dueDate: String,
+    val dueDateDisplay: String,
+    val amountValue: Double?,
+    val amount: String,
+    val balanceValue: Double?,
+    val balance: String,
+    val statusLabel: String,
+    val statusStyle: StatusBadgeStyle,
+    val propertyName: String,
+    val propertyManager: String,
+    val leaseStart: String,
+    val leaseEnd: String,
+    val tenantName: String,
+    val tenantEmail: String,
+    val tenantUid: String,
+    val unitNumber: String,
+    val interac: RentInteracDetails?,
+    val stripe: RentStripeDetails?,
+    val sortDate: LocalDate?
+) {
+    val isPaid: Boolean
+        get() = statusStyle == StatusBadgeStyle.Paid ||
+            statusStyle == StatusBadgeStyle.Completed ||
+            ((balanceValue ?: amountValue ?: 0.0) <= 0.0 && (balanceValue != null || amountValue != null))
+
+    fun hostedCheckoutUrl(kind: PaymentMethodItem.Kind): String? = when (kind) {
+        PaymentMethodItem.Kind.OnlinePayment ->
+            stripe?.takeIf { it.isActive && it.paymentLinkUrl.isNotBlank() }?.paymentLinkUrl
+
+        PaymentMethodItem.Kind.BankTransfer ->
+            interac?.takeIf { it.isActive && it.requestUrl.isNotBlank() }?.requestUrl
+    }
+}
+
 enum class StatusBadgeStyle(val localizationKey: String) {
     Due("status.due"),
     Paid("status.paid"),
@@ -135,8 +204,14 @@ data class PaymentMethodItem(
     val id: String = UUID.randomUUID().toString(),
     val title: String,
     val subtitle: String,
-    val icon: String
-)
+    val icon: String,
+    val kind: Kind
+) {
+    enum class Kind {
+        OnlinePayment,
+        BankTransfer
+    }
+}
 
 enum class MaintenanceCategory(
     val defaultTitle: String,

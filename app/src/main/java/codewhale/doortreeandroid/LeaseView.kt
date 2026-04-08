@@ -56,7 +56,7 @@ fun LeaseView(
 
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(text = L("lease.rent_schedule"), color = DoorTreeTheme.textPrimary)
-                val entries = RentScheduleBuilder.entries(tenantRecord = tenantDataStore.tenantRecord, leaseDetails = tenantDataStore.leaseDetails)
+                val entries = tenantDataStore.rentScheduleEntries
                 if (entries.isEmpty()) {
                     SectionPlaceholder(
                         systemName = "calendar.badge.clock",

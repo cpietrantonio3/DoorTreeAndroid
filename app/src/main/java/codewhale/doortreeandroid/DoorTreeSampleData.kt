@@ -42,17 +42,14 @@ object DoorTreeSampleData {
         PaymentMethodItem(
             title = L("mock.payment_method.credit_card.title"),
             subtitle = L("mock.payment_method.credit_card.subtitle"),
-            icon = "creditcard.fill"
+            icon = "creditcard.fill",
+            kind = PaymentMethodItem.Kind.OnlinePayment
         ),
         PaymentMethodItem(
             title = L("mock.payment_method.bank_transfer.title"),
             subtitle = L("mock.payment_method.bank_transfer.subtitle"),
-            icon = "building.columns.fill"
-        ),
-        PaymentMethodItem(
-            title = L("mock.payment_method.apple_pay.title"),
-            subtitle = L("mock.payment_method.apple_pay.subtitle"),
-            icon = "iphone"
+            icon = "building.columns.fill",
+            kind = PaymentMethodItem.Kind.BankTransfer
         )
     )
 

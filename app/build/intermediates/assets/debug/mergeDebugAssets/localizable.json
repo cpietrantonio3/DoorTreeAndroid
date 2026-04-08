@@ -5537,19 +5537,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chase Checking"
+            "value": "Interac e-Transfer®"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compte courant Chase"
+            "value": "Virement Interac®"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compte cheque Chase"
+            "value": "Virement Interac®"
           }
         }
       }
@@ -5583,19 +5583,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Visa ••4242"
+            "value": "Online Payment"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Visa ••4242"
+            "value": "Paiement en ligne"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Visa ••4242"
+            "value": "Paiement en ligne"
           }
         }
       }
@@ -5790,19 +5790,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "March 2026"
+            "value": "Next Payment"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "mars 2026"
+            "value": "Prochain paiement"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "mars 2026"
+            "value": "Prochain paiement"
           }
         }
       }
@@ -6311,6 +6311,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Payer maintenant"
+          }
+        }
+      }
+    },
+    "payments.interac.unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Interac e-Transfer is not available for this rent payment yet."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le virement Interac n'est pas encore disponible pour ce paiement de loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le virement Interac n'est pas encore disponible pour ce paiement de loyer."
           }
         }
       }
