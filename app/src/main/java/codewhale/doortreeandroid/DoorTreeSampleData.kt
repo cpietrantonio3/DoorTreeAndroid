@@ -40,16 +40,22 @@ object DoorTreeSampleData {
 
     val paymentMethods = listOf(
         PaymentMethodItem(
-            title = L("mock.payment_method.credit_card.title"),
-            subtitle = L("mock.payment_method.credit_card.subtitle"),
+            title = "Manual monthly pay",
+            subtitle = "Open Stripe and pay manually each month when rent is due.",
             icon = "creditcard.fill",
-            kind = PaymentMethodItem.Kind.OnlinePayment
+            kind = PaymentMethodItem.Kind.ManualMonthly
         ),
         PaymentMethodItem(
-            title = L("mock.payment_method.bank_transfer.title"),
-            subtitle = L("mock.payment_method.bank_transfer.subtitle"),
+            title = "Automatic card pay",
+            subtitle = "Save a credit card once for automatic monthly rent payments.",
+            icon = "creditcard.circle.fill",
+            kind = PaymentMethodItem.Kind.AutopayCard
+        ),
+        PaymentMethodItem(
+            title = "Automatic bank debit",
+            subtitle = "Save bank details once for automatic monthly PAD rent payments.",
             icon = "building.columns.fill",
-            kind = PaymentMethodItem.Kind.BankTransfer
+            kind = PaymentMethodItem.Kind.AutopayBank
         )
     )
 

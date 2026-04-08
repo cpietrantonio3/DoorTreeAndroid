@@ -16,7 +16,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -36,6 +38,8 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
 import java.util.UUID
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 data class MaintenancePhotoUpload(
     val bytes: ByteArray,
@@ -66,7 +70,9 @@ data class TenantRecord(
     val squareFootage: Double?,
     val streetAddress: String,
     val unitNumber: String,
-    val userType: String
+    val userType: String,
+    val rentPayment: TenantRentPaymentState,
+    val stripeConnectAssociation: TenantStripeConnectAssociationState
 ) {
     val tenantProfile: TenantProfile
         get() = TenantProfile(
@@ -167,7 +173,63 @@ data class TenantRecord(
                 squareFootage = snapshot["squarefootage"].doubleValue(),
                 streetAddress = snapshot["streetAddress"].stringValue(),
                 unitNumber = snapshot["unitNumber"].stringValue(),
-                userType = snapshot["userType"].stringValue()
+                userType = snapshot["userType"].stringValue(),
+                rentPayment = rentPaymentState(snapshot["rentPayment"]),
+                stripeConnectAssociation = stripeConnectAssociation(snapshot["stripeConnect"])
+            )
+        }
+
+        private fun rentPaymentState(value: JsonElement?): TenantRentPaymentState {
+            val snapshot = value as? JsonObject ?: return TenantRentPaymentState.Empty
+            val paymentMethodType = snapshot["paymentMethodType"].stringValue().ifBlank { null }
+            val pendingSetupMethodType = snapshot["pendingSetupMethodType"].stringValue().ifBlank { null }
+            val selectedMethodType = snapshot["selectedMethodType"].stringValue().ifBlank { "manual" }
+            val status = snapshot["status"].stringValue().ifBlank { "manual" }
+
+            return TenantRentPaymentState(
+                createdAt = snapshot["createdAt"].stringValue(),
+                lastAutopayAt = snapshot["lastAutopayAt"].stringValue().ifBlank { null },
+                lastAutopayChargeId = snapshot["lastAutopayChargeId"].stringValue().ifBlank { null },
+                lastAutopayPaymentIntentId = snapshot["lastAutopayPaymentIntentId"].stringValue().ifBlank { null },
+                lastAutopayStatus = snapshot["lastAutopayStatus"].stringValue().ifBlank { null },
+                lastAutopaySucceededAt = snapshot["lastAutopaySucceededAt"].stringValue().ifBlank { null },
+                lastError = snapshot["lastError"].stringValue().ifBlank { null },
+                lastSetupAt = snapshot["lastSetupAt"].stringValue().ifBlank { null },
+                lastSetupError = snapshot["lastSetupError"].stringValue().ifBlank { null },
+                paymentMethodBrand = snapshot["paymentMethodBrand"].stringValue().ifBlank { null },
+                paymentMethodLabel = snapshot["paymentMethodLabel"].stringValue().ifBlank { null },
+                paymentMethodLast4 = snapshot["paymentMethodLast4"].stringValue().ifBlank { null },
+                paymentMethodType = paymentMethodType,
+                pendingSetupCheckoutSessionId = snapshot["pendingSetupCheckoutSessionId"].stringValue().ifBlank { null },
+                pendingSetupMethodType = pendingSetupMethodType,
+                selectedMethodType = selectedMethodType,
+                status = status,
+                stripeCustomerId = snapshot["stripeCustomerId"].stringValue().ifBlank { null },
+                stripeMandateId = snapshot["stripeMandateId"].stringValue().ifBlank { null },
+                stripePaymentMethodId = snapshot["stripePaymentMethodId"].stringValue().ifBlank { null },
+                stripeSetupIntentId = snapshot["stripeSetupIntentId"].stringValue().ifBlank { null },
+                updatedAt = snapshot["updatedAt"].stringValue()
+            )
+        }
+
+        private fun stripeConnectAssociation(value: JsonElement?): TenantStripeConnectAssociationState {
+            val root = value as? JsonObject ?: return TenantStripeConnectAssociationState.Empty
+            val snapshot = root["association"] as? JsonObject ?: return TenantStripeConnectAssociationState.Empty
+            val status = snapshot["status"].stringValue().ifBlank { "manual" }
+
+            return TenantStripeConnectAssociationState(
+                accountId = snapshot["accountId"].stringValue().ifBlank { null },
+                associated = snapshot["associated"]?.jsonPrimitive?.booleanOrNull ?: false,
+                landlordUserId = snapshot["landlordUserId"].stringValue().ifBlank { null },
+                linkedAt = snapshot["linkedAt"].stringValue().ifBlank { null },
+                status = status,
+                stripeCustomerId = snapshot["stripeCustomerId"].stringValue().ifBlank { null },
+                stripeMandateId = snapshot["stripeMandateId"].stringValue().ifBlank { null },
+                stripePaymentMethodId = snapshot["stripePaymentMethodId"].stringValue().ifBlank { null },
+                stripeSetupIntentId = snapshot["stripeSetupIntentId"].stringValue().ifBlank { null },
+                tenantUserId = snapshot["tenantUserId"].stringValue().ifBlank { null },
+                type = snapshot["type"].stringValue().ifBlank { null },
+                updatedAt = snapshot["updatedAt"].stringValue().ifBlank { null }
             )
         }
 
@@ -276,7 +338,67 @@ class TenantDataStore(
         get() = DoorTreeSampleData.quickActions
 
     val paymentMethods: List<PaymentMethodItem>
-        get() = DoorTreeSampleData.paymentMethods
+        get() {
+            val rentPayment = currentRentPayment
+            val hasStripeManagement = stripeConnectAssociation.associated
+            val manualSubtitle = if (currentRentEntry?.isAutopayProcessing == true) {
+                "Automatic payment is already processing for the current rent charge."
+            } else {
+                "Open Stripe and pay manually each month when rent is due."
+            }
+            val cardSubtitle = when {
+                rentPayment.pendingSetupMethodType == "card" ->
+                    "Stripe is waiting for you to finish the hosted card setup."
+                hasStripeManagement ->
+                    "A Stripe payment profile is already connected. Open Stripe to manage or replace your automatic card setup."
+                rentPayment.selectedMethodType == "card" && rentPayment.status == "active" && !rentPayment.paymentMethodLabel.isNullOrBlank() ->
+                    "${rentPayment.paymentMethodLabel} is active for automatic monthly rent payments."
+                else ->
+                    "Save a credit card once for automatic monthly rent payments."
+            }
+            val bankSubtitle = when {
+                rentPayment.pendingSetupMethodType == "acss_debit" ->
+                    "Stripe is waiting for you to finish the hosted bank setup."
+                rentPayment.selectedMethodType == "acss_debit" && rentPayment.status == "verification_pending" ->
+                    "Stripe may still need bank verification before PAD autopay becomes active."
+                hasStripeManagement ->
+                    "A Stripe payment profile is already connected. Open Stripe to manage or replace your automatic bank debit setup."
+                rentPayment.selectedMethodType == "acss_debit" && rentPayment.status == "active" && !rentPayment.paymentMethodLabel.isNullOrBlank() ->
+                    "${rentPayment.paymentMethodLabel} is active for automatic monthly PAD rent payments."
+                else ->
+                    "Save bank details once for automatic monthly PAD rent payments."
+            }
+
+            return listOf(
+                PaymentMethodItem(
+                    id = "manual-monthly",
+                    title = "Manual monthly pay",
+                    subtitle = manualSubtitle,
+                    icon = "creditcard.fill",
+                    kind = PaymentMethodItem.Kind.ManualMonthly
+                ),
+                PaymentMethodItem(
+                    id = "autopay-card",
+                    title = "Automatic card pay",
+                    subtitle = cardSubtitle,
+                    icon = "creditcard.circle.fill",
+                    kind = PaymentMethodItem.Kind.AutopayCard
+                ),
+                PaymentMethodItem(
+                    id = "autopay-bank",
+                    title = "Automatic bank debit",
+                    subtitle = bankSubtitle,
+                    icon = "building.columns.fill",
+                    kind = PaymentMethodItem.Kind.AutopayBank
+                )
+            )
+        }
+
+    val currentRentPayment: TenantRentPaymentState
+        get() = tenantRecord?.rentPayment ?: TenantRentPaymentState.Empty
+
+    val stripeConnectAssociation: TenantStripeConnectAssociationState
+        get() = tenantRecord?.stripeConnectAssociation ?: TenantStripeConnectAssociationState.Empty
 
     val paymentHistory: List<PaymentItem>
         get() = rentEntries
@@ -341,7 +463,7 @@ class TenantDataStore(
     }
 
     val payableRentEntry: RentLedgerEntry?
-        get() = payableRentEntry(PaymentMethodItem.Kind.OnlinePayment)
+        get() = payableRentEntry(PaymentMethodItem.Kind.ManualMonthly)
 
     fun hostedCheckoutUrl(kind: PaymentMethodItem.Kind): String? =
         payableRentEntry(kind)?.hostedCheckoutUrl(kind)
@@ -450,6 +572,39 @@ class TenantDataStore(
         val uid = activeUid ?: return
         debugMaintenanceRequestLog("refresh requested for uid $uid")
         loadTenantRecord(uid)
+    }
+
+    suspend fun startRentPaymentFlow(kind: PaymentMethodItem.Kind): String? {
+        val uid = activeUid ?: throw IllegalStateException("Sign in again before managing rent payments.")
+
+        return when (kind) {
+            PaymentMethodItem.Kind.ManualMonthly -> {
+                val manualCheckoutUrl = hostedCheckoutUrl(PaymentMethodItem.Kind.ManualMonthly)
+                    ?: throw IllegalStateException("Stripe is still preparing the rent payment link.")
+
+                if (currentRentEntry?.isAutopayProcessing == true) {
+                    throw IllegalStateException("An automatic payment is already processing for this rent charge.")
+                }
+
+                submitRentPaymentPreferenceJob(uid, "switch-manual")
+                refresh()
+                manualCheckoutUrl
+            }
+
+            PaymentMethodItem.Kind.AutopayCard -> {
+                val action = if (stripeConnectAssociation.associated) "manage-card" else "setup-card"
+                val result = submitRentPaymentPreferenceJob(uid, action)
+                refresh()
+                result.url
+            }
+
+            PaymentMethodItem.Kind.AutopayBank -> {
+                val action = if (stripeConnectAssociation.associated) "manage-pad" else "setup-pad"
+                val result = submitRentPaymentPreferenceJob(uid, action)
+                refresh()
+                result.url
+            }
+        }
     }
 
     fun setChatOpen(isOpen: Boolean) {
@@ -702,6 +857,89 @@ class TenantDataStore(
         }
     }
 
+    private data class RentPaymentPreferenceJobResult(
+        val url: String?
+    )
+
+    private suspend fun submitRentPaymentPreferenceJob(
+        uid: String,
+        action: String
+    ): RentPaymentPreferenceJobResult {
+        return withTimeout(30_000) {
+            suspendCancellableCoroutine { continuation ->
+                val queueRef = realtimeDatabase
+                    .child("users")
+                    .child(uid)
+                    .child("rentPaymentQueue")
+                    .push()
+
+                val payload = mapOf(
+                    "action" to action,
+                    "createdAt" to Instant.now().toString(),
+                    "source" to "android",
+                    "status" to "pending"
+                )
+
+                var listener: ValueEventListener? = null
+
+                fun finish(result: Result<RentPaymentPreferenceJobResult>) {
+                    if (!continuation.isActive) {
+                        return
+                    }
+
+                    listener?.let(queueRef::removeEventListener)
+                    result.fold(
+                        onSuccess = { continuation.resume(it) },
+                        onFailure = { continuation.resumeWithException(it) }
+                    )
+                }
+
+                listener = object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val values = snapshot.value as? Map<*, *> ?: return
+                        when ((values["status"] as? String)?.trim().orEmpty()) {
+                            "completed" -> finish(
+                                Result.success(
+                                    RentPaymentPreferenceJobResult(
+                                        url = (values["url"] as? String)?.trim()?.takeIf { it.isNotEmpty() }
+                                    )
+                                )
+                            )
+
+                            "failed" -> {
+                                val message = (values["error"] as? String)?.trim().orEmpty()
+                                finish(
+                                    Result.failure(
+                                        IllegalStateException(
+                                            if (message.isBlank()) {
+                                                "Rent payment setup could not be completed."
+                                            } else {
+                                                message
+                                            }
+                                        )
+                                    )
+                                )
+                            }
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        finish(Result.failure(IllegalStateException(error.message)))
+                    }
+                }
+
+                queueRef.addValueEventListener(listener)
+                queueRef.setValue(payload).addOnFailureListener { error ->
+                    finish(Result.failure(error))
+                }
+
+                continuation.invokeOnCancellation {
+                    listener?.let(queueRef::removeEventListener)
+                }
+            }
+        }
+    }
+
     fun updateNotificationSetting(key: NotificationSettingKey, isEnabled: Boolean) {
         val uid = activeUid ?: return
         val previous = notificationPreferences
@@ -716,7 +954,7 @@ class TenantDataStore(
         }
     }
 
-    private suspend fun loadTenantRecord(uid: String) {
+    private suspend fun loadTenantRecord(uid: String, allowPendingSetupReconciliation: Boolean = true) {
         isLoading = true
         loadError = null
         debugMaintenanceRequestLog("loadTenantRecord start uid=$uid")
@@ -760,7 +998,19 @@ class TenantDataStore(
             return
         }
 
-        tenantRecord = TenantRecord.fromSnapshot(uid, objectValue)
+        val parsedTenantRecord = TenantRecord.fromSnapshot(uid, objectValue)
+        if (allowPendingSetupReconciliation && shouldReconcilePendingRentPaymentSetup(parsedTenantRecord)) {
+            debugMaintenanceRequestLog("loadTenantRecord found pending Stripe setup session for uid $uid, reconciling before applying state")
+            runCatching {
+                submitRentPaymentPreferenceJob(uid, "reconcile-pending-setup")
+            }.onFailure { error ->
+                debugMaintenanceRequestLog("loadTenantRecord reconciliation failed for uid $uid: ${error.localizedMessage ?: "Unknown error"}")
+            }
+            loadTenantRecord(uid, allowPendingSetupReconciliation = false)
+            return
+        }
+
+        tenantRecord = parsedTenantRecord
         rentEntries = parseRentEntries(objectValue)
         pendingInvoices = parsePendingInvoices(objectValue)
         debugMaintenanceRequestLog("loadTenantRecord pendingInvoices count=${pendingInvoices.size}")
@@ -798,6 +1048,11 @@ class TenantDataStore(
             faceID = DoorTreeSampleData.notificationPreferences.faceID
         )
         isLoading = false
+    }
+
+    private fun shouldReconcilePendingRentPaymentSetup(record: TenantRecord): Boolean {
+        return !record.rentPayment.pendingSetupCheckoutSessionId.isNullOrBlank() &&
+            record.stripeConnectAssociation.associated.not()
     }
 
     private fun reset() {
@@ -1086,10 +1341,22 @@ class TenantDataStore(
         val stripeSnapshot = snapshot["stripe"] as? JsonObject
         val paymentLinkId = stripeSnapshot?.get("paymentLinkId").stringValue()
         val paymentLinkUrl = stripeSnapshot?.get("paymentLinkUrl").stringValue()
+        val autopaySnapshot = stripeSnapshot?.get("autopay") as? JsonObject
         val stripe = if (stripeSnapshot == null && paymentLinkId.isBlank() && paymentLinkUrl.isBlank()) {
             null
         } else {
             RentStripeDetails(
+                autopay = autopaySnapshot?.let { autopay ->
+                    RentStripeAutopayDetails(
+                        lastAttemptAt = autopay["lastAttemptAt"].stringValue().ifBlank { null },
+                        lastChargeId = autopay["lastChargeId"].stringValue().ifBlank { null },
+                        lastError = autopay["lastError"].stringValue().ifBlank { null },
+                        lastPaymentIntentId = autopay["lastPaymentIntentId"].stringValue().ifBlank { null },
+                        lastProcessedAt = autopay["lastProcessedAt"].stringValue().ifBlank { null },
+                        lastStatus = autopay["lastStatus"].stringValue().ifBlank { null },
+                        methodType = autopay["methodType"].stringValue().ifBlank { null }
+                    )
+                },
                 isActive = stripeSnapshot?.get("active")?.jsonPrimitive?.booleanOrNull ?: false,
                 paymentLinkId = paymentLinkId,
                 paymentLinkUrl = paymentLinkUrl

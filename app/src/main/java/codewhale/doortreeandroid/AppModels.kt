@@ -38,11 +38,125 @@ data class LeaseDetails(
     val renewalNotice: String
 )
 
+data class RentStripeAutopayDetails(
+    val lastAttemptAt: String?,
+    val lastChargeId: String?,
+    val lastError: String?,
+    val lastPaymentIntentId: String?,
+    val lastProcessedAt: String?,
+    val lastStatus: String?,
+    val methodType: String?
+)
+
 data class RentStripeDetails(
+    val autopay: RentStripeAutopayDetails?,
     val isActive: Boolean,
     val paymentLinkId: String,
     val paymentLinkUrl: String
 )
+
+data class TenantRentPaymentState(
+    val createdAt: String,
+    val lastAutopayAt: String?,
+    val lastAutopayChargeId: String?,
+    val lastAutopayPaymentIntentId: String?,
+    val lastAutopayStatus: String?,
+    val lastAutopaySucceededAt: String?,
+    val lastError: String?,
+    val lastSetupAt: String?,
+    val lastSetupError: String?,
+    val paymentMethodBrand: String?,
+    val paymentMethodLabel: String?,
+    val paymentMethodLast4: String?,
+    val paymentMethodType: String?,
+    val pendingSetupCheckoutSessionId: String?,
+    val pendingSetupMethodType: String?,
+    val selectedMethodType: String,
+    val status: String,
+    val stripeCustomerId: String?,
+    val stripeMandateId: String?,
+    val stripePaymentMethodId: String?,
+    val stripeSetupIntentId: String?,
+    val updatedAt: String
+) {
+    val currentPreferenceTitle: String
+        get() = when {
+            pendingSetupMethodType == "card" -> "Card autopay setup in progress"
+            pendingSetupMethodType == "acss_debit" -> "Bank autopay setup in progress"
+            selectedMethodType == "card" && status == "active" -> "Automatic card payments active"
+            selectedMethodType == "acss_debit" && status == "verification_pending" -> "Bank verification pending"
+            selectedMethodType == "acss_debit" && status == "active" -> "Automatic bank debit active"
+            else -> "Manual monthly payment"
+        }
+
+    val currentPreferenceSubtitle: String
+        get() = when {
+            pendingSetupMethodType == "card" -> "Stripe is waiting for you to finish the hosted card setup."
+            pendingSetupMethodType == "acss_debit" -> "Stripe is waiting for you to finish the hosted bank setup."
+            status == "verification_pending" -> "Stripe may still need bank verification before automatic PAD rent becomes active."
+            status == "active" && !paymentMethodLabel.isNullOrBlank() -> "$paymentMethodLabel will be charged automatically when rent is due."
+            else -> "Pay each rent charge manually when it becomes due."
+        }
+
+    companion object {
+        val Empty = TenantRentPaymentState(
+            createdAt = "",
+            lastAutopayAt = null,
+            lastAutopayChargeId = null,
+            lastAutopayPaymentIntentId = null,
+            lastAutopayStatus = null,
+            lastAutopaySucceededAt = null,
+            lastError = null,
+            lastSetupAt = null,
+            lastSetupError = null,
+            paymentMethodBrand = null,
+            paymentMethodLabel = null,
+            paymentMethodLast4 = null,
+            paymentMethodType = null,
+            pendingSetupCheckoutSessionId = null,
+            pendingSetupMethodType = null,
+            selectedMethodType = "manual",
+            status = "manual",
+            stripeCustomerId = null,
+            stripeMandateId = null,
+            stripePaymentMethodId = null,
+            stripeSetupIntentId = null,
+            updatedAt = ""
+        )
+    }
+}
+
+data class TenantStripeConnectAssociationState(
+    val accountId: String?,
+    val associated: Boolean,
+    val landlordUserId: String?,
+    val linkedAt: String?,
+    val status: String,
+    val stripeCustomerId: String?,
+    val stripeMandateId: String?,
+    val stripePaymentMethodId: String?,
+    val stripeSetupIntentId: String?,
+    val tenantUserId: String?,
+    val type: String?,
+    val updatedAt: String?
+) {
+    companion object {
+        val Empty = TenantStripeConnectAssociationState(
+            accountId = null,
+            associated = false,
+            landlordUserId = null,
+            linkedAt = null,
+            status = "manual",
+            stripeCustomerId = null,
+            stripeMandateId = null,
+            stripePaymentMethodId = null,
+            stripeSetupIntentId = null,
+            tenantUserId = null,
+            type = null,
+            updatedAt = null
+        )
+    }
+}
 
 data class RentInteracDetails(
     val isActive: Boolean,
@@ -98,12 +212,15 @@ data class RentLedgerEntry(
             statusStyle == StatusBadgeStyle.Completed ||
             ((balanceValue ?: amountValue ?: 0.0) <= 0.0 && (balanceValue != null || amountValue != null))
 
+    val isAutopayProcessing: Boolean
+        get() = stripe?.autopay?.lastStatus == "processing" && stripe.autopay.lastChargeId == id
+
     fun hostedCheckoutUrl(kind: PaymentMethodItem.Kind): String? = when (kind) {
-        PaymentMethodItem.Kind.OnlinePayment ->
+        PaymentMethodItem.Kind.ManualMonthly ->
             stripe?.takeIf { it.isActive && it.paymentLinkUrl.isNotBlank() }?.paymentLinkUrl
 
-        PaymentMethodItem.Kind.BankTransfer ->
-            interac?.takeIf { it.isActive && it.requestUrl.isNotBlank() }?.requestUrl
+        PaymentMethodItem.Kind.AutopayCard,
+        PaymentMethodItem.Kind.AutopayBank -> null
     }
 }
 
@@ -208,8 +325,9 @@ data class PaymentMethodItem(
     val kind: Kind
 ) {
     enum class Kind {
-        OnlinePayment,
-        BankTransfer
+        ManualMonthly,
+        AutopayCard,
+        AutopayBank
     }
 }
 
