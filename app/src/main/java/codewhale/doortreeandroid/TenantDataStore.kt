@@ -214,19 +214,34 @@ data class TenantRecord(
 
         private fun stripeConnectAssociation(value: JsonElement?): TenantStripeConnectAssociationState {
             val root = value as? JsonObject ?: return TenantStripeConnectAssociationState.Empty
-            val snapshot = root["association"] as? JsonObject ?: return TenantStripeConnectAssociationState.Empty
+            val snapshot = root["association"] as? JsonObject ?: root
+            val stripeCustomerId = snapshot["stripeCustomerId"].stringValue().ifBlank { null }
+            val stripeMandateId = snapshot["stripeMandateId"].stringValue().ifBlank { null }
+            val stripePaymentMethodId = snapshot["stripePaymentMethodId"].stringValue().ifBlank { null }
+            val stripeSetupIntentId = snapshot["stripeSetupIntentId"].stringValue().ifBlank { null }
+            val hasAssociationPayload =
+                (snapshot["associated"]?.jsonPrimitive?.booleanOrNull ?: false) ||
+                    !stripeCustomerId.isNullOrBlank() ||
+                    !stripeMandateId.isNullOrBlank() ||
+                    !stripePaymentMethodId.isNullOrBlank() ||
+                    !stripeSetupIntentId.isNullOrBlank()
+
+            if (root["association"] == null && !hasAssociationPayload) {
+                return TenantStripeConnectAssociationState.Empty
+            }
+
             val status = snapshot["status"].stringValue().ifBlank { "manual" }
 
             return TenantStripeConnectAssociationState(
                 accountId = snapshot["accountId"].stringValue().ifBlank { null },
-                associated = snapshot["associated"]?.jsonPrimitive?.booleanOrNull ?: false,
+                associated = (snapshot["associated"]?.jsonPrimitive?.booleanOrNull ?: false) || hasAssociationPayload,
                 landlordUserId = snapshot["landlordUserId"].stringValue().ifBlank { null },
                 linkedAt = snapshot["linkedAt"].stringValue().ifBlank { null },
                 status = status,
-                stripeCustomerId = snapshot["stripeCustomerId"].stringValue().ifBlank { null },
-                stripeMandateId = snapshot["stripeMandateId"].stringValue().ifBlank { null },
-                stripePaymentMethodId = snapshot["stripePaymentMethodId"].stringValue().ifBlank { null },
-                stripeSetupIntentId = snapshot["stripeSetupIntentId"].stringValue().ifBlank { null },
+                stripeCustomerId = stripeCustomerId,
+                stripeMandateId = stripeMandateId,
+                stripePaymentMethodId = stripePaymentMethodId,
+                stripeSetupIntentId = stripeSetupIntentId,
                 tenantUserId = snapshot["tenantUserId"].stringValue().ifBlank { null },
                 type = snapshot["type"].stringValue().ifBlank { null },
                 updatedAt = snapshot["updatedAt"].stringValue().ifBlank { null }
@@ -340,53 +355,60 @@ class TenantDataStore(
     val paymentMethods: List<PaymentMethodItem>
         get() {
             val rentPayment = currentRentPayment
-            val hasStripeManagement = stripeConnectAssociation.associated
+            val hasSavedCardProfile = rentPayment.hasSavedCardStripeProfile
+            val hasSavedBankProfile = rentPayment.hasSavedBankStripeProfile
+            val isPendingCardSetup = rentPayment.pendingSetupMethodType == "card" && !hasSavedCardProfile
+            val isPendingBankSetup = rentPayment.pendingSetupMethodType == "acss_debit" && !hasSavedBankProfile
             val manualSubtitle = if (currentRentEntry?.isAutopayProcessing == true) {
-                "Automatic payment is already processing for the current rent charge."
+                L("payments.method.manual.subtitle.autopay_processing")
             } else {
-                "Open Stripe and pay manually each month when rent is due."
+                L("payments.method.manual.subtitle")
             }
             val cardSubtitle = when {
-                rentPayment.pendingSetupMethodType == "card" ->
-                    "Stripe is waiting for you to finish the hosted card setup."
-                hasStripeManagement ->
-                    "A Stripe payment profile is already connected. Open Stripe to manage or replace your automatic card setup."
-                rentPayment.selectedMethodType == "card" && rentPayment.status == "active" && !rentPayment.paymentMethodLabel.isNullOrBlank() ->
-                    "${rentPayment.paymentMethodLabel} is active for automatic monthly rent payments."
+                isPendingCardSetup ->
+                    L("payments.method.card.subtitle.setup_pending")
+                rentPayment.isCardAutopayActive && !rentPayment.paymentMethodLabel.isNullOrBlank() ->
+                    LF("payments.method.card.subtitle.active_with_label", rentPayment.paymentMethodLabel)
+                hasSavedCardProfile && !rentPayment.paymentMethodLabel.isNullOrBlank() ->
+                    LF("payments.method.card.subtitle.saved_with_label", rentPayment.paymentMethodLabel)
+                hasCardRentPaymentManagement ->
+                    L("payments.method.card.subtitle.management_available")
                 else ->
-                    "Save a credit card once for automatic monthly rent payments."
+                    L("payments.method.card.subtitle.setup_default")
             }
             val bankSubtitle = when {
-                rentPayment.pendingSetupMethodType == "acss_debit" ->
-                    "Stripe is waiting for you to finish the hosted bank setup."
-                rentPayment.selectedMethodType == "acss_debit" && rentPayment.status == "verification_pending" ->
-                    "Stripe may still need bank verification before PAD autopay becomes active."
-                hasStripeManagement ->
-                    "A Stripe payment profile is already connected. Open Stripe to manage or replace your automatic bank debit setup."
-                rentPayment.selectedMethodType == "acss_debit" && rentPayment.status == "active" && !rentPayment.paymentMethodLabel.isNullOrBlank() ->
-                    "${rentPayment.paymentMethodLabel} is active for automatic monthly PAD rent payments."
+                isPendingBankSetup ->
+                    L("payments.method.bank.subtitle.setup_pending")
+                rentPayment.isBankAutopayVerificationPending ->
+                    L("payments.method.bank.subtitle.verification_pending")
+                rentPayment.isBankAutopayActive && !rentPayment.paymentMethodLabel.isNullOrBlank() ->
+                    LF("payments.method.bank.subtitle.active_with_label", rentPayment.paymentMethodLabel)
+                hasSavedBankProfile && !rentPayment.paymentMethodLabel.isNullOrBlank() ->
+                    LF("payments.method.bank.subtitle.saved_with_label", rentPayment.paymentMethodLabel)
+                hasBankRentPaymentManagement ->
+                    L("payments.method.bank.subtitle.management_available")
                 else ->
-                    "Save bank details once for automatic monthly PAD rent payments."
+                    L("payments.method.bank.subtitle.setup_default")
             }
 
             return listOf(
                 PaymentMethodItem(
                     id = "manual-monthly",
-                    title = "Manual monthly pay",
+                    title = L("payments.method.manual.title"),
                     subtitle = manualSubtitle,
                     icon = "creditcard.fill",
                     kind = PaymentMethodItem.Kind.ManualMonthly
                 ),
                 PaymentMethodItem(
                     id = "autopay-card",
-                    title = "Automatic card pay",
+                    title = L("payments.method.card.title"),
                     subtitle = cardSubtitle,
                     icon = "creditcard.circle.fill",
                     kind = PaymentMethodItem.Kind.AutopayCard
                 ),
                 PaymentMethodItem(
                     id = "autopay-bank",
-                    title = "Automatic bank debit",
+                    title = L("payments.method.bank.title"),
                     subtitle = bankSubtitle,
                     icon = "building.columns.fill",
                     kind = PaymentMethodItem.Kind.AutopayBank
@@ -399,6 +421,15 @@ class TenantDataStore(
 
     val stripeConnectAssociation: TenantStripeConnectAssociationState
         get() = tenantRecord?.stripeConnectAssociation ?: TenantStripeConnectAssociationState.Empty
+
+    val hasStripeRentPaymentManagement: Boolean
+        get() = tenantRecord?.let(::hasStripeRentPaymentManagement) ?: false
+
+    val hasCardRentPaymentManagement: Boolean
+        get() = tenantRecord?.let(::hasCardRentPaymentManagement) ?: false
+
+    val hasBankRentPaymentManagement: Boolean
+        get() = tenantRecord?.let(::hasBankRentPaymentManagement) ?: false
 
     val paymentHistory: List<PaymentItem>
         get() = rentEntries
@@ -574,16 +605,19 @@ class TenantDataStore(
         loadTenantRecord(uid)
     }
 
-    suspend fun startRentPaymentFlow(kind: PaymentMethodItem.Kind): String? {
-        val uid = activeUid ?: throw IllegalStateException("Sign in again before managing rent payments.")
+    suspend fun startRentPaymentFlow(
+        kind: PaymentMethodItem.Kind,
+        managementMode: Boolean = false
+    ): String? {
+        val uid = activeUid ?: throw IllegalStateException(L("payments.error.sign_in_again"))
 
         return when (kind) {
             PaymentMethodItem.Kind.ManualMonthly -> {
                 val manualCheckoutUrl = hostedCheckoutUrl(PaymentMethodItem.Kind.ManualMonthly)
-                    ?: throw IllegalStateException("Stripe is still preparing the rent payment link.")
+                    ?: throw IllegalStateException(L("payments.error.link_preparing"))
 
                 if (currentRentEntry?.isAutopayProcessing == true) {
-                    throw IllegalStateException("An automatic payment is already processing for this rent charge.")
+                    throw IllegalStateException(L("payments.error.autopay_processing"))
                 }
 
                 submitRentPaymentPreferenceJob(uid, "switch-manual")
@@ -592,14 +626,14 @@ class TenantDataStore(
             }
 
             PaymentMethodItem.Kind.AutopayCard -> {
-                val action = if (stripeConnectAssociation.associated) "manage-card" else "setup-card"
+                val action = if (managementMode) "manage-card" else "setup-card"
                 val result = submitRentPaymentPreferenceJob(uid, action)
                 refresh()
                 result.url
             }
 
             PaymentMethodItem.Kind.AutopayBank -> {
-                val action = if (stripeConnectAssociation.associated) "manage-pad" else "setup-pad"
+                val action = if (managementMode) "manage-pad" else "setup-pad"
                 val result = submitRentPaymentPreferenceJob(uid, action)
                 refresh()
                 result.url
@@ -1052,7 +1086,33 @@ class TenantDataStore(
 
     private fun shouldReconcilePendingRentPaymentSetup(record: TenantRecord): Boolean {
         return !record.rentPayment.pendingSetupCheckoutSessionId.isNullOrBlank() &&
-            record.stripeConnectAssociation.associated.not()
+            hasStripeRentPaymentManagement(record).not()
+    }
+
+    private fun hasStripeRentPaymentManagement(record: TenantRecord): Boolean {
+        return hasCardRentPaymentManagement(record) || hasBankRentPaymentManagement(record)
+    }
+
+    private fun hasCardRentPaymentManagement(record: TenantRecord): Boolean {
+        val rentPayment = record.rentPayment
+
+        if (rentPayment.hasSavedCardStripeProfile) {
+            return true
+        }
+
+        return record.stripeConnectAssociation.hasConnectedCustomerProfile &&
+            (rentPayment.selectedMethodType == "card" || rentPayment.pendingSetupMethodType == "card")
+    }
+
+    private fun hasBankRentPaymentManagement(record: TenantRecord): Boolean {
+        val rentPayment = record.rentPayment
+
+        if (rentPayment.hasSavedBankStripeProfile) {
+            return true
+        }
+
+        return record.stripeConnectAssociation.hasConnectedCustomerProfile &&
+            (rentPayment.selectedMethodType == "acss_debit" || rentPayment.pendingSetupMethodType == "acss_debit")
     }
 
     private fun reset() {

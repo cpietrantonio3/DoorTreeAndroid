@@ -81,22 +81,43 @@ data class TenantRentPaymentState(
 ) {
     val currentPreferenceTitle: String
         get() = when {
-            pendingSetupMethodType == "card" -> "Card autopay setup in progress"
-            pendingSetupMethodType == "acss_debit" -> "Bank autopay setup in progress"
-            selectedMethodType == "card" && status == "active" -> "Automatic card payments active"
-            selectedMethodType == "acss_debit" && status == "verification_pending" -> "Bank verification pending"
-            selectedMethodType == "acss_debit" && status == "active" -> "Automatic bank debit active"
-            else -> "Manual monthly payment"
+            pendingSetupMethodType == "card" -> L("payments.preference.title.card_setup_in_progress")
+            pendingSetupMethodType == "acss_debit" -> L("payments.preference.title.bank_setup_in_progress")
+            selectedMethodType == "card" && status == "active" -> L("payments.preference.title.card_active")
+            selectedMethodType == "acss_debit" && status == "verification_pending" -> L("payments.preference.title.bank_verification_pending")
+            selectedMethodType == "acss_debit" && status == "active" -> L("payments.preference.title.bank_active")
+            else -> L("payments.preference.title.manual")
         }
 
     val currentPreferenceSubtitle: String
         get() = when {
-            pendingSetupMethodType == "card" -> "Stripe is waiting for you to finish the hosted card setup."
-            pendingSetupMethodType == "acss_debit" -> "Stripe is waiting for you to finish the hosted bank setup."
-            status == "verification_pending" -> "Stripe may still need bank verification before automatic PAD rent becomes active."
-            status == "active" && !paymentMethodLabel.isNullOrBlank() -> "$paymentMethodLabel will be charged automatically when rent is due."
-            else -> "Pay each rent charge manually when it becomes due."
+            pendingSetupMethodType == "card" -> L("payments.preference.subtitle.card_setup_in_progress")
+            pendingSetupMethodType == "acss_debit" -> L("payments.preference.subtitle.bank_setup_in_progress")
+            status == "verification_pending" -> L("payments.preference.subtitle.bank_verification_pending")
+            status == "active" && !paymentMethodLabel.isNullOrBlank() -> LF("payments.preference.subtitle.active_with_label", paymentMethodLabel)
+            else -> L("payments.preference.subtitle.manual")
         }
+
+    val hasSavedCardStripeProfile: Boolean
+        get() = paymentMethodType == "card" && hasStoredStripeProfile
+
+    val hasSavedBankStripeProfile: Boolean
+        get() = paymentMethodType == "acss_debit" && hasStoredStripeProfile
+
+    val isCardAutopayActive: Boolean
+        get() = selectedMethodType == "card" && status == "active"
+
+    val isBankAutopayActive: Boolean
+        get() = selectedMethodType == "acss_debit" && status == "active"
+
+    val isBankAutopayVerificationPending: Boolean
+        get() = selectedMethodType == "acss_debit" && status == "verification_pending"
+
+    val hasStoredStripeProfile: Boolean
+        get() = !stripeCustomerId.isNullOrBlank() ||
+            !stripePaymentMethodId.isNullOrBlank() ||
+            !stripeSetupIntentId.isNullOrBlank() ||
+            !stripeMandateId.isNullOrBlank()
 
     companion object {
         val Empty = TenantRentPaymentState(
@@ -156,6 +177,13 @@ data class TenantStripeConnectAssociationState(
             updatedAt = null
         )
     }
+
+    val hasConnectedCustomerProfile: Boolean
+        get() = associated ||
+            !stripeCustomerId.isNullOrBlank() ||
+            !stripePaymentMethodId.isNullOrBlank() ||
+            !stripeSetupIntentId.isNullOrBlank() ||
+            !stripeMandateId.isNullOrBlank()
 }
 
 data class RentInteracDetails(

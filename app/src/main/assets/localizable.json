@@ -6315,6 +6315,1455 @@
         }
       }
     },
+    "payments.preference.title.card_setup_in_progress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card autopay setup in progress"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuration du paiement auto par carte en cours"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuration du paiement auto par carte en cours"
+          }
+        }
+      }
+    },
+    "payments.preference.title.bank_setup_in_progress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bank autopay setup in progress"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuration du paiement auto bancaire en cours"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuration du paiement auto bancaire en cours"
+          }
+        }
+      }
+    },
+    "payments.preference.title.card_active": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic card payments active"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paiements automatiques par carte actifs"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paiements automatiques par carte actifs"
+          }
+        }
+      }
+    },
+    "payments.preference.title.bank_verification_pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bank verification pending"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verification bancaire en attente"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verification bancaire en attente"
+          }
+        }
+      }
+    },
+    "payments.preference.title.bank_active": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic bank debit active"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prelevement bancaire automatique actif"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prelevement bancaire automatique actif"
+          }
+        }
+      }
+    },
+    "payments.preference.title.manual": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual monthly payment"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paiement mensuel manuel"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paiement mensuel manuel"
+          }
+        }
+      }
+    },
+    "payments.preference.subtitle.card_setup_in_progress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe is waiting for you to finish the hosted card setup."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe attend que vous terminiez la configuration hebergee de la carte."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe attend que vous terminiez la configuration hebergee de la carte."
+          }
+        }
+      }
+    },
+    "payments.preference.subtitle.bank_setup_in_progress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe is waiting for you to finish the hosted bank setup."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe attend que vous terminiez la configuration hebergee du compte bancaire."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe attend que vous terminiez la configuration hebergee du compte bancaire."
+          }
+        }
+      }
+    },
+    "payments.preference.subtitle.bank_verification_pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe may still need bank verification before automatic PAD rent becomes active."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe pourrait encore avoir besoin d'une verification bancaire avant que le PAD automatique soit actif."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe pourrait encore avoir besoin d'une verification bancaire avant que le PAD automatique soit actif."
+          }
+        }
+      }
+    },
+    "payments.preference.subtitle.active_with_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ will be charged automatically when rent is due."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ sera preleve automatiquement a l'echeance du loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ sera preleve automatiquement a l'echeance du loyer."
+          }
+        }
+      }
+    },
+    "payments.preference.subtitle.manual": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pay each rent charge manually when it becomes due."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payez chaque loyer manuellement lorsqu'il devient exigible."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payez chaque loyer manuellement lorsqu'il devient exigible."
+          }
+        }
+      }
+    },
+    "payments.method.manual.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manual monthly pay"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paiement mensuel manuel"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paiement mensuel manuel"
+          }
+        }
+      }
+    },
+    "payments.method.manual.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Stripe and pay manually each month when rent is due."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez Stripe et payez manuellement chaque mois lorsque le loyer est exigible."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez Stripe et payez manuellement chaque mois lorsque le loyer est exigible."
+          }
+        }
+      }
+    },
+    "payments.method.manual.subtitle.autopay_processing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic payment is already processing for the current rent charge."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un paiement automatique est deja en cours pour ce loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un paiement automatique est deja en cours pour ce loyer."
+          }
+        }
+      }
+    },
+    "payments.method.card.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic card pay"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paiement automatique par carte"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paiement automatique par carte"
+          }
+        }
+      }
+    },
+    "payments.method.card.subtitle.setup_pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe is waiting for you to finish the hosted card setup."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe attend que vous terminiez la configuration hebergee de la carte."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe attend que vous terminiez la configuration hebergee de la carte."
+          }
+        }
+      }
+    },
+    "payments.method.card.subtitle.active_with_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is active for automatic monthly rent payments."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est active pour les paiements automatiques mensuels du loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est active pour les paiements automatiques mensuels du loyer."
+          }
+        }
+      }
+    },
+    "payments.method.card.subtitle.saved_with_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is already saved. Select this option to use it again for automatic monthly rent payments."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja enregistree. Selectionnez cette option pour la reutiliser pour les paiements automatiques mensuels du loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja enregistree. Selectionnez cette option pour la reutiliser pour les paiements automatiques mensuels du loyer."
+          }
+        }
+      }
+    },
+    "payments.method.card.subtitle.management_available": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A saved Stripe card profile is available. Open Stripe only if you need to replace the card on file."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un profil de carte Stripe enregistre est disponible. Ouvrez Stripe seulement si vous devez remplacer la carte au dossier."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un profil de carte Stripe enregistre est disponible. Ouvrez Stripe seulement si vous devez remplacer la carte au dossier."
+          }
+        }
+      }
+    },
+    "payments.method.card.subtitle.setup_default": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save a credit card once for automatic monthly rent payments."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrez une carte une seule fois pour les paiements automatiques mensuels du loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrez une carte une seule fois pour les paiements automatiques mensuels du loyer."
+          }
+        }
+      }
+    },
+    "payments.method.bank.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic bank debit"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prelevement bancaire automatique"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prelevement bancaire automatique"
+          }
+        }
+      }
+    },
+    "payments.method.bank.subtitle.setup_pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe is waiting for you to finish the hosted bank setup."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe attend que vous terminiez la configuration hebergee du compte bancaire."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe attend que vous terminiez la configuration hebergee du compte bancaire."
+          }
+        }
+      }
+    },
+    "payments.method.bank.subtitle.verification_pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe may still need bank verification before PAD autopay becomes active."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe pourrait encore avoir besoin d'une verification bancaire avant que le PAD automatique soit actif."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe pourrait encore avoir besoin d'une verification bancaire avant que le PAD automatique soit actif."
+          }
+        }
+      }
+    },
+    "payments.method.bank.subtitle.active_with_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is active for automatic monthly PAD rent payments."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est actif pour les paiements automatiques mensuels PAD du loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est actif pour les paiements automatiques mensuels PAD du loyer."
+          }
+        }
+      }
+    },
+    "payments.method.bank.subtitle.saved_with_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is already saved. Select this option to use it again for automatic monthly PAD rent payments."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja enregistre. Selectionnez cette option pour le reutiliser pour les paiements automatiques mensuels PAD du loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja enregistre. Selectionnez cette option pour le reutiliser pour les paiements automatiques mensuels PAD du loyer."
+          }
+        }
+      }
+    },
+    "payments.method.bank.subtitle.management_available": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A saved Stripe bank profile is available. Open Stripe only if you need to replace the account on file."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un profil bancaire Stripe enregistre est disponible. Ouvrez Stripe seulement si vous devez remplacer le compte au dossier."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un profil bancaire Stripe enregistre est disponible. Ouvrez Stripe seulement si vous devez remplacer le compte au dossier."
+          }
+        }
+      }
+    },
+    "payments.method.bank.subtitle.setup_default": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save bank details once for automatic monthly PAD rent payments."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrez les renseignements bancaires une seule fois pour les paiements automatiques mensuels PAD du loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrez les renseignements bancaires une seule fois pour les paiements automatiques mensuels PAD du loyer."
+          }
+        }
+      }
+    },
+    "payments.error.sign_in_again": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in again before managing rent payments."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnectez-vous avant de gerer les paiements de loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnectez-vous avant de gerer les paiements de loyer."
+          }
+        }
+      }
+    },
+    "payments.error.link_preparing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe is still preparing the rent payment link."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe prepare encore le lien de paiement du loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stripe prepare encore le lien de paiement du loyer."
+          }
+        }
+      }
+    },
+    "payments.error.autopay_processing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An automatic payment is already processing for this rent charge."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un paiement automatique est deja en cours pour ce loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un paiement automatique est deja en cours pour ce loyer."
+          }
+        }
+      }
+    },
+    "payments.action.working": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Working..."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traitement..."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traitement..."
+          }
+        }
+      }
+    },
+    "payments.action.continue_to_stripe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue to Stripe"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer vers Stripe"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer vers Stripe"
+          }
+        }
+      }
+    },
+    "payments.action.continue_card_setup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue Card Setup"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer la configuration de la carte"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer la configuration de la carte"
+          }
+        }
+      }
+    },
+    "payments.action.manage_saved_card": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage Saved Card"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerer la carte enregistree"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerer la carte enregistree"
+          }
+        }
+      }
+    },
+    "payments.action.use_saved_card": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Saved Card Autopay"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utiliser la carte enregistree"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utiliser la carte enregistree"
+          }
+        }
+      }
+    },
+    "payments.action.setup_card": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set Up Card Autopay"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configurer le paiement auto par carte"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configurer le paiement auto par carte"
+          }
+        }
+      }
+    },
+    "payments.action.continue_bank_setup": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue Bank Setup"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer la configuration bancaire"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer la configuration bancaire"
+          }
+        }
+      }
+    },
+    "payments.action.manage_saved_bank": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage Saved Bank"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerer le compte bancaire enregistre"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerer le compte bancaire enregistre"
+          }
+        }
+      }
+    },
+    "payments.action.use_saved_bank": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Saved Bank Autopay"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utiliser le compte bancaire enregistre"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utiliser le compte bancaire enregistre"
+          }
+        }
+      }
+    },
+    "payments.action.setup_bank": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set Up Bank Autopay"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configurer le paiement auto bancaire"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configurer le paiement auto bancaire"
+          }
+        }
+      }
+    },
+    "payments.message.card.active_with_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is already on file for automatic rent payments. Open Stripe only if you want to replace it."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja au dossier pour les paiements automatiques du loyer. Ouvrez Stripe seulement si vous voulez la remplacer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja au dossier pour les paiements automatiques du loyer. Ouvrez Stripe seulement si vous voulez la remplacer."
+          }
+        }
+      }
+    },
+    "payments.message.card.active_default": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A saved card is already on file for automatic rent payments. Open Stripe only if you want to replace it."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une carte enregistree est deja au dossier pour les paiements automatiques du loyer. Ouvrez Stripe seulement si vous voulez la remplacer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une carte enregistree est deja au dossier pour les paiements automatiques du loyer. Ouvrez Stripe seulement si vous voulez la remplacer."
+          }
+        }
+      }
+    },
+    "payments.message.card.saved_with_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is already saved. Selecting this option will reuse it for automatic monthly rent payments."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja enregistree. En choisissant cette option, vous la reutiliserez pour les paiements automatiques mensuels du loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja enregistree. En choisissant cette option, vous la reutiliserez pour les paiements automatiques mensuels du loyer."
+          }
+        }
+      }
+    },
+    "payments.message.card.saved_default": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A saved card is already available. Selecting this option will reuse it for automatic monthly rent payments."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une carte enregistree est deja disponible. En choisissant cette option, vous la reutiliserez pour les paiements automatiques mensuels du loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une carte enregistree est deja disponible. En choisissant cette option, vous la reutiliserez pour les paiements automatiques mensuels du loyer."
+          }
+        }
+      }
+    },
+    "payments.message.card.management_available": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A saved Stripe card profile is already available. Open Stripe only if you need to replace the card on file."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un profil de carte Stripe enregistre est deja disponible. Ouvrez Stripe seulement si vous devez remplacer la carte au dossier."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un profil de carte Stripe enregistre est deja disponible. Ouvrez Stripe seulement si vous devez remplacer la carte au dossier."
+          }
+        }
+      }
+    },
+    "payments.message.bank.active_with_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is already on file for automatic monthly PAD rent payments. Open Stripe only if you want to replace the saved bank account."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja au dossier pour les paiements automatiques mensuels PAD du loyer. Ouvrez Stripe seulement si vous voulez remplacer le compte bancaire enregistre."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja au dossier pour les paiements automatiques mensuels PAD du loyer. Ouvrez Stripe seulement si vous voulez remplacer le compte bancaire enregistre."
+          }
+        }
+      }
+    },
+    "payments.message.bank.active_default": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A saved bank account is already on file for automatic monthly PAD rent payments. Open Stripe only if you want to replace it."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un compte bancaire enregistre est deja au dossier pour les paiements automatiques mensuels PAD du loyer. Ouvrez Stripe seulement si vous voulez le remplacer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un compte bancaire enregistre est deja au dossier pour les paiements automatiques mensuels PAD du loyer. Ouvrez Stripe seulement si vous voulez le remplacer."
+          }
+        }
+      }
+    },
+    "payments.message.bank.saved_with_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is already saved. Selecting this option will reuse the saved PAD setup without reconnecting the bank."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja enregistre. En choisissant cette option, vous reutiliserez la configuration PAD enregistree sans reconnecter la banque."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja enregistre. En choisissant cette option, vous reutiliserez la configuration PAD enregistree sans reconnecter la banque."
+          }
+        }
+      }
+    },
+    "payments.message.bank.saved_default": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A saved bank account is already available. Selecting this option will reuse the saved PAD setup without reconnecting the bank."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un compte bancaire enregistre est deja disponible. En choisissant cette option, vous reutiliserez la configuration PAD enregistree sans reconnecter la banque."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un compte bancaire enregistre est deja disponible. En choisissant cette option, vous reutiliserez la configuration PAD enregistree sans reconnecter la banque."
+          }
+        }
+      }
+    },
+    "payments.message.bank.management_available": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A saved Stripe bank profile is already available. Open Stripe only if you need to replace the account on file."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un profil bancaire Stripe enregistre est deja disponible. Ouvrez Stripe seulement si vous devez remplacer le compte au dossier."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un profil bancaire Stripe enregistre est deja disponible. Ouvrez Stripe seulement si vous devez remplacer le compte au dossier."
+          }
+        }
+      }
+    },
+    "payments.message.saved_card_activated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved card is now active for automatic rent payments."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La carte enregistree est maintenant active pour les paiements automatiques du loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La carte enregistree est maintenant active pour les paiements automatiques du loyer."
+          }
+        }
+      }
+    },
+    "payments.message.saved_bank_verification_pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved bank account still needs Stripe verification before automatic PAD rent can start."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le compte bancaire enregistre doit encore etre verifie par Stripe avant que les paiements PAD automatiques puissent commencer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le compte bancaire enregistre doit encore etre verifie par Stripe avant que les paiements PAD automatiques puissent commencer."
+          }
+        }
+      }
+    },
+    "payments.message.saved_bank_activated": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The saved bank account is now active for automatic PAD rent payments."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le compte bancaire enregistre est maintenant actif pour les paiements automatiques PAD du loyer."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le compte bancaire enregistre est maintenant actif pour les paiements automatiques PAD du loyer."
+          }
+        }
+      }
+    },
+    "payments.alert.saved_card.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved card already on file"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carte enregistree deja au dossier"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carte enregistree deja au dossier"
+          }
+        }
+      }
+    },
+    "payments.alert.saved_card.message_with_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is already on file for automatic rent payments. If you want to change it, Stripe will ask you for a replacement card."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja au dossier pour les paiements automatiques du loyer. Si vous voulez la changer, Stripe vous demandera une carte de remplacement."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja au dossier pour les paiements automatiques du loyer. Si vous voulez la changer, Stripe vous demandera une carte de remplacement."
+          }
+        }
+      }
+    },
+    "payments.alert.saved_card.message_default": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A saved card is already on file for automatic rent payments. If you want to change it, Stripe will ask you for a replacement card."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une carte enregistree est deja au dossier pour les paiements automatiques du loyer. Si vous voulez la changer, Stripe vous demandera une carte de remplacement."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une carte enregistree est deja au dossier pour les paiements automatiques du loyer. Si vous voulez la changer, Stripe vous demandera une carte de remplacement."
+          }
+        }
+      }
+    },
+    "payments.alert.saved_card.confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace Saved Card"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplacer la carte enregistree"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplacer la carte enregistree"
+          }
+        }
+      }
+    },
+    "payments.alert.saved_card.cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep Current Card"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserver la carte actuelle"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserver la carte actuelle"
+          }
+        }
+      }
+    },
+    "payments.alert.saved_bank.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved bank already on file"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compte bancaire enregistre deja au dossier"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compte bancaire enregistre deja au dossier"
+          }
+        }
+      }
+    },
+    "payments.alert.saved_bank.message_with_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is already on file for automatic PAD rent payments. Stripe does not expose the current bank details here. If you want to change the account, Stripe will ask you to replace it with a new one."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja au dossier pour les paiements automatiques PAD du loyer. Stripe n'affiche pas les details bancaires actuels ici. Si vous voulez changer le compte, Stripe vous demandera de le remplacer par un nouveau."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est deja au dossier pour les paiements automatiques PAD du loyer. Stripe n'affiche pas les details bancaires actuels ici. Si vous voulez changer le compte, Stripe vous demandera de le remplacer par un nouveau."
+          }
+        }
+      }
+    },
+    "payments.alert.saved_bank.message_default": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A saved bank account is already on file for automatic PAD rent payments. Stripe does not expose the current bank details here. If you want to change the account, Stripe will ask you to replace it with a new one."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un compte bancaire enregistre est deja au dossier pour les paiements automatiques PAD du loyer. Stripe n'affiche pas les details bancaires actuels ici. Si vous voulez changer le compte, Stripe vous demandera de le remplacer par un nouveau."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un compte bancaire enregistre est deja au dossier pour les paiements automatiques PAD du loyer. Stripe n'affiche pas les details bancaires actuels ici. Si vous voulez changer le compte, Stripe vous demandera de le remplacer par un nouveau."
+          }
+        }
+      }
+    },
+    "payments.alert.saved_bank.confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace Saved Bank"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplacer le compte bancaire enregistre"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remplacer le compte bancaire enregistre"
+          }
+        }
+      }
+    },
+    "payments.alert.saved_bank.cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep Current Bank"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserver le compte bancaire actuel"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserver le compte bancaire actuel"
+          }
+        }
+      }
+    },
     "payments.interac.unavailable": {
       "extractionState": "manual",
       "localizations": {

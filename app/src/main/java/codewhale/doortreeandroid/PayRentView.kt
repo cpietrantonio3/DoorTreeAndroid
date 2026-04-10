@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,6 +44,43 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
     var checkoutRequest by remember { mutableStateOf<HostedCheckoutRequest?>(null) }
     var isStartingPaymentFlow by remember { mutableStateOf(false) }
     var paymentFlowMessage by remember { mutableStateOf<String?>(null) }
+    var managementPrompt by remember { mutableStateOf<SavedPaymentManagementPrompt?>(null) }
+
+    suspend fun continuePaymentFlow(
+        kind: PaymentMethodItem.Kind,
+        managementMode: Boolean = false
+    ) {
+        paymentFlowMessage = null
+        isStartingPaymentFlow = true
+
+        try {
+            val url = tenantDataStore.startRentPaymentFlow(kind, managementMode)
+            isStartingPaymentFlow = false
+
+            if (!url.isNullOrBlank()) {
+                val selectedMethod = paymentMethods.firstOrNull { it.kind == kind }
+                checkoutRequest = HostedCheckoutRequest(
+                    url = url,
+                    title = selectedMethod?.title ?: L("tab.payments")
+                )
+            } else {
+                val refreshedRentPayment = tenantDataStore.currentRentPayment
+                paymentFlowMessage = when (kind) {
+                    PaymentMethodItem.Kind.ManualMonthly -> null
+                    PaymentMethodItem.Kind.AutopayCard -> L("payments.message.saved_card_activated")
+                    PaymentMethodItem.Kind.AutopayBank ->
+                        if (refreshedRentPayment.isBankAutopayVerificationPending) {
+                            L("payments.message.saved_bank_verification_pending")
+                        } else {
+                            L("payments.message.saved_bank_activated")
+                        }
+                }
+            }
+        } catch (error: Throwable) {
+            isStartingPaymentFlow = false
+            paymentFlowMessage = error.message
+        }
+    }
 
     LaunchedEffect(paymentMethods) {
         if (selectedMethodId == null || paymentMethods.none { it.id == selectedMethodId }) {
@@ -121,29 +160,13 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
                 enabled = canStartPaymentFlow(tenantDataStore, selectedMethodId) && !isStartingPaymentFlow,
                 onClick = {
                     val selectedMethod = paymentMethods.firstOrNull { it.id == selectedMethodId } ?: return@GradientButton
-                    scope.launch {
+                    val prompt = managementPromptFor(tenantDataStore, selectedMethod.kind)
+                    if (prompt != null) {
                         paymentFlowMessage = null
-                        isStartingPaymentFlow = true
-
-                        try {
-                            val url = tenantDataStore.startRentPaymentFlow(selectedMethod.kind)
-                            isStartingPaymentFlow = false
-
-                            if (!url.isNullOrBlank()) {
-                                checkoutRequest = HostedCheckoutRequest(
-                                    url = url,
-                                    title = selectedMethod.title
-                                )
-                            } else {
-                                paymentFlowMessage = when (selectedMethod.kind) {
-                                    PaymentMethodItem.Kind.ManualMonthly -> null
-                                    PaymentMethodItem.Kind.AutopayCard -> "Card autopay is already active for your rent."
-                                    PaymentMethodItem.Kind.AutopayBank -> "Bank autopay is already active for your rent."
-                                }
-                            }
-                        } catch (error: Throwable) {
-                            isStartingPaymentFlow = false
-                            paymentFlowMessage = error.message
+                        managementPrompt = prompt
+                    } else {
+                        scope.launch {
+                            continuePaymentFlow(selectedMethod.kind)
                         }
                     }
                 }
@@ -217,6 +240,35 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
             }
         )
     }
+
+    managementPrompt?.let { prompt ->
+        AlertDialog(
+            onDismissRequest = { managementPrompt = null },
+            title = {
+                Text(text = prompt.title)
+            },
+            text = {
+                Text(text = prompt.message)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        managementPrompt = null
+                        scope.launch {
+                            continuePaymentFlow(prompt.kind, managementMode = true)
+                        }
+                    }
+                ) {
+                    Text(text = prompt.confirmTitle)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { managementPrompt = null }) {
+                    Text(text = prompt.cancelTitle)
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -264,6 +316,14 @@ private data class HostedCheckoutRequest(
     val title: String
 )
 
+private data class SavedPaymentManagementPrompt(
+    val cancelTitle: String,
+    val confirmTitle: String,
+    val kind: PaymentMethodItem.Kind,
+    val message: String,
+    val title: String
+)
+
 private fun selectedHostedCheckoutUrl(
     tenantDataStore: TenantDataStore,
     selectedMethodId: String?
@@ -296,32 +356,37 @@ private fun primaryActionTitle(
     isStartingPaymentFlow: Boolean
 ): String {
     if (isStartingPaymentFlow) {
-        return "Working..."
+        return L("payments.action.working")
     }
 
     val selectedMethod = tenantDataStore.paymentMethods.firstOrNull { it.id == selectedMethodId }
     val currentRentPayment = tenantDataStore.currentRentPayment
-    val hasStripeManagement = tenantDataStore.stripeConnectAssociation.associated
+    val isPendingCardSetup = currentRentPayment.pendingSetupMethodType == "card" && !currentRentPayment.hasSavedCardStripeProfile
+    val isPendingBankSetup = currentRentPayment.pendingSetupMethodType == "acss_debit" && !currentRentPayment.hasSavedBankStripeProfile
 
     return when (selectedMethod?.kind) {
-        PaymentMethodItem.Kind.ManualMonthly -> "Continue to Stripe"
+        PaymentMethodItem.Kind.ManualMonthly -> L("payments.action.continue_to_stripe")
         PaymentMethodItem.Kind.AutopayCard -> {
-            if (currentRentPayment.pendingSetupMethodType == "card") {
-                "Continue Card Setup"
-            } else if (hasStripeManagement) {
-                "Manage Card Autopay"
+            if (isPendingCardSetup) {
+                L("payments.action.continue_card_setup")
+            } else if (currentRentPayment.isCardAutopayActive) {
+                L("payments.action.manage_saved_card")
+            } else if (currentRentPayment.hasSavedCardStripeProfile) {
+                L("payments.action.use_saved_card")
             } else {
-                "Set Up Card Autopay"
+                L("payments.action.setup_card")
             }
         }
 
         PaymentMethodItem.Kind.AutopayBank -> {
-            if (currentRentPayment.pendingSetupMethodType == "acss_debit") {
-                "Continue Bank Setup"
-            } else if (hasStripeManagement) {
-                "Manage Bank Autopay"
+            if (isPendingBankSetup) {
+                L("payments.action.continue_bank_setup")
+            } else if (currentRentPayment.isBankAutopayActive || currentRentPayment.isBankAutopayVerificationPending) {
+                L("payments.action.manage_saved_bank")
+            } else if (currentRentPayment.hasSavedBankStripeProfile) {
+                L("payments.action.use_saved_bank")
             } else {
-                "Set Up Bank Autopay"
+                L("payments.action.setup_bank")
             }
         }
 
@@ -343,34 +408,116 @@ private fun paymentStatusMessage(
     currentRentPayment.lastError?.takeIf { it.isNotBlank() }?.let { return it }
 
     val selectedMethod = tenantDataStore.paymentMethods.firstOrNull { it.id == selectedMethodId } ?: return null
+    val isPendingCardSetup = currentRentPayment.pendingSetupMethodType == "card" && !currentRentPayment.hasSavedCardStripeProfile
+    val isPendingBankSetup = currentRentPayment.pendingSetupMethodType == "acss_debit" && !currentRentPayment.hasSavedBankStripeProfile
     return when (selectedMethod.kind) {
         PaymentMethodItem.Kind.ManualMonthly -> when {
             tenantDataStore.currentRentEntry?.isAutopayProcessing == true ->
-                "An automatic payment is already processing for the current rent charge."
+                L("payments.error.autopay_processing")
 
             selectedHostedCheckoutUrl(tenantDataStore, selectedMethodId).isNullOrBlank() ->
-                "Stripe is still preparing the rent payment link."
+                L("payments.error.link_preparing")
 
             else -> null
         }
 
         PaymentMethodItem.Kind.AutopayCard -> {
-            if (currentRentPayment.pendingSetupMethodType == "card") {
-                "Stripe is waiting for you to finish the hosted card setup."
+            if (isPendingCardSetup) {
+                L("payments.method.card.subtitle.setup_pending")
+            } else if (currentRentPayment.isCardAutopayActive) {
+                if (!currentRentPayment.paymentMethodLabel.isNullOrBlank()) {
+                    LF("payments.message.card.active_with_label", currentRentPayment.paymentMethodLabel)
+                } else {
+                    L("payments.message.card.active_default")
+                }
+            } else if (currentRentPayment.hasSavedCardStripeProfile) {
+                if (!currentRentPayment.paymentMethodLabel.isNullOrBlank()) {
+                    LF("payments.message.card.saved_with_label", currentRentPayment.paymentMethodLabel)
+                } else {
+                    L("payments.message.card.saved_default")
+                }
+            } else if (tenantDataStore.hasCardRentPaymentManagement) {
+                L("payments.message.card.management_available")
             } else {
                 null
             }
         }
 
         PaymentMethodItem.Kind.AutopayBank -> when {
-            currentRentPayment.pendingSetupMethodType == "acss_debit" ->
-                "Stripe is waiting for you to finish the hosted bank setup."
+            isPendingBankSetup ->
+                L("payments.method.bank.subtitle.setup_pending")
 
-            currentRentPayment.selectedMethodType == "acss_debit" &&
-                currentRentPayment.status == "verification_pending" ->
-                "Stripe may still need bank verification before automatic PAD payments become active."
+            currentRentPayment.isBankAutopayVerificationPending ->
+                L("payments.method.bank.subtitle.verification_pending")
+
+            currentRentPayment.isBankAutopayActive ->
+                if (!currentRentPayment.paymentMethodLabel.isNullOrBlank()) {
+                    LF("payments.message.bank.active_with_label", currentRentPayment.paymentMethodLabel)
+                } else {
+                    L("payments.message.bank.active_default")
+                }
+
+            currentRentPayment.hasSavedBankStripeProfile ->
+                if (!currentRentPayment.paymentMethodLabel.isNullOrBlank()) {
+                    LF("payments.message.bank.saved_with_label", currentRentPayment.paymentMethodLabel)
+                } else {
+                    L("payments.message.bank.saved_default")
+                }
+
+            tenantDataStore.hasBankRentPaymentManagement ->
+                L("payments.message.bank.management_available")
 
             else -> null
+        }
+    }
+}
+
+private fun managementPromptFor(
+    tenantDataStore: TenantDataStore,
+    kind: PaymentMethodItem.Kind
+): SavedPaymentManagementPrompt? {
+    val currentRentPayment = tenantDataStore.currentRentPayment
+
+    return when (kind) {
+        PaymentMethodItem.Kind.ManualMonthly -> null
+        PaymentMethodItem.Kind.AutopayCard -> {
+            if (!currentRentPayment.isCardAutopayActive) {
+                return null
+            }
+
+            val message = if (!currentRentPayment.paymentMethodLabel.isNullOrBlank()) {
+                LF("payments.alert.saved_card.message_with_label", currentRentPayment.paymentMethodLabel)
+            } else {
+                L("payments.alert.saved_card.message_default")
+            }
+
+            SavedPaymentManagementPrompt(
+                cancelTitle = L("payments.alert.saved_card.cancel"),
+                confirmTitle = L("payments.alert.saved_card.confirm"),
+                kind = kind,
+                message = message,
+                title = L("payments.alert.saved_card.title")
+            )
+        }
+
+        PaymentMethodItem.Kind.AutopayBank -> {
+            if (!currentRentPayment.isBankAutopayActive && !currentRentPayment.isBankAutopayVerificationPending) {
+                return null
+            }
+
+            val message = if (!currentRentPayment.paymentMethodLabel.isNullOrBlank()) {
+                LF("payments.alert.saved_bank.message_with_label", currentRentPayment.paymentMethodLabel)
+            } else {
+                L("payments.alert.saved_bank.message_default")
+            }
+
+            SavedPaymentManagementPrompt(
+                cancelTitle = L("payments.alert.saved_bank.cancel"),
+                confirmTitle = L("payments.alert.saved_bank.confirm"),
+                kind = kind,
+                message = message,
+                title = L("payments.alert.saved_bank.title")
+            )
         }
     }
 }
