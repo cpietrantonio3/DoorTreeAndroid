@@ -361,17 +361,19 @@ private fun primaryActionTitle(
 
     val selectedMethod = tenantDataStore.paymentMethods.firstOrNull { it.id == selectedMethodId }
     val currentRentPayment = tenantDataStore.currentRentPayment
-    val isPendingCardSetup = currentRentPayment.pendingSetupMethodType == "card" && !currentRentPayment.hasSavedCardStripeProfile
-    val isPendingBankSetup = currentRentPayment.pendingSetupMethodType == "acss_debit" && !currentRentPayment.hasSavedBankStripeProfile
+    val hasSavedCardProfile = tenantDataStore.hasSavedCardRentPaymentProfile
+    val hasSavedBankProfile = tenantDataStore.hasSavedBankRentPaymentProfile
+    val isPendingCardSetup = currentRentPayment.pendingSetupMethodType == "card" && !hasSavedCardProfile
+    val isPendingBankSetup = currentRentPayment.pendingSetupMethodType == "acss_debit" && !hasSavedBankProfile
 
     return when (selectedMethod?.kind) {
         PaymentMethodItem.Kind.ManualMonthly -> L("payments.action.continue_to_stripe")
         PaymentMethodItem.Kind.AutopayCard -> {
             if (isPendingCardSetup) {
                 L("payments.action.continue_card_setup")
-            } else if (currentRentPayment.isCardAutopayActive) {
+            } else if (tenantDataStore.isCardRentPaymentActive) {
                 L("payments.action.manage_saved_card")
-            } else if (currentRentPayment.hasSavedCardStripeProfile) {
+            } else if (hasSavedCardProfile) {
                 L("payments.action.use_saved_card")
             } else {
                 L("payments.action.setup_card")
@@ -381,9 +383,9 @@ private fun primaryActionTitle(
         PaymentMethodItem.Kind.AutopayBank -> {
             if (isPendingBankSetup) {
                 L("payments.action.continue_bank_setup")
-            } else if (currentRentPayment.isBankAutopayActive || currentRentPayment.isBankAutopayVerificationPending) {
+            } else if (tenantDataStore.isBankRentPaymentActive || tenantDataStore.isBankRentPaymentVerificationPending) {
                 L("payments.action.manage_saved_bank")
-            } else if (currentRentPayment.hasSavedBankStripeProfile) {
+            } else if (hasSavedBankProfile) {
                 L("payments.action.use_saved_bank")
             } else {
                 L("payments.action.setup_bank")
@@ -408,8 +410,12 @@ private fun paymentStatusMessage(
     currentRentPayment.lastError?.takeIf { it.isNotBlank() }?.let { return it }
 
     val selectedMethod = tenantDataStore.paymentMethods.firstOrNull { it.id == selectedMethodId } ?: return null
-    val isPendingCardSetup = currentRentPayment.pendingSetupMethodType == "card" && !currentRentPayment.hasSavedCardStripeProfile
-    val isPendingBankSetup = currentRentPayment.pendingSetupMethodType == "acss_debit" && !currentRentPayment.hasSavedBankStripeProfile
+    val hasSavedCardProfile = tenantDataStore.hasSavedCardRentPaymentProfile
+    val hasSavedBankProfile = tenantDataStore.hasSavedBankRentPaymentProfile
+    val cardLabel = tenantDataStore.savedCardPaymentMethodLabel
+    val bankLabel = tenantDataStore.savedBankPaymentMethodLabel
+    val isPendingCardSetup = currentRentPayment.pendingSetupMethodType == "card" && !hasSavedCardProfile
+    val isPendingBankSetup = currentRentPayment.pendingSetupMethodType == "acss_debit" && !hasSavedBankProfile
     return when (selectedMethod.kind) {
         PaymentMethodItem.Kind.ManualMonthly -> when {
             tenantDataStore.currentRentEntry?.isAutopayProcessing == true ->
@@ -424,15 +430,15 @@ private fun paymentStatusMessage(
         PaymentMethodItem.Kind.AutopayCard -> {
             if (isPendingCardSetup) {
                 L("payments.method.card.subtitle.setup_pending")
-            } else if (currentRentPayment.isCardAutopayActive) {
-                if (!currentRentPayment.paymentMethodLabel.isNullOrBlank()) {
-                    LF("payments.message.card.active_with_label", currentRentPayment.paymentMethodLabel)
+            } else if (tenantDataStore.isCardRentPaymentActive) {
+                if (!cardLabel.isNullOrBlank()) {
+                    LF("payments.message.card.active_with_label", cardLabel)
                 } else {
                     L("payments.message.card.active_default")
                 }
-            } else if (currentRentPayment.hasSavedCardStripeProfile) {
-                if (!currentRentPayment.paymentMethodLabel.isNullOrBlank()) {
-                    LF("payments.message.card.saved_with_label", currentRentPayment.paymentMethodLabel)
+            } else if (hasSavedCardProfile) {
+                if (!cardLabel.isNullOrBlank()) {
+                    LF("payments.message.card.saved_with_label", cardLabel)
                 } else {
                     L("payments.message.card.saved_default")
                 }
@@ -447,19 +453,19 @@ private fun paymentStatusMessage(
             isPendingBankSetup ->
                 L("payments.method.bank.subtitle.setup_pending")
 
-            currentRentPayment.isBankAutopayVerificationPending ->
+            tenantDataStore.isBankRentPaymentVerificationPending ->
                 L("payments.method.bank.subtitle.verification_pending")
 
-            currentRentPayment.isBankAutopayActive ->
-                if (!currentRentPayment.paymentMethodLabel.isNullOrBlank()) {
-                    LF("payments.message.bank.active_with_label", currentRentPayment.paymentMethodLabel)
+            tenantDataStore.isBankRentPaymentActive ->
+                if (!bankLabel.isNullOrBlank()) {
+                    LF("payments.message.bank.active_with_label", bankLabel)
                 } else {
                     L("payments.message.bank.active_default")
                 }
 
-            currentRentPayment.hasSavedBankStripeProfile ->
-                if (!currentRentPayment.paymentMethodLabel.isNullOrBlank()) {
-                    LF("payments.message.bank.saved_with_label", currentRentPayment.paymentMethodLabel)
+            hasSavedBankProfile ->
+                if (!bankLabel.isNullOrBlank()) {
+                    LF("payments.message.bank.saved_with_label", bankLabel)
                 } else {
                     L("payments.message.bank.saved_default")
                 }
@@ -481,12 +487,12 @@ private fun managementPromptFor(
     return when (kind) {
         PaymentMethodItem.Kind.ManualMonthly -> null
         PaymentMethodItem.Kind.AutopayCard -> {
-            if (!currentRentPayment.isCardAutopayActive) {
+            if (!tenantDataStore.isCardRentPaymentActive) {
                 return null
             }
 
-            val message = if (!currentRentPayment.paymentMethodLabel.isNullOrBlank()) {
-                LF("payments.alert.saved_card.message_with_label", currentRentPayment.paymentMethodLabel)
+            val message = if (!tenantDataStore.savedCardPaymentMethodLabel.isNullOrBlank()) {
+                LF("payments.alert.saved_card.message_with_label", tenantDataStore.savedCardPaymentMethodLabel)
             } else {
                 L("payments.alert.saved_card.message_default")
             }
@@ -501,12 +507,12 @@ private fun managementPromptFor(
         }
 
         PaymentMethodItem.Kind.AutopayBank -> {
-            if (!currentRentPayment.isBankAutopayActive && !currentRentPayment.isBankAutopayVerificationPending) {
+            if (!tenantDataStore.isBankRentPaymentActive && !tenantDataStore.isBankRentPaymentVerificationPending) {
                 return null
             }
 
-            val message = if (!currentRentPayment.paymentMethodLabel.isNullOrBlank()) {
-                LF("payments.alert.saved_bank.message_with_label", currentRentPayment.paymentMethodLabel)
+            val message = if (!tenantDataStore.savedBankPaymentMethodLabel.isNullOrBlank()) {
+                LF("payments.alert.saved_bank.message_with_label", tenantDataStore.savedBankPaymentMethodLabel)
             } else {
                 L("payments.alert.saved_bank.message_default")
             }

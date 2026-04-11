@@ -149,7 +149,22 @@ data class TenantRentPaymentState(
 
 data class TenantStripeConnectAssociationState(
     val accountId: String?,
+    val bankPaymentMethodBrand: String?,
+    val bankPaymentMethodLabel: String?,
+    val bankPaymentMethodLast4: String?,
+    val bankStatus: String?,
+    val bankStripeMandateId: String?,
+    val bankStripePaymentMethodId: String?,
+    val bankStripeSetupIntentId: String?,
     val associated: Boolean,
+    val cardPaymentMethodBrand: String?,
+    val cardPaymentMethodLabel: String?,
+    val cardPaymentMethodLast4: String?,
+    val cardStatus: String?,
+    val cardStripePaymentMethodId: String?,
+    val cardStripeSetupIntentId: String?,
+    val creditCardActive: Boolean,
+    val debitActive: Boolean,
     val landlordUserId: String?,
     val linkedAt: String?,
     val status: String,
@@ -164,7 +179,22 @@ data class TenantStripeConnectAssociationState(
     companion object {
         val Empty = TenantStripeConnectAssociationState(
             accountId = null,
+            bankPaymentMethodBrand = null,
+            bankPaymentMethodLabel = null,
+            bankPaymentMethodLast4 = null,
+            bankStatus = null,
+            bankStripeMandateId = null,
+            bankStripePaymentMethodId = null,
+            bankStripeSetupIntentId = null,
             associated = false,
+            cardPaymentMethodBrand = null,
+            cardPaymentMethodLabel = null,
+            cardPaymentMethodLast4 = null,
+            cardStatus = null,
+            cardStripePaymentMethodId = null,
+            cardStripeSetupIntentId = null,
+            creditCardActive = false,
+            debitActive = false,
             landlordUserId = null,
             linkedAt = null,
             status = "manual",
@@ -178,8 +208,30 @@ data class TenantStripeConnectAssociationState(
         )
     }
 
+    val hasSavedCardStripeProfile: Boolean
+        get() = !stripeCustomerId.isNullOrBlank() && !cardStripePaymentMethodId.isNullOrBlank()
+
+    val hasSavedBankStripeProfile: Boolean
+        get() = !stripeCustomerId.isNullOrBlank() &&
+            !bankStripePaymentMethodId.isNullOrBlank() &&
+            (!bankStripeMandateId.isNullOrBlank() || !bankStripeSetupIntentId.isNullOrBlank())
+
+    val isCardAutopayActive: Boolean
+        get() = creditCardActive && hasSavedCardStripeProfile
+
+    val isBankAutopayActive: Boolean
+        get() = debitActive && bankStatus == "active" && hasSavedBankStripeProfile
+
+    val isBankAutopayVerificationPending: Boolean
+        get() = debitActive && bankStatus == "verification_pending" && hasSavedBankStripeProfile
+
     val hasConnectedCustomerProfile: Boolean
         get() = associated ||
+            !bankStripeMandateId.isNullOrBlank() ||
+            !bankStripePaymentMethodId.isNullOrBlank() ||
+            !bankStripeSetupIntentId.isNullOrBlank() ||
+            !cardStripePaymentMethodId.isNullOrBlank() ||
+            !cardStripeSetupIntentId.isNullOrBlank() ||
             !stripeCustomerId.isNullOrBlank() ||
             !stripePaymentMethodId.isNullOrBlank() ||
             !stripeSetupIntentId.isNullOrBlank() ||

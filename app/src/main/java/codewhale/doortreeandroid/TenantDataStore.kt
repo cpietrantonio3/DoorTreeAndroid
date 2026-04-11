@@ -215,12 +215,62 @@ data class TenantRecord(
         private fun stripeConnectAssociation(value: JsonElement?): TenantStripeConnectAssociationState {
             val root = value as? JsonObject ?: return TenantStripeConnectAssociationState.Empty
             val snapshot = root["association"] as? JsonObject ?: root
+            val associatedFlag = snapshot["associated"]?.jsonPrimitive?.booleanOrNull ?: false
             val stripeCustomerId = snapshot["stripeCustomerId"].stringValue().ifBlank { null }
             val stripeMandateId = snapshot["stripeMandateId"].stringValue().ifBlank { null }
             val stripePaymentMethodId = snapshot["stripePaymentMethodId"].stringValue().ifBlank { null }
             val stripeSetupIntentId = snapshot["stripeSetupIntentId"].stringValue().ifBlank { null }
+            val status = snapshot["status"].stringValue().ifBlank { "manual" }
+            val legacyMethodType = when {
+                stripePaymentMethodId.isNullOrBlank() -> null
+                !stripeMandateId.isNullOrBlank() -> "acss_debit"
+                else -> "card"
+            }
+            val creditCardActive =
+                if (snapshot["creditCardActive"] != null) {
+                    snapshot["creditCardActive"]?.jsonPrimitive?.booleanOrNull ?: false
+                } else {
+                    legacyMethodType == "card" && status != "manual"
+                }
+            val debitActive =
+                if (snapshot["debitActive"] != null) {
+                    snapshot["debitActive"]?.jsonPrimitive?.booleanOrNull ?: false
+                } else {
+                    legacyMethodType == "acss_debit" && status != "manual"
+                }
+            val cardStatus = snapshot["cardStatus"].stringValue().ifBlank {
+                if (legacyMethodType == "card" && creditCardActive) status else ""
+            }.ifBlank { null }
+            val bankStatus = snapshot["bankStatus"].stringValue().ifBlank {
+                if (legacyMethodType == "acss_debit" && debitActive) status else ""
+            }.ifBlank { null }
+            val cardStripePaymentMethodId =
+                snapshot["cardStripePaymentMethodId"].stringValue().ifBlank {
+                    if (legacyMethodType == "card") stripePaymentMethodId ?: "" else ""
+                }.ifBlank { null }
+            val cardStripeSetupIntentId =
+                snapshot["cardStripeSetupIntentId"].stringValue().ifBlank {
+                    if (legacyMethodType == "card") stripeSetupIntentId ?: "" else ""
+                }.ifBlank { null }
+            val bankStripeMandateId =
+                snapshot["bankStripeMandateId"].stringValue().ifBlank {
+                    if (legacyMethodType == "acss_debit") stripeMandateId ?: "" else ""
+                }.ifBlank { null }
+            val bankStripePaymentMethodId =
+                snapshot["bankStripePaymentMethodId"].stringValue().ifBlank {
+                    if (legacyMethodType == "acss_debit") stripePaymentMethodId ?: "" else ""
+                }.ifBlank { null }
+            val bankStripeSetupIntentId =
+                snapshot["bankStripeSetupIntentId"].stringValue().ifBlank {
+                    if (legacyMethodType == "acss_debit") stripeSetupIntentId ?: "" else ""
+                }.ifBlank { null }
             val hasAssociationPayload =
-                (snapshot["associated"]?.jsonPrimitive?.booleanOrNull ?: false) ||
+                associatedFlag ||
+                    !bankStripeMandateId.isNullOrBlank() ||
+                    !bankStripePaymentMethodId.isNullOrBlank() ||
+                    !bankStripeSetupIntentId.isNullOrBlank() ||
+                    !cardStripePaymentMethodId.isNullOrBlank() ||
+                    !cardStripeSetupIntentId.isNullOrBlank() ||
                     !stripeCustomerId.isNullOrBlank() ||
                     !stripeMandateId.isNullOrBlank() ||
                     !stripePaymentMethodId.isNullOrBlank() ||
@@ -230,11 +280,24 @@ data class TenantRecord(
                 return TenantStripeConnectAssociationState.Empty
             }
 
-            val status = snapshot["status"].stringValue().ifBlank { "manual" }
-
             return TenantStripeConnectAssociationState(
                 accountId = snapshot["accountId"].stringValue().ifBlank { null },
-                associated = (snapshot["associated"]?.jsonPrimitive?.booleanOrNull ?: false) || hasAssociationPayload,
+                bankPaymentMethodBrand = snapshot["bankPaymentMethodBrand"].stringValue().ifBlank { null },
+                bankPaymentMethodLabel = snapshot["bankPaymentMethodLabel"].stringValue().ifBlank { null },
+                bankPaymentMethodLast4 = snapshot["bankPaymentMethodLast4"].stringValue().ifBlank { null },
+                bankStatus = bankStatus,
+                bankStripeMandateId = bankStripeMandateId,
+                bankStripePaymentMethodId = bankStripePaymentMethodId,
+                bankStripeSetupIntentId = bankStripeSetupIntentId,
+                associated = associatedFlag || hasAssociationPayload,
+                cardPaymentMethodBrand = snapshot["cardPaymentMethodBrand"].stringValue().ifBlank { null },
+                cardPaymentMethodLabel = snapshot["cardPaymentMethodLabel"].stringValue().ifBlank { null },
+                cardPaymentMethodLast4 = snapshot["cardPaymentMethodLast4"].stringValue().ifBlank { null },
+                cardStatus = cardStatus,
+                cardStripePaymentMethodId = cardStripePaymentMethodId,
+                cardStripeSetupIntentId = cardStripeSetupIntentId,
+                creditCardActive = creditCardActive,
+                debitActive = debitActive,
                 landlordUserId = snapshot["landlordUserId"].stringValue().ifBlank { null },
                 linkedAt = snapshot["linkedAt"].stringValue().ifBlank { null },
                 status = status,
@@ -355,8 +418,14 @@ class TenantDataStore(
     val paymentMethods: List<PaymentMethodItem>
         get() {
             val rentPayment = currentRentPayment
-            val hasSavedCardProfile = rentPayment.hasSavedCardStripeProfile
-            val hasSavedBankProfile = rentPayment.hasSavedBankStripeProfile
+            val hasSavedCardProfile = tenantRecord?.let(::hasSavedCardRentPaymentProfileForRecord) ?: rentPayment.hasSavedCardStripeProfile
+            val hasSavedBankProfile = tenantRecord?.let(::hasSavedBankRentPaymentProfileForRecord) ?: rentPayment.hasSavedBankStripeProfile
+            val cardLabel = tenantRecord?.let(::savedCardPaymentMethodLabelForRecord)
+            val bankLabel = tenantRecord?.let(::savedBankPaymentMethodLabelForRecord)
+            val isCardActive = tenantRecord?.let(::isCardAutopayActiveForRecord) ?: rentPayment.isCardAutopayActive
+            val isBankActive = tenantRecord?.let(::isBankAutopayActiveForRecord) ?: rentPayment.isBankAutopayActive
+            val isBankVerificationPending =
+                tenantRecord?.let(::isBankAutopayVerificationPendingForRecord) ?: rentPayment.isBankAutopayVerificationPending
             val isPendingCardSetup = rentPayment.pendingSetupMethodType == "card" && !hasSavedCardProfile
             val isPendingBankSetup = rentPayment.pendingSetupMethodType == "acss_debit" && !hasSavedBankProfile
             val manualSubtitle = if (currentRentEntry?.isAutopayProcessing == true) {
@@ -367,10 +436,10 @@ class TenantDataStore(
             val cardSubtitle = when {
                 isPendingCardSetup ->
                     L("payments.method.card.subtitle.setup_pending")
-                rentPayment.isCardAutopayActive && !rentPayment.paymentMethodLabel.isNullOrBlank() ->
-                    LF("payments.method.card.subtitle.active_with_label", rentPayment.paymentMethodLabel)
-                hasSavedCardProfile && !rentPayment.paymentMethodLabel.isNullOrBlank() ->
-                    LF("payments.method.card.subtitle.saved_with_label", rentPayment.paymentMethodLabel)
+                isCardActive && !cardLabel.isNullOrBlank() ->
+                    LF("payments.method.card.subtitle.active_with_label", cardLabel)
+                hasSavedCardProfile && !cardLabel.isNullOrBlank() ->
+                    LF("payments.method.card.subtitle.saved_with_label", cardLabel)
                 hasCardRentPaymentManagement ->
                     L("payments.method.card.subtitle.management_available")
                 else ->
@@ -379,12 +448,12 @@ class TenantDataStore(
             val bankSubtitle = when {
                 isPendingBankSetup ->
                     L("payments.method.bank.subtitle.setup_pending")
-                rentPayment.isBankAutopayVerificationPending ->
+                isBankVerificationPending ->
                     L("payments.method.bank.subtitle.verification_pending")
-                rentPayment.isBankAutopayActive && !rentPayment.paymentMethodLabel.isNullOrBlank() ->
-                    LF("payments.method.bank.subtitle.active_with_label", rentPayment.paymentMethodLabel)
-                hasSavedBankProfile && !rentPayment.paymentMethodLabel.isNullOrBlank() ->
-                    LF("payments.method.bank.subtitle.saved_with_label", rentPayment.paymentMethodLabel)
+                isBankActive && !bankLabel.isNullOrBlank() ->
+                    LF("payments.method.bank.subtitle.active_with_label", bankLabel)
+                hasSavedBankProfile && !bankLabel.isNullOrBlank() ->
+                    LF("payments.method.bank.subtitle.saved_with_label", bankLabel)
                 hasBankRentPaymentManagement ->
                     L("payments.method.bank.subtitle.management_available")
                 else ->
@@ -430,6 +499,27 @@ class TenantDataStore(
 
     val hasBankRentPaymentManagement: Boolean
         get() = tenantRecord?.let(::hasBankRentPaymentManagement) ?: false
+
+    val hasSavedCardRentPaymentProfile: Boolean
+        get() = tenantRecord?.let(::hasSavedCardRentPaymentProfileForRecord) ?: false
+
+    val hasSavedBankRentPaymentProfile: Boolean
+        get() = tenantRecord?.let(::hasSavedBankRentPaymentProfileForRecord) ?: false
+
+    val savedCardPaymentMethodLabel: String?
+        get() = tenantRecord?.let(::savedCardPaymentMethodLabelForRecord)
+
+    val savedBankPaymentMethodLabel: String?
+        get() = tenantRecord?.let(::savedBankPaymentMethodLabelForRecord)
+
+    val isCardRentPaymentActive: Boolean
+        get() = tenantRecord?.let(::isCardAutopayActiveForRecord) ?: currentRentPayment.isCardAutopayActive
+
+    val isBankRentPaymentActive: Boolean
+        get() = tenantRecord?.let(::isBankAutopayActiveForRecord) ?: currentRentPayment.isBankAutopayActive
+
+    val isBankRentPaymentVerificationPending: Boolean
+        get() = tenantRecord?.let(::isBankAutopayVerificationPendingForRecord) ?: currentRentPayment.isBankAutopayVerificationPending
 
     val paymentHistory: List<PaymentItem>
         get() = rentEntries
@@ -1085,8 +1175,7 @@ class TenantDataStore(
     }
 
     private fun shouldReconcilePendingRentPaymentSetup(record: TenantRecord): Boolean {
-        return !record.rentPayment.pendingSetupCheckoutSessionId.isNullOrBlank() &&
-            hasStripeRentPaymentManagement(record).not()
+        return !record.rentPayment.pendingSetupCheckoutSessionId.isNullOrBlank()
     }
 
     private fun hasStripeRentPaymentManagement(record: TenantRecord): Boolean {
@@ -1096,7 +1185,7 @@ class TenantDataStore(
     private fun hasCardRentPaymentManagement(record: TenantRecord): Boolean {
         val rentPayment = record.rentPayment
 
-        if (rentPayment.hasSavedCardStripeProfile) {
+        if (hasSavedCardRentPaymentProfileForRecord(record)) {
             return true
         }
 
@@ -1107,12 +1196,50 @@ class TenantDataStore(
     private fun hasBankRentPaymentManagement(record: TenantRecord): Boolean {
         val rentPayment = record.rentPayment
 
-        if (rentPayment.hasSavedBankStripeProfile) {
+        if (hasSavedBankRentPaymentProfileForRecord(record)) {
             return true
         }
 
         return record.stripeConnectAssociation.hasConnectedCustomerProfile &&
             (rentPayment.selectedMethodType == "acss_debit" || rentPayment.pendingSetupMethodType == "acss_debit")
+    }
+
+    private fun hasSavedCardRentPaymentProfileForRecord(record: TenantRecord): Boolean {
+        return record.stripeConnectAssociation.hasSavedCardStripeProfile || record.rentPayment.hasSavedCardStripeProfile
+    }
+
+    private fun hasSavedBankRentPaymentProfileForRecord(record: TenantRecord): Boolean {
+        return record.stripeConnectAssociation.hasSavedBankStripeProfile || record.rentPayment.hasSavedBankStripeProfile
+    }
+
+    private fun savedCardPaymentMethodLabelForRecord(record: TenantRecord): String? {
+        val associationLabel = record.stripeConnectAssociation.cardPaymentMethodLabel?.trim().orEmpty()
+        if (associationLabel.isNotBlank()) {
+            return associationLabel
+        }
+
+        return record.rentPayment.paymentMethodLabel?.takeIf { record.rentPayment.paymentMethodType == "card" }
+    }
+
+    private fun savedBankPaymentMethodLabelForRecord(record: TenantRecord): String? {
+        val associationLabel = record.stripeConnectAssociation.bankPaymentMethodLabel?.trim().orEmpty()
+        if (associationLabel.isNotBlank()) {
+            return associationLabel
+        }
+
+        return record.rentPayment.paymentMethodLabel?.takeIf { record.rentPayment.paymentMethodType == "acss_debit" }
+    }
+
+    private fun isCardAutopayActiveForRecord(record: TenantRecord): Boolean {
+        return record.stripeConnectAssociation.isCardAutopayActive || record.rentPayment.isCardAutopayActive
+    }
+
+    private fun isBankAutopayActiveForRecord(record: TenantRecord): Boolean {
+        return record.stripeConnectAssociation.isBankAutopayActive || record.rentPayment.isBankAutopayActive
+    }
+
+    private fun isBankAutopayVerificationPendingForRecord(record: TenantRecord): Boolean {
+        return record.stripeConnectAssociation.isBankAutopayVerificationPending || record.rentPayment.isBankAutopayVerificationPending
     }
 
     private fun reset() {
