@@ -46,13 +46,13 @@ enum class PolicyDocument(
         titleKey = "policy.privacy_policy.title",
         bodyKey = "policy.privacy_policy.body",
         icon = "person.crop.rectangle.stack.fill",
-        url = "https://example.com/doortree/privacy-policy"
+        url = "https://doortree.co/privacy-policy"
     ),
     TermsOfUse(
         titleKey = "policy.terms_of_use.title",
         bodyKey = "policy.terms_of_use.body",
         icon = "doc.text",
-        url = "https://example.com/doortree/terms-of-use"
+        url = "https://doortree.co/terms-and-conditions"
     )
 }
 
