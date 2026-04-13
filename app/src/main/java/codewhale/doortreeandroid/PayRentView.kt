@@ -146,31 +146,39 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
                         onClick = {
                             selectedMethodId = method.id
                             paymentFlowMessage = null
+
+                            if (shouldApplySelectedPaymentMethodImmediately(tenantDataStore, method.kind, isStartingPaymentFlow)) {
+                                scope.launch {
+                                    continuePaymentFlow(method.kind)
+                                }
+                            }
                         }
                     )
                 }
             }
 
-            GradientButton(
-                title = primaryActionTitle(
-                    tenantDataStore = tenantDataStore,
-                    selectedMethodId = selectedMethodId,
-                    isStartingPaymentFlow = isStartingPaymentFlow
-                ),
-                enabled = canStartPaymentFlow(tenantDataStore, selectedMethodId) && !isStartingPaymentFlow,
-                onClick = {
-                    val selectedMethod = paymentMethods.firstOrNull { it.id == selectedMethodId } ?: return@GradientButton
-                    val prompt = managementPromptFor(tenantDataStore, selectedMethod.kind)
-                    if (prompt != null) {
-                        paymentFlowMessage = null
-                        managementPrompt = prompt
-                    } else {
-                        scope.launch {
-                            continuePaymentFlow(selectedMethod.kind)
+            if (showsPrimaryActionButton(tenantDataStore, selectedMethodId)) {
+                GradientButton(
+                    title = primaryActionTitle(
+                        tenantDataStore = tenantDataStore,
+                        selectedMethodId = selectedMethodId,
+                        isStartingPaymentFlow = isStartingPaymentFlow
+                    ),
+                    enabled = canStartPaymentFlow(tenantDataStore, selectedMethodId) && !isStartingPaymentFlow,
+                    onClick = {
+                        val selectedMethod = paymentMethods.firstOrNull { it.id == selectedMethodId } ?: return@GradientButton
+                        val prompt = managementPromptFor(tenantDataStore, selectedMethod.kind)
+                        if (prompt != null) {
+                            paymentFlowMessage = null
+                            managementPrompt = prompt
+                        } else {
+                            scope.launch {
+                                continuePaymentFlow(selectedMethod.kind)
+                            }
                         }
                     }
-                }
-            )
+                )
+            }
 
             paymentStatusMessage(
                 tenantDataStore = tenantDataStore,
@@ -345,8 +353,39 @@ private fun canStartPaymentFlow(
             selectedHostedCheckoutUrl(tenantDataStore, selectedMethodId) != null &&
                 tenantDataStore.currentRentEntry?.isAutopayProcessing != true
 
-        PaymentMethodItem.Kind.AutopayCard,
-        PaymentMethodItem.Kind.AutopayBank -> true
+        PaymentMethodItem.Kind.AutopayCard -> tenantDataStore.isCardRentPaymentActive
+        PaymentMethodItem.Kind.AutopayBank ->
+            tenantDataStore.isBankRentPaymentActive || tenantDataStore.isBankRentPaymentVerificationPending
+    }
+}
+
+private fun showsPrimaryActionButton(
+    tenantDataStore: TenantDataStore,
+    selectedMethodId: String?
+): Boolean {
+    val selectedMethod = tenantDataStore.paymentMethods.firstOrNull { it.id == selectedMethodId } ?: return false
+    return when (selectedMethod.kind) {
+        PaymentMethodItem.Kind.ManualMonthly -> true
+        PaymentMethodItem.Kind.AutopayCard -> tenantDataStore.isCardRentPaymentActive
+        PaymentMethodItem.Kind.AutopayBank ->
+            tenantDataStore.isBankRentPaymentActive || tenantDataStore.isBankRentPaymentVerificationPending
+    }
+}
+
+private fun shouldApplySelectedPaymentMethodImmediately(
+    tenantDataStore: TenantDataStore,
+    kind: PaymentMethodItem.Kind,
+    isStartingPaymentFlow: Boolean
+): Boolean {
+    if (isStartingPaymentFlow) {
+        return false
+    }
+
+    return when (kind) {
+        PaymentMethodItem.Kind.ManualMonthly -> false
+        PaymentMethodItem.Kind.AutopayCard -> !tenantDataStore.isCardRentPaymentActive
+        PaymentMethodItem.Kind.AutopayBank ->
+            !tenantDataStore.isBankRentPaymentActive && !tenantDataStore.isBankRentPaymentVerificationPending
     }
 }
 

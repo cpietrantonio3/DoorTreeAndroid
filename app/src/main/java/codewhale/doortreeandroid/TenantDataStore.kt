@@ -212,94 +212,99 @@ data class TenantRecord(
             )
         }
 
-        private fun stripeConnectAssociation(value: JsonElement?): TenantStripeConnectAssociationState {
-            val root = value as? JsonObject ?: return TenantStripeConnectAssociationState.Empty
-            val snapshot = root["association"] as? JsonObject ?: root
-            val associatedFlag = snapshot["associated"]?.jsonPrimitive?.booleanOrNull ?: false
+        private data class StripeConnectMethodNodeState(
+            val accountId: String?,
+            val associated: Boolean,
+            val isActive: Boolean,
+            val landlordUserId: String?,
+            val linkedAt: String?,
+            val paymentMethodBrand: String?,
+            val paymentMethodLabel: String?,
+            val paymentMethodLast4: String?,
+            val status: String?,
+            val stripeCustomerId: String?,
+            val stripeMandateId: String?,
+            val stripePaymentMethodId: String?,
+            val stripeSetupIntentId: String?,
+            val tenantUserId: String?,
+            val type: String?,
+            val updatedAt: String?
+        )
+
+        private fun normalizedStripeConnectStatus(value: JsonElement?): String? {
+            return value.stringValue()
+                .ifBlank { "" }
+                .let { normalized ->
+                    when (normalized) {
+                        "", "manual" -> null
+                        else -> normalized
+                    }
+                }
+        }
+
+        private fun stripeConnectMethodNodeState(
+            value: JsonObject?,
+            methodType: String
+        ): StripeConnectMethodNodeState? {
+            val snapshot = value ?: return null
+            val status = normalizedStripeConnectStatus(
+                snapshot[if (methodType == "card") "cardStatus" else "bankStatus"] ?: snapshot["status"]
+            )
             val stripeCustomerId = snapshot["stripeCustomerId"].stringValue().ifBlank { null }
-            val stripeMandateId = snapshot["stripeMandateId"].stringValue().ifBlank { null }
-            val stripePaymentMethodId = snapshot["stripePaymentMethodId"].stringValue().ifBlank { null }
-            val stripeSetupIntentId = snapshot["stripeSetupIntentId"].stringValue().ifBlank { null }
-            val status = snapshot["status"].stringValue().ifBlank { "manual" }
-            val legacyMethodType = when {
-                stripePaymentMethodId.isNullOrBlank() -> null
-                !stripeMandateId.isNullOrBlank() -> "acss_debit"
-                else -> "card"
-            }
-            val creditCardActive =
-                if (snapshot["creditCardActive"] != null) {
-                    snapshot["creditCardActive"]?.jsonPrimitive?.booleanOrNull ?: false
+            val stripePaymentMethodId =
+                (snapshot[if (methodType == "card") "cardStripePaymentMethodId" else "bankStripePaymentMethodId"]
+                    ?: snapshot["stripePaymentMethodId"])
+                    .stringValue()
+                    .ifBlank { null }
+            val stripeSetupIntentId =
+                (snapshot[if (methodType == "card") "cardStripeSetupIntentId" else "bankStripeSetupIntentId"]
+                    ?: snapshot["stripeSetupIntentId"])
+                    .stringValue()
+                    .ifBlank { null }
+            val stripeMandateId =
+                if (methodType == "acss_debit") {
+                    (snapshot["bankStripeMandateId"] ?: snapshot["stripeMandateId"])
+                        .stringValue()
+                        .ifBlank { null }
                 } else {
-                    legacyMethodType == "card" && status != "manual"
+                    null
                 }
-            val debitActive =
-                if (snapshot["debitActive"] != null) {
-                    snapshot["debitActive"]?.jsonPrimitive?.booleanOrNull ?: false
-                } else {
-                    legacyMethodType == "acss_debit" && status != "manual"
-                }
-            val cardStatus = snapshot["cardStatus"].stringValue().ifBlank {
-                if (legacyMethodType == "card" && creditCardActive) status else ""
-            }.ifBlank { null }
-            val bankStatus = snapshot["bankStatus"].stringValue().ifBlank {
-                if (legacyMethodType == "acss_debit" && debitActive) status else ""
-            }.ifBlank { null }
-            val cardStripePaymentMethodId =
-                snapshot["cardStripePaymentMethodId"].stringValue().ifBlank {
-                    if (legacyMethodType == "card") stripePaymentMethodId ?: "" else ""
-                }.ifBlank { null }
-            val cardStripeSetupIntentId =
-                snapshot["cardStripeSetupIntentId"].stringValue().ifBlank {
-                    if (legacyMethodType == "card") stripeSetupIntentId ?: "" else ""
-                }.ifBlank { null }
-            val bankStripeMandateId =
-                snapshot["bankStripeMandateId"].stringValue().ifBlank {
-                    if (legacyMethodType == "acss_debit") stripeMandateId ?: "" else ""
-                }.ifBlank { null }
-            val bankStripePaymentMethodId =
-                snapshot["bankStripePaymentMethodId"].stringValue().ifBlank {
-                    if (legacyMethodType == "acss_debit") stripePaymentMethodId ?: "" else ""
-                }.ifBlank { null }
-            val bankStripeSetupIntentId =
-                snapshot["bankStripeSetupIntentId"].stringValue().ifBlank {
-                    if (legacyMethodType == "acss_debit") stripeSetupIntentId ?: "" else ""
-                }.ifBlank { null }
-            val hasAssociationPayload =
-                associatedFlag ||
-                    !bankStripeMandateId.isNullOrBlank() ||
-                    !bankStripePaymentMethodId.isNullOrBlank() ||
-                    !bankStripeSetupIntentId.isNullOrBlank() ||
-                    !cardStripePaymentMethodId.isNullOrBlank() ||
-                    !cardStripeSetupIntentId.isNullOrBlank() ||
+            val isActive =
+                snapshot["isActive"]?.jsonPrimitive?.booleanOrNull
+                    ?: if (methodType == "card") {
+                        snapshot["creditCardActive"]?.jsonPrimitive?.booleanOrNull
+                    } else {
+                        snapshot["debitActive"]?.jsonPrimitive?.booleanOrNull
+                    }
+                    ?: (status != null)
+            val associated =
+                (snapshot["associated"]?.jsonPrimitive?.booleanOrNull ?: false) ||
                     !stripeCustomerId.isNullOrBlank() ||
-                    !stripeMandateId.isNullOrBlank() ||
                     !stripePaymentMethodId.isNullOrBlank() ||
-                    !stripeSetupIntentId.isNullOrBlank()
+                    !stripeSetupIntentId.isNullOrBlank() ||
+                    !stripeMandateId.isNullOrBlank()
 
-            if (root["association"] == null && !hasAssociationPayload) {
-                return TenantStripeConnectAssociationState.Empty
-            }
-
-            return TenantStripeConnectAssociationState(
+            return StripeConnectMethodNodeState(
                 accountId = snapshot["accountId"].stringValue().ifBlank { null },
-                bankPaymentMethodBrand = snapshot["bankPaymentMethodBrand"].stringValue().ifBlank { null },
-                bankPaymentMethodLabel = snapshot["bankPaymentMethodLabel"].stringValue().ifBlank { null },
-                bankPaymentMethodLast4 = snapshot["bankPaymentMethodLast4"].stringValue().ifBlank { null },
-                bankStatus = bankStatus,
-                bankStripeMandateId = bankStripeMandateId,
-                bankStripePaymentMethodId = bankStripePaymentMethodId,
-                bankStripeSetupIntentId = bankStripeSetupIntentId,
-                associated = associatedFlag || hasAssociationPayload,
-                cardPaymentMethodBrand = snapshot["cardPaymentMethodBrand"].stringValue().ifBlank { null },
-                cardPaymentMethodLabel = snapshot["cardPaymentMethodLabel"].stringValue().ifBlank { null },
-                cardPaymentMethodLast4 = snapshot["cardPaymentMethodLast4"].stringValue().ifBlank { null },
-                cardStatus = cardStatus,
-                cardStripePaymentMethodId = cardStripePaymentMethodId,
-                cardStripeSetupIntentId = cardStripeSetupIntentId,
-                creditCardActive = creditCardActive,
-                debitActive = debitActive,
+                associated = associated,
+                isActive = isActive,
                 landlordUserId = snapshot["landlordUserId"].stringValue().ifBlank { null },
                 linkedAt = snapshot["linkedAt"].stringValue().ifBlank { null },
+                paymentMethodBrand =
+                    (snapshot[if (methodType == "card") "cardPaymentMethodBrand" else "bankPaymentMethodBrand"]
+                        ?: snapshot["paymentMethodBrand"])
+                        .stringValue()
+                        .ifBlank { null },
+                paymentMethodLabel =
+                    (snapshot[if (methodType == "card") "cardPaymentMethodLabel" else "bankPaymentMethodLabel"]
+                        ?: snapshot["paymentMethodLabel"])
+                        .stringValue()
+                        .ifBlank { null },
+                paymentMethodLast4 =
+                    (snapshot[if (methodType == "card") "cardPaymentMethodLast4" else "bankPaymentMethodLast4"]
+                        ?: snapshot["paymentMethodLast4"])
+                        .stringValue()
+                        .ifBlank { null },
                 status = status,
                 stripeCustomerId = stripeCustomerId,
                 stripeMandateId = stripeMandateId,
@@ -308,6 +313,126 @@ data class TenantRecord(
                 tenantUserId = snapshot["tenantUserId"].stringValue().ifBlank { null },
                 type = snapshot["type"].stringValue().ifBlank { null },
                 updatedAt = snapshot["updatedAt"].stringValue().ifBlank { null }
+            )
+        }
+
+        private fun hasStripeConnectMethodNodePayload(value: JsonObject?, methodType: String): Boolean {
+            val state = stripeConnectMethodNodeState(value, methodType) ?: return false
+
+            return state.associated ||
+                state.isActive ||
+                !state.linkedAt.isNullOrBlank() ||
+                !state.paymentMethodBrand.isNullOrBlank() ||
+                !state.paymentMethodLabel.isNullOrBlank() ||
+                !state.paymentMethodLast4.isNullOrBlank() ||
+                !state.status.isNullOrBlank() ||
+                !state.stripeCustomerId.isNullOrBlank() ||
+                !state.stripeMandateId.isNullOrBlank() ||
+                !state.stripePaymentMethodId.isNullOrBlank() ||
+                !state.stripeSetupIntentId.isNullOrBlank()
+        }
+
+        private fun stripeConnectAssociation(value: JsonElement?): TenantStripeConnectAssociationState {
+            val root = value as? JsonObject ?: return TenantStripeConnectAssociationState.Empty
+            val associationNode = root["association"] as? JsonObject
+            val creditCardNode = root["creditCard"] as? JsonObject
+            val hasAssociationNode = associationNode != null
+            val hasCreditCardNode = creditCardNode != null
+            val legacyStripePaymentMethodId = root["stripePaymentMethodId"].stringValue().ifBlank { null }
+            val legacyStripeMandateId = root["stripeMandateId"].stringValue().ifBlank { null }
+            val legacyMethodType = when {
+                legacyStripePaymentMethodId.isNullOrBlank() -> null
+                !legacyStripeMandateId.isNullOrBlank() -> "acss_debit"
+                else -> "card"
+            }
+            val strippedLegacyKeys = setOf("stripeMandateId", "stripePaymentMethodId", "stripeSetupIntentId")
+            val legacyBankSource =
+                if (!hasAssociationNode && !hasCreditCardNode && legacyMethodType == "card") {
+                    JsonObject(root.filterKeys { it !in strippedLegacyKeys })
+                } else {
+                    root
+                }
+            val legacyCardSource =
+                if (!hasAssociationNode && !hasCreditCardNode && legacyMethodType == "acss_debit") {
+                    JsonObject(root.filterKeys { it !in strippedLegacyKeys })
+                } else {
+                    root
+                }
+            val bankSource = associationNode ?: if (!hasCreditCardNode) legacyBankSource else null
+            val cardSource = creditCardNode ?: if (!hasAssociationNode) legacyCardSource else null
+            val bankState = stripeConnectMethodNodeState(bankSource, "acss_debit")
+            val cardState = stripeConnectMethodNodeState(cardSource, "card")
+            val creditCardActive = cardState?.isActive == true
+            val debitActive = bankState?.isActive == true
+            val activeMethodType = when {
+                creditCardActive &&
+                    !cardState?.stripeCustomerId.isNullOrBlank() &&
+                    !cardState?.stripePaymentMethodId.isNullOrBlank() -> "card"
+                debitActive &&
+                    !bankState?.stripeCustomerId.isNullOrBlank() &&
+                    !bankState?.stripePaymentMethodId.isNullOrBlank() &&
+                    (!bankState?.stripeMandateId.isNullOrBlank() || !bankState?.stripeSetupIntentId.isNullOrBlank()) -> "acss_debit"
+                else -> null
+            }
+            val hasAssociationPayload =
+                hasStripeConnectMethodNodePayload(bankSource, "acss_debit") ||
+                    hasStripeConnectMethodNodePayload(cardSource, "card")
+
+            if (!hasAssociationNode && !hasCreditCardNode && !hasAssociationPayload) {
+                return TenantStripeConnectAssociationState.Empty
+            }
+
+            val associated = bankState?.associated == true || cardState?.associated == true
+            val stripeCustomerId = when (activeMethodType) {
+                "card" -> cardState?.stripeCustomerId
+                "acss_debit" -> bankState?.stripeCustomerId
+                else -> cardState?.stripeCustomerId ?: bankState?.stripeCustomerId
+            }
+            val stripeMandateId = if (activeMethodType == "acss_debit") bankState?.stripeMandateId else null
+            val stripePaymentMethodId = when (activeMethodType) {
+                "card" -> cardState?.stripePaymentMethodId
+                "acss_debit" -> bankState?.stripePaymentMethodId
+                else -> null
+            }
+            val stripeSetupIntentId = when (activeMethodType) {
+                "card" -> cardState?.stripeSetupIntentId
+                "acss_debit" -> bankState?.stripeSetupIntentId
+                else -> null
+            }
+            val status = when (activeMethodType) {
+                "card" -> cardState?.status ?: "manual"
+                "acss_debit" -> bankState?.status ?: "manual"
+                else -> "manual"
+            }
+
+            return TenantStripeConnectAssociationState(
+                accountId = bankState?.accountId ?: cardState?.accountId,
+                bankPaymentMethodBrand = bankState?.paymentMethodBrand,
+                bankPaymentMethodLabel = bankState?.paymentMethodLabel,
+                bankPaymentMethodLast4 = bankState?.paymentMethodLast4,
+                bankStatus = bankState?.status,
+                bankStripeMandateId = bankState?.stripeMandateId,
+                bankStripePaymentMethodId = bankState?.stripePaymentMethodId,
+                bankStripeSetupIntentId = bankState?.stripeSetupIntentId,
+                associated = associated,
+                cardPaymentMethodBrand = cardState?.paymentMethodBrand,
+                cardPaymentMethodLabel = cardState?.paymentMethodLabel,
+                cardPaymentMethodLast4 = cardState?.paymentMethodLast4,
+                cardStatus = cardState?.status,
+                cardStripePaymentMethodId = cardState?.stripePaymentMethodId,
+                cardStripeSetupIntentId = cardState?.stripeSetupIntentId,
+                creditCardActive = creditCardActive,
+                debitActive = debitActive,
+                landlordUserId = bankState?.landlordUserId ?: cardState?.landlordUserId,
+                linkedAt = bankState?.linkedAt ?: cardState?.linkedAt,
+                status = status,
+                stripeCustomerId = stripeCustomerId,
+                stripeMandateId = stripeMandateId,
+                stripePaymentMethodId = stripePaymentMethodId,
+                stripeSetupIntentId = stripeSetupIntentId,
+                tenantUserId = bankState?.tenantUserId ?: cardState?.tenantUserId,
+                type = bankState?.type ?: cardState?.type,
+                updatedAt = bankState?.updatedAt ?: cardState?.updatedAt
             )
         }
 
