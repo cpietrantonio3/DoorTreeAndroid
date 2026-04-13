@@ -6574,19 +6574,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Manual monthly pay"
+            "value": "Open Payment Portal"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paiement mensuel manuel"
+            "value": "Ouvrir le portail de paiement"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paiement mensuel manuel"
+            "value": "Ouvrir le portail de paiement"
           }
         }
       }
@@ -6597,19 +6597,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Stripe and pay manually each month when rent is due."
+            "value": "Open the payment portal and pay manually each month when rent is due."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrez Stripe et payez manuellement chaque mois lorsque le loyer est exigible."
+            "value": "Ouvrez le portail de paiement et payez manuellement chaque mois lorsque le loyer est exigible."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ouvrez Stripe et payez manuellement chaque mois lorsque le loyer est exigible."
+            "value": "Ouvrez le portail de paiement et payez manuellement chaque mois lorsque le loyer est exigible."
           }
         }
       }
@@ -7034,19 +7034,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Continue to Stripe"
+            "value": "Open Payment Portal"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Continuer vers Stripe"
+            "value": "Ouvrir le portail de paiement"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Continuer vers Stripe"
+            "value": "Ouvrir le portail de paiement"
           }
         }
       }

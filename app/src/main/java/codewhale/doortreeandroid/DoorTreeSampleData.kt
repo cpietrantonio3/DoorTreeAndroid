@@ -40,8 +40,8 @@ object DoorTreeSampleData {
 
     val paymentMethods = listOf(
         PaymentMethodItem(
-            title = "Manual monthly pay",
-            subtitle = "Open Stripe and pay manually each month when rent is due.",
+            title = "Open Payment Portal",
+            subtitle = "Open the payment portal and pay manually each month when rent is due.",
             icon = "creditcard.fill",
             kind = PaymentMethodItem.Kind.ManualMonthly
         ),

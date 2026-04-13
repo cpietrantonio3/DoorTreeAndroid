@@ -29,9 +29,10 @@ fun AuthLoadingOverlay(
             modifier = Modifier
                 .glassCard(cornerRadius = 18.dp)
                 .padding(horizontal = 20.dp, vertical = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            DoorTreeLogoLockup(width = 140.dp)
             CircularProgressIndicator(color = DoorTreeTheme.textPrimary)
             Text(text = title, color = DoorTreeTheme.textPrimary)
             Text(text = subtitle, color = DoorTreeTheme.textSecondary)

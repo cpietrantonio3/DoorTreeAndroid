@@ -41,10 +41,16 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
     val paymentMethods = tenantDataStore.paymentMethods
     val scope = rememberCoroutineScope()
     var selectedMethodId by remember { mutableStateOf<String?>(null) }
+    var hasUserSelectedMethod by remember { mutableStateOf(false) }
     var checkoutRequest by remember { mutableStateOf<HostedCheckoutRequest?>(null) }
     var isStartingPaymentFlow by remember { mutableStateOf(false) }
     var paymentFlowMessage by remember { mutableStateOf<String?>(null) }
     var managementPrompt by remember { mutableStateOf<SavedPaymentManagementPrompt?>(null) }
+    val preferredSelectedMethodId =
+        paymentMethodIdForKind(
+            paymentMethods = paymentMethods,
+            kind = preferredSelectedPaymentKind(tenantDataStore)
+        ) ?: paymentMethods.firstOrNull()?.id
 
     suspend fun continuePaymentFlow(
         kind: PaymentMethodItem.Kind,
@@ -82,9 +88,10 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
         }
     }
 
-    LaunchedEffect(paymentMethods) {
-        if (selectedMethodId == null || paymentMethods.none { it.id == selectedMethodId }) {
-            selectedMethodId = paymentMethods.firstOrNull()?.id
+    LaunchedEffect(preferredSelectedMethodId, paymentMethods, hasUserSelectedMethod) {
+        val hasValidSelection = selectedMethodId != null && paymentMethods.any { it.id == selectedMethodId }
+        if (!hasUserSelectedMethod || !hasValidSelection) {
+            selectedMethodId = preferredSelectedMethodId
         }
     }
 
@@ -144,6 +151,7 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
                         method = method,
                         isSelected = selectedMethodId == method.id,
                         onClick = {
+                            hasUserSelectedMethod = true
                             selectedMethodId = method.id
                             paymentFlowMessage = null
 
@@ -341,6 +349,22 @@ private fun selectedHostedCheckoutUrl(
         return null
     }
     return tenantDataStore.hostedCheckoutUrl(PaymentMethodItem.Kind.ManualMonthly)?.takeIf { it.isNotBlank() }
+}
+
+private fun preferredSelectedPaymentKind(tenantDataStore: TenantDataStore): PaymentMethodItem.Kind {
+    return when {
+        tenantDataStore.isCardRentPaymentActive -> PaymentMethodItem.Kind.AutopayCard
+        tenantDataStore.isBankRentPaymentActive || tenantDataStore.isBankRentPaymentVerificationPending ->
+            PaymentMethodItem.Kind.AutopayBank
+        else -> PaymentMethodItem.Kind.ManualMonthly
+    }
+}
+
+private fun paymentMethodIdForKind(
+    paymentMethods: List<PaymentMethodItem>,
+    kind: PaymentMethodItem.Kind
+): String? {
+    return paymentMethods.firstOrNull { it.kind == kind }?.id
 }
 
 private fun canStartPaymentFlow(
