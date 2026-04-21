@@ -25,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import codewhale.doortreeandroid.ui.theme.DoorTreeTheme
@@ -33,7 +35,8 @@ import codewhale.doortreeandroid.ui.theme.DoorTreeTheme
 fun HomeView(
     tenantDataStore: TenantDataStore,
     onSelectAction: (QuickActionRoute) -> Unit,
-    onOpenRequest: (MaintenanceRequestItem) -> Unit
+    onOpenRequest: (MaintenanceRequestItem) -> Unit,
+    onSelectProfile: () -> Unit = {}
 ) {
     var showingMaintenanceRequest by remember { mutableStateOf(false) }
     var showingNotificationCenter by remember { mutableStateOf(false) }
@@ -90,14 +93,24 @@ fun HomeView(
                     )
                     Text(text = tenantDataStore.propertyInfo.subtitle, color = DoorTreeTheme.textSecondary)
                 }
-                AvatarCircle(initials = tenantDataStore.tenantProfile.initials, size = 46.dp)
+                Box(
+                    modifier = Modifier
+                        .semantics { contentDescription = L("tab.profile") }
+                        .clickable { onSelectProfile() }
+                ) {
+                    AvatarCircle(initials = tenantDataStore.tenantProfile.initials, size = 46.dp)
+                }
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
                     tenantDataStore.quickActions.take(2).forEach { item ->
                         Box(modifier = Modifier.weight(1f)) {
-                            QuickActionCard(item = item, height = 128.dp) {
+                            QuickActionCard(
+                                item = item,
+                                notificationCount = if (item.route == QuickActionRoute.Lease) tenantDataStore.unreadDocumentCount else 0,
+                                height = 128.dp
+                            ) {
                                 onSelectAction(item.route)
                             }
                         }
@@ -106,7 +119,11 @@ fun HomeView(
                 Row(horizontalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
                     tenantDataStore.quickActions.drop(2).forEach { item ->
                         Box(modifier = Modifier.weight(1f)) {
-                            QuickActionCard(item = item, height = 128.dp) {
+                            QuickActionCard(
+                                item = item,
+                                notificationCount = if (item.route == QuickActionRoute.Lease) tenantDataStore.unreadDocumentCount else 0,
+                                height = 128.dp
+                            ) {
                                 onSelectAction(item.route)
                             }
                         }

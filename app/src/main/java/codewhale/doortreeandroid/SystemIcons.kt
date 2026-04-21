@@ -39,6 +39,7 @@ import androidx.compose.material.icons.rounded.Park
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Photo
 import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material.icons.rounded.Print
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Apartment
 import androidx.compose.material.icons.rounded.Brush
@@ -71,6 +72,7 @@ fun systemIcon(name: String): ImageVector {
         "bell.slash" -> Icons.Rounded.NotificationsOff
         "clock.arrow.circlepath" -> Icons.Rounded.History
         "square.and.arrow.up" -> Icons.Rounded.IosShare
+        "printer" -> Icons.Rounded.Print
         "arrow.up.right.square" -> Icons.Rounded.OpenInNew
         "paperplane.fill" -> Icons.Rounded.Send
         "envelope.fill", "envelope.badge.fill" -> Icons.Rounded.Email

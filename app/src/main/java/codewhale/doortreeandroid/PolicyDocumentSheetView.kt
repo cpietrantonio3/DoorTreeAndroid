@@ -34,13 +34,13 @@ enum class PolicyDocument(
         titleKey = "policy.eula.title",
         bodyKey = "eula_text",
         icon = "lock.shield",
-        url = "https://example.com/doortree/eula"
+        url = "https://doortree.co/end-user-licence-agreement"
     ),
     CodeOfConduct(
         titleKey = "policy.code_of_conduct.title",
         bodyKey = "policy.code_of_conduct.body",
         icon = "checklist",
-        url = "https://example.com/doortree/code-of-conduct"
+        url = "https://doortree.co/code-of-conduct"
     ),
     PrivacyPolicy(
         titleKey = "policy.privacy_policy.title",

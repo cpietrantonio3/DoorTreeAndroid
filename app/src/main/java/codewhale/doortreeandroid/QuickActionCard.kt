@@ -24,50 +24,63 @@ import codewhale.doortreeandroid.ui.theme.DoorTreeTheme
 fun QuickActionCard(
     item: QuickActionItem,
     badge: Pair<StatusBadgeStyle, String>? = null,
+    notificationCount: Int = 0,
     height: Dp? = null,
     action: () -> Unit
 ) {
-    val modifier = Modifier
+    val cardModifier = Modifier
         .fillMaxWidth()
         .then(if (height != null) Modifier.height(height) else Modifier)
         .clip(RoundedCornerShape(18.dp))
         .glassCard(cornerRadius = 18.dp)
         .clickable(onClick = action)
-        .padding(if (height != null) 10.dp else 12.dp)
 
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(if (height != null) 10.dp else 12.dp)
+    Box(
+        modifier = cardModifier
     ) {
-        Box(
-            modifier = Modifier
-                .height(if (height != null) 44.dp else 52.dp)
-                .fillMaxWidth(),
-            contentAlignment = Alignment.TopStart
+        Column(
+            modifier = Modifier.padding(if (height != null) 10.dp else 12.dp),
+            verticalArrangement = Arrangement.spacedBy(if (height != null) 10.dp else 12.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(item.iconBackground)
-                    .padding(12.dp)
+                    .height(if (height != null) 44.dp else 52.dp)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.TopStart
             ) {
-                Icon(
-                    imageVector = systemIcon(item.icon),
-                    contentDescription = null,
-                    tint = item.iconColor
-                )
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(item.iconBackground)
+                        .padding(12.dp)
+                ) {
+                    Icon(
+                        imageVector = systemIcon(item.icon),
+                        contentDescription = null,
+                        tint = item.iconColor
+                    )
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(text = item.title, color = DoorTreeTheme.textPrimary)
+                Text(text = item.subtitle, color = DoorTreeTheme.textSecondary)
+            }
+
+            Spacer(modifier = Modifier.weight(1f, fill = true))
+
+            if (badge != null) {
+                StatusBadge(status = badge.first, label = badge.second)
             }
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(text = item.title, color = DoorTreeTheme.textPrimary)
-            Text(text = item.subtitle, color = DoorTreeTheme.textSecondary)
-        }
-
-        Spacer(modifier = Modifier.weight(1f, fill = true))
-
-        if (badge != null) {
-            StatusBadge(status = badge.first, label = badge.second)
+        if (notificationCount > 0) {
+            NotificationCountBadge(
+                count = notificationCount,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 8.dp, end = 8.dp)
+            )
         }
     }
 }

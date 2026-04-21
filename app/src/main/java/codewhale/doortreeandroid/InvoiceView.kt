@@ -15,6 +15,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,12 +28,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import codewhale.doortreeandroid.ui.theme.DoorTreeTheme
 import java.time.LocalDate
+import kotlinx.coroutines.launch
 
 @Composable
 fun InvoiceView(
     invoice: PendingInvoiceItem,
+    tenantDataStore: TenantDataStore,
     onClose: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
+    var checkoutUrl by remember { mutableStateOf<String?>(null) }
+    var isStartingPaymentFlow by remember { mutableStateOf(false) }
+    var paymentFlowMessage by remember { mutableStateOf<String?>(null) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -60,7 +72,27 @@ fun InvoiceView(
                 )
             }
 
-            GradientButton(title = L("payments.pay_now"), onClick = {})
+            GradientButton(
+                title = if (isStartingPaymentFlow) L("payments.action.working") else L("payments.pay_now"),
+                enabled = !isStartingPaymentFlow && invoice.hostedCheckoutUrl != null,
+                onClick = {
+                    paymentFlowMessage = null
+                    isStartingPaymentFlow = true
+
+                    try {
+                        checkoutUrl = tenantDataStore.startInvoicePaymentFlow(invoice)
+                    } catch (error: Throwable) {
+                        paymentFlowMessage = error.message
+                    }
+
+                    isStartingPaymentFlow = false
+                }
+            )
+
+            paymentFlowMessage?.let { message ->
+                Text(text = message, color = DoorTreeTheme.textSecondary)
+            }
+
             InvoiceHeroCard(invoice = invoice)
             InvoiceLineItemsSection(invoice = invoice)
             InvoiceSummarySection(invoice = invoice)
@@ -71,6 +103,19 @@ fun InvoiceView(
                 InvoiceNotesSection(invoice = invoice)
             }
         }
+    }
+
+    checkoutUrl?.let { url ->
+        HostedCheckoutSheetView(
+            url = url,
+            title = L("payments.pay_now"),
+            onDismiss = {
+                checkoutUrl = null
+                scope.launch {
+                    tenantDataStore.refresh()
+                }
+            }
+        )
     }
 }
 

@@ -1,6 +1,7 @@
 package codewhale.doortreeandroid
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -107,6 +112,8 @@ private fun LeaseRenewalBanner(tenantDataStore: TenantDataStore) {
 
 @Composable
 private fun LeaseDocumentsSection(tenantDataStore: TenantDataStore) {
+    var selectedDocument by remember { mutableStateOf<DocumentItem?>(null) }
+
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(text = L("lease.documents"), color = DoorTreeTheme.textPrimary)
         if (tenantDataStore.documents.isEmpty()) {
@@ -117,20 +124,77 @@ private fun LeaseDocumentsSection(tenantDataStore: TenantDataStore) {
             )
         } else {
             tenantDataStore.documents.forEach { document ->
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .glassCard(cornerRadius = 16.dp)
+                        .then(
+                            if (document.url != null) {
+                                Modifier.clickable {
+                                    tenantDataStore.markDocumentRead(document)
+                                    selectedDocument = document
+                                }
+                            } else {
+                                Modifier
+                            }
+                        )
                         .padding(14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(systemIcon("doc.fill"), contentDescription = null, tint = DoorTreeTheme.leaseAccent)
-                    Text(text = document.filename, color = DoorTreeTheme.textPrimary, modifier = Modifier.weight(1f))
-                    Icon(systemIcon("arrow.down.circle.fill"), contentDescription = null, tint = DoorTreeTheme.textSecondary)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(systemIcon("doc.fill"), contentDescription = null, tint = DoorTreeTheme.leaseAccent)
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(text = document.filename, color = DoorTreeTheme.textPrimary)
+                                if (document.requiresRenewalAction) {
+                                    Text(
+                                        text = "Action Required",
+                                        color = DoorTreeTheme.destructive,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier
+                                            .background(
+                                                DoorTreeTheme.destructive.copy(alpha = 0.14f),
+                                                RoundedCornerShape(999.dp)
+                                            )
+                                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                            if (document.subtitle.isNotBlank()) {
+                                Text(text = document.subtitle, color = DoorTreeTheme.textSecondary)
+                            }
+                        }
+                        Icon(systemIcon("arrow.down.circle.fill"), contentDescription = null, tint = DoorTreeTheme.textSecondary)
+                    }
+
+                    if (document.shouldShowNotificationBadge) {
+                        NotificationDotBadge(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                        )
+                    }
                 }
             }
         }
+    }
+
+    selectedDocument?.let { document ->
+        PDFDocumentSheetView(
+            document = document,
+            tenantName = tenantDataStore.tenantProfile.name,
+            onRenewalDecision = { status, signatureBitmap ->
+                tenantDataStore.recordRenewalDecision(document, status, signatureBitmap)
+            },
+            onDismiss = { selectedDocument = null }
+        )
     }
 }
 

@@ -20,11 +20,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import codewhale.doortreeandroid.ui.theme.DoorTreeTheme
+import android.content.Intent
+import android.net.Uri
 
 @Composable
 fun LoginView(authSession: AuthSessionStore) {
+    val context = LocalContext.current
     var showEmailAuth by remember { mutableStateOf(false) }
     var authAlertMessage by remember { mutableStateOf("") }
 
@@ -71,6 +76,15 @@ fun LoginView(authSession: AuthSessionStore) {
                     icon = "envelope.fill",
                     onClick = { showEmailAuth = true }
                 )
+
+                LoginDisclaimer(
+                    onOpenTerms = {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://doortree.co/terms-and-conditions")))
+                    },
+                    onOpenPrivacy = {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://doortree.co/privacy-policy")))
+                    }
+                )
             }
 
             Box(modifier = Modifier.fillMaxWidth().padding(bottom = 22.dp)) {
@@ -107,6 +121,43 @@ fun LoginView(authSession: AuthSessionStore) {
             title = { Text(L("auth.alert.title")) },
             text = { Text(authAlertMessage) }
         )
+    }
+}
+
+@Composable
+private fun LoginDisclaimer(
+    onOpenTerms: () -> Unit,
+    onOpenPrivacy: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = L("login.disclaimer.prefix"),
+            color = DoorTreeTheme.textSecondary
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = L("policy.terms_of_use.title"),
+                color = DoorTreeTheme.textSecondary,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier.clickable(onClick = onOpenTerms)
+            )
+            Text(
+                text = L("login.disclaimer.and"),
+                color = DoorTreeTheme.textSecondary
+            )
+            Text(
+                text = L("policy.privacy_policy.title"),
+                color = DoorTreeTheme.textSecondary,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier.clickable(onClick = onOpenPrivacy)
+            )
+        }
     }
 }
 

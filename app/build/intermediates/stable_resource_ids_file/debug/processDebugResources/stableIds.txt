@@ -1,4 +1,4 @@
-codewhale.doortreeandroid:xml/image_share_filepaths = 0x7f130002
+codewhale.doortreeandroid:xml/image_share_filepaths = 0x7f130003
 codewhale.doortreeandroid:xml/backup_rules = 0x7f130000
 codewhale.doortreeandroid:styleable/ViewStubCompat = 0x7f120093
 codewhale.doortreeandroid:styleable/ViewBackgroundHelper = 0x7f120091
@@ -4473,6 +4473,7 @@ codewhale.doortreeandroid:attr/thumbHeight = 0x7f030428
 codewhale.doortreeandroid:color/mtrl_navigation_item_icon_tint = 0x7f0502e6
 codewhale.doortreeandroid:attr/paddingTopNoTitle = 0x7f03033a
 codewhale.doortreeandroid:attr/layout_dodgeInsetEdges = 0x7f030283
+codewhale.doortreeandroid:xml/file_paths = 0x7f130002
 codewhale.doortreeandroid:style/Base.AlertDialog.AppCompat = 0x7f11000b
 codewhale.doortreeandroid:integer/m3_sys_motion_duration_extra_long4 = 0x7f090013
 codewhale.doortreeandroid:id/accessibility_custom_action_2 = 0x7f08001c

@@ -1,5 +1,6 @@
 package codewhale.doortreeandroid
 
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
@@ -161,6 +162,20 @@ class FirebaseRestClient {
         )
     }
 
+    suspend fun putDatabaseValue(
+        path: String,
+        idToken: String,
+        value: JsonElement
+    ): Boolean {
+        val token = URLEncoder.encode(idToken, StandardCharsets.UTF_8.toString())
+        val normalizedPath = path.trim('/')
+        return executeBooleanWrite(
+            url = "${FirebaseConfig.databaseUrl}/$normalizedPath.json?auth=$token",
+            method = "PUT",
+            body = value.toString()
+        )
+    }
+
     private suspend inline fun <reified T> postJson(url: String, body: JsonObject): T {
         return executeRequest(
             Request.Builder()
@@ -204,11 +219,19 @@ class FirebaseRestClient {
 
     private suspend fun <T> executeRequest(request: Request, mapper: (String) -> T): T {
         return withContext(Dispatchers.IO) {
+            val safeUrl = sanitizedUrl(request.url.toString())
+            Log.d(TAG, "request start method=${request.method} url=$safeUrl")
             client.newCall(request).execute().use { response ->
                 val rawBody = response.body?.string().orEmpty()
                 if (!response.isSuccessful) {
-                    throw parseError(rawBody, response.message)
+                    val parsedError = parseError(rawBody, response.message)
+                    Log.e(
+                        TAG,
+                        "request failed method=${request.method} url=$safeUrl status=${response.code} code=${parsedError.code}"
+                    )
+                    throw parsedError
                 }
+                Log.d(TAG, "request success method=${request.method} url=$safeUrl status=${response.code}")
                 mapper(rawBody)
             }
         }
@@ -225,6 +248,16 @@ class FirebaseRestClient {
         }.getOrNull().orEmpty()
         val normalized = if (code.isBlank()) "UNKNOWN" else code
         return FirebaseRestException(normalized, if (normalized == "UNKNOWN") fallbackMessage else normalized)
+    }
+
+    private fun sanitizedUrl(url: String): String {
+        return url
+            .replace(Regex("([?&]key=)[^&]+"), "$1<redacted>")
+            .replace(Regex("([?&]auth=)[^&]+"), "$1<redacted>")
+    }
+
+    private companion object {
+        const val TAG = "DoorTreeFirebaseRest"
     }
 }
 

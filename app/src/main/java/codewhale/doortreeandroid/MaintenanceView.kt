@@ -23,9 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import codewhale.doortreeandroid.ui.theme.DoorTreeTheme
 
-private const val MaintenanceVisibleRows = 3
-private val PendingInvoicesMaxHeight = 250.dp
-private val ActiveRequestsMaxHeight = 262.dp
+private const val PendingInvoicesVisibleRows = 4
+private val PendingInvoicesMaxHeight = 336.dp
 
 @Composable
 fun MaintenanceView(
@@ -34,6 +33,11 @@ fun MaintenanceView(
     onOpenInvoice: (PendingInvoiceItem) -> Unit,
     onOpenRequest: (MaintenanceRequestItem) -> Unit
 ) {
+    val sortedActiveRequests = tenantDataStore.maintenanceRequests.sortedWith(
+        compareBy<MaintenanceRequestItem>({ it.sortDate == null }, { it.sortDate }, { it.id })
+    )
+    val pendingInvoiceNotificationCount = tenantDataStore.pendingInvoices.size
+
     RefreshableScreen(
         onRefresh = { tenantDataStore.refresh() },
         modifier = Modifier
@@ -43,7 +47,6 @@ fun MaintenanceView(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .topSafeAreaPadding()
                 .padding(horizontal = DoorTreeTheme.screenHorizontalPadding, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -73,11 +76,19 @@ fun MaintenanceView(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = L("maintenance.section.pending_invoices"),
-                    color = DoorTreeTheme.textSecondary,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = L("maintenance.section.pending_invoices"),
+                        color = DoorTreeTheme.textSecondary,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (pendingInvoiceNotificationCount > 0) {
+                        NotificationCountBadge(count = pendingInvoiceNotificationCount)
+                    }
+                }
                 if (tenantDataStore.pendingInvoices.isEmpty()) {
                     SectionPlaceholder(
                         systemName = "doc.badge.clock",
@@ -87,6 +98,7 @@ fun MaintenanceView(
                 } else {
                     SectionList(
                         itemCount = tenantDataStore.pendingInvoices.size,
+                        visibleRows = PendingInvoicesVisibleRows,
                         maxHeight = PendingInvoicesMaxHeight
                     ) {
                         tenantDataStore.pendingInvoices.forEach { invoice ->
@@ -102,6 +114,7 @@ fun MaintenanceView(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .weight(1f)
                     .glassCard(cornerRadius = 20.dp)
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -117,12 +130,16 @@ fun MaintenanceView(
                         title = "No active requests",
                         message = "Maintenance requests will appear here after they are created for this tenant."
                     )
+                    Spacer(modifier = Modifier.weight(1f))
                 } else {
-                    SectionList(
-                        itemCount = tenantDataStore.maintenanceRequests.size,
-                        maxHeight = ActiveRequestsMaxHeight
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        tenantDataStore.maintenanceRequests.forEach { request ->
+                        sortedActiveRequests.forEach { request ->
                             DismissiblePendingRequestRow(
                                 request = request,
                                 subtitle = LF("requests.submitted_format", request.submittedDate),
@@ -177,10 +194,11 @@ private fun PendingInvoiceRow(
 @Composable
 private fun SectionList(
     itemCount: Int,
+    visibleRows: Int,
     maxHeight: androidx.compose.ui.unit.Dp,
     content: @Composable () -> Unit
 ) {
-    val scrollModifier = if (itemCount > MaintenanceVisibleRows) {
+    val scrollModifier = if (itemCount > visibleRows) {
         Modifier
             .fillMaxWidth()
             .heightIn(max = maxHeight)

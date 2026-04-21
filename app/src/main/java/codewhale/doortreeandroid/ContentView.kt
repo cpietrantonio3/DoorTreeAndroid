@@ -41,6 +41,7 @@ fun ContentView(
     var selectedInvoice by remember { mutableStateOf<PendingInvoiceItem?>(null) }
     var selectedRequest by remember { mutableStateOf<MaintenanceRequestItem?>(null) }
     val chatBadgeCount = if (selectedTab == DoorTreeTab.Chat) 0 else tenantDataStore.unreadChatCount
+    val pendingInvoiceBadgeCount = tenantDataStore.pendingInvoices.size
 
     LaunchedEffect(selectedTab) {
         tenantDataStore.setChatOpen(selectedTab == DoorTreeTab.Chat)
@@ -53,6 +54,7 @@ fun ContentView(
                     DoorTreeTab.Home -> HomeView(
                         tenantDataStore = tenantDataStore,
                         onOpenRequest = { request -> selectedRequest = request },
+                        onSelectProfile = { selectedTab = DoorTreeTab.Profile },
                         onSelectAction = { route ->
                             when (route) {
                                 QuickActionRoute.Payments -> selectedTab = DoorTreeTab.Payments
@@ -80,15 +82,21 @@ fun ContentView(
 
             NavigationBar(containerColor = DoorTreeTheme.tabBarOverlay) {
                 DoorTreeTab.entries.forEach { tab ->
+                    val badgeCount = when (tab) {
+                        DoorTreeTab.Requests -> pendingInvoiceBadgeCount
+                        DoorTreeTab.Chat -> chatBadgeCount
+                        else -> 0
+                    }
+
                     NavigationBarItem(
                         selected = selectedTab == tab,
                         onClick = { selectedTab = tab },
                         icon = {
-                            if (tab == DoorTreeTab.Chat && chatBadgeCount > 0) {
+                            if (badgeCount > 0) {
                                 BadgedBox(
                                     badge = {
                                         Badge {
-                                            Text(text = chatBadgeCount.coerceAtMost(99).toString())
+                                            Text(text = badgeCount.coerceAtMost(99).toString())
                                         }
                                     }
                                 ) {
@@ -122,6 +130,7 @@ fun ContentView(
         selectedInvoice?.let { invoice ->
             InvoiceView(
                 invoice = invoice,
+                tenantDataStore = tenantDataStore,
                 onClose = { selectedInvoice = null }
             )
         }

@@ -367,7 +367,20 @@ data class PendingInvoiceItem(
     val total: String,
     val balance: String,
     val lineItems: List<InvoiceLineItem>,
+    val stripe: PendingInvoiceStripeDetails? = null,
     val sortDate: LocalDate? = null
+) {
+    val hostedCheckoutUrl: String?
+        get() = stripe
+            ?.takeIf { it.isActive && it.paymentLinkUrl.isNotBlank() }
+            ?.paymentLinkUrl
+}
+
+data class PendingInvoiceStripeDetails(
+    val isActive: Boolean,
+    val checkoutSessionId: String,
+    val currency: String,
+    val paymentLinkUrl: String
 )
 
 data class InvoiceLineItem(
@@ -483,8 +496,34 @@ data class ChatSection(
 
 data class DocumentItem(
     val id: String = UUID.randomUUID().toString(),
-    val filename: String
-)
+    val filename: String,
+    val subtitle: String = "",
+    val url: String? = null,
+    val storageReference: String = "",
+    val databasePath: String? = null,
+    val read: Boolean = false,
+    val isRenewalNotice: Boolean = false,
+    val isActionTaken: Boolean = true,
+    val status: String = ""
+) {
+    val requiresRenewalAction: Boolean
+        get() = isRenewalNotice && !isActionTaken
+
+    val shouldShowNotificationBadge: Boolean
+        get() = !read || requiresRenewalAction
+
+    val markingRead: DocumentItem
+        get() = copy(read = true)
+
+    fun markingRenewalActionTaken(status: String, url: String? = null): DocumentItem {
+        return copy(
+            url = url ?: this.url,
+            read = true,
+            isActionTaken = true,
+            status = status
+        )
+    }
+}
 
 enum class NotificationCenterCategory(
     val icon: String,

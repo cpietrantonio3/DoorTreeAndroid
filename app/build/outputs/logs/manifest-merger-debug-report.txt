@@ -1,9 +1,20 @@
 -- Merging decision tree log ---
+provider#androidx.core.content.FileProvider
+INJECTED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:16:9-24:20
+	android:grantUriPermissions
+		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:20:13-47
+	android:authorities
+		INJECTED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml
+		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:18:13-64
+	android:exported
+		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:19:13-37
+	android:name
+		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:17:13-62
 manifest
-ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:2:1-27:12
-INJECTED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:2:1-27:12
-INJECTED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:2:1-27:12
-INJECTED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:2:1-27:12
+ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:2:1-37:12
+INJECTED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:2:1-37:12
+INJECTED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:2:1-37:12
+INJECTED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:2:1-37:12
 MERGED from [com.google.android.material:material:1.12.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/cafa892b94e73d0de73ced127d41c189/transformed/material-1.12.0/AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.compose.material3:material3-android:1.3.1] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/54ae1636a4f6cbc7477c6eb1f0b3a095/transformed/material3-release/AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.compose.animation:animation-core-android:1.7.8] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/2515b7c48c980e21d7276b7bc7127425/transformed/animation-core-release/AndroidManifest.xml:2:1-7:12
@@ -137,8 +148,8 @@ ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/Android
 	android:name
 		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:5:22-62
 application
-ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:7:5-25:19
-INJECTED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:7:5-25:19
+ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:7:5-35:19
+INJECTED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:7:5-35:19
 MERGED from [com.google.android.material:material:1.12.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/cafa892b94e73d0de73ced127d41c189/transformed/material-1.12.0/AndroidManifest.xml:22:5-20
 MERGED from [com.google.android.material:material:1.12.0] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/cafa892b94e73d0de73ced127d41c189/transformed/material-1.12.0/AndroidManifest.xml:22:5-20
 MERGED from [androidx.compose.ui:ui-tooling-android:1.7.8] /Users/claudiopietrantonio/.gradle/caches/8.13/transforms/a113e1d53d4a7e7d87160b48f0465067/transformed/ui-tooling-release/AndroidManifest.xml:22:5-26:19
@@ -210,23 +221,29 @@ MERGED from [com.google.android.play:core-common:2.0.3] /Users/claudiopietranton
 	android:dataExtractionRules
 		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:9:9-65
 activity#codewhale.doortreeandroid.MainActivity
-ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:16:9-24:20
+ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:26:9-34:20
 	android:exported
-		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:18:13-36
+		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:28:13-36
 	android:theme
-		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:19:13-57
+		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:29:13-57
 	android:name
-		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:17:13-41
+		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:27:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:20:13-23:29
+ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:30:13-33:29
 action#android.intent.action.MAIN
-ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:21:17-69
+ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:31:17-69
 	android:name
-		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:21:25-66
+		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:31:25-66
 category#android.intent.category.LAUNCHER
-ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:22:17-77
+ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:32:17-77
 	android:name
-		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:22:27-74
+		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:32:27-74
+meta-data#android.support.FILE_PROVIDER_PATHS
+ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:21:13-23:54
+	android:resource
+		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:23:17-51
+	android:name
+		ADDED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml:22:17-67
 uses-sdk
 INJECTED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from /Users/claudiopietrantonio/Repos/DoorTreeAndroid/app/src/main/AndroidManifest.xml

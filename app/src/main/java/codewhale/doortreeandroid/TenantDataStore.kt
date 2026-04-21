@@ -1,5 +1,14 @@
 package codewhale.doortreeandroid
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Typeface
+import android.graphics.pdf.PdfDocument
+import android.graphics.pdf.PdfRenderer
+import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +27,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -29,6 +39,9 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.jsonPrimitive
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.text.NumberFormat
 import java.text.ParsePosition
 import java.time.Instant
@@ -40,6 +53,8 @@ import java.util.Locale
 import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.math.max
+import kotlin.math.min
 
 data class MaintenancePhotoUpload(
     val bytes: ByteArray,
@@ -490,6 +505,8 @@ class TenantDataStore(
         private set
     var pendingInvoices by mutableStateOf<List<PendingInvoiceItem>>(emptyList())
         private set
+    var documents by mutableStateOf<List<DocumentItem>>(emptyList())
+        private set
     var maintenanceRequests by mutableStateOf<List<MaintenanceRequestItem>>(emptyList())
         private set
     var chatSections by mutableStateOf<List<ChatSection>>(emptyList())
@@ -517,8 +534,8 @@ class TenantDataStore(
             val base = record.leaseDetails
             val rentEntry = nextRentEntry ?: currentRentEntry
             return LeaseDetails(
-                startDate = base.startDate,
-                endDate = base.endDate,
+                startDate = activeLeaseStartDate ?: base.startDate,
+                endDate = activeLeaseEndDate ?: base.endDate,
                 monthlyRent = rentEntry?.amount ?: base.monthlyRent,
                 unitLabel = base.unitLabel,
                 renewalNotice = base.renewalNotice
@@ -662,8 +679,8 @@ class TenantDataStore(
     val completedPayments: List<PaymentItem>
         get() = paymentHistory.filter { it.status == StatusBadgeStyle.Paid }
 
-    val documents: List<DocumentItem>
-        get() = emptyList()
+    val unreadDocumentCount: Int
+        get() = documents.count { it.shouldShowNotificationBadge }
 
     val rentScheduleEntries: List<RentScheduleEntry>
         get() = RentScheduleBuilder.entries(
@@ -742,49 +759,7 @@ class TenantDataStore(
         }
 
     val notificationCenterItems: List<NotificationCenterItem>
-        get() {
-            val record = tenantRecord ?: return emptyList()
-            val monthlyRent = leaseDetails.monthlyRent.takeIf { it != "-" } ?: "Your rent"
-            val propertyName = propertyInfo.name.takeIf { it != "Property" } ?: "your property"
-            val unitLabel = propertyInfo.unit.takeIf { it != "Unit -" } ?: "your unit"
-            val leaseEnd = leaseDetails.endDate.takeIf { it != "-" } ?: "your current lease term"
-            val managerName = propertyManagerName.takeIf { it != "Property Manager" } ?: "your property manager"
-
-            return listOf(
-                NotificationCenterItem(
-                    id = "rent-reminder",
-                    title = "Rent reminder",
-                    message = "$monthlyRent is due for ${currentMonthLabel()}. You can submit payment anytime from the Payments tab.",
-                    timestamp = "Today",
-                    category = NotificationCenterCategory.Payment,
-                    isUnread = true
-                ),
-                NotificationCenterItem(
-                    id = "lease-status",
-                    title = "Lease status",
-                    message = "Your lease for $propertyName stays active through $leaseEnd.",
-                    timestamp = "This week",
-                    category = NotificationCenterCategory.Lease,
-                    isUnread = true
-                ),
-                NotificationCenterItem(
-                    id = "manager-contact",
-                    title = "Manager contact",
-                    message = "$managerName is assigned to $unitLabel. Use Chat if you need help with the apartment.",
-                    timestamp = "Anytime",
-                    category = NotificationCenterCategory.Message,
-                    isUnread = false
-                ),
-                NotificationCenterItem(
-                    id = "profile-sync",
-                    title = "Profile synced",
-                    message = "Your tenant account for ${record.email} is connected and ready.",
-                    timestamp = "Now",
-                    category = NotificationCenterCategory.Reminder,
-                    isUnread = false
-                )
-            )
-        }
+        get() = emptyList()
 
     val unreadNotificationCount: Int
         get() = notificationCenterItems.count { it.isUnread }
@@ -856,6 +831,97 @@ class TenantDataStore(
         }
     }
 
+    fun startInvoicePaymentFlow(invoice: PendingInvoiceItem): String {
+        if (activeUid.isNullOrBlank()) {
+            throw IllegalStateException(L("payments.error.sign_in_again"))
+        }
+
+        return invoice.hostedCheckoutUrl
+            ?: throw IllegalStateException("Stripe is still preparing this invoice payment link.")
+    }
+
+    fun markDocumentRead(document: DocumentItem) {
+        val uid = activeUid ?: return
+        val databasePath = document.databasePath?.trim().orEmpty()
+        if (databasePath.isBlank() || document.read) {
+            return
+        }
+
+        val previousDocuments = documents
+        documents = documents.map { item ->
+            if (item.id == document.id) item.markingRead else item
+        }
+
+        scope.launch {
+            val idToken = authSession.ensureValidIdToken()
+            val updated = idToken != null && restClient.patchDatabaseRoot(
+                idToken = idToken,
+                body = buildJsonObject {
+                    put("users/$uid/$databasePath/read", JsonPrimitive(true))
+                }
+            )
+
+            if (!updated) {
+                documents = previousDocuments
+                debugMaintenanceRequestLog("Failed to mark document as read at $databasePath")
+            }
+        }
+    }
+
+    suspend fun recordRenewalDecision(
+        document: DocumentItem,
+        status: String,
+        signatureBitmap: Bitmap? = null
+    ) {
+        val uid = activeUid ?: throw IllegalStateException("Unable to update this renewal notice right now.")
+        val databasePath = document.databasePath?.trim().orEmpty()
+        if (databasePath.isBlank() || !document.isRenewalNotice) {
+            throw IllegalStateException("Unable to update this renewal notice right now.")
+        }
+
+        val previousDocuments = documents
+        documents = documents.map { item ->
+            if (item.id == document.id) item.markingRenewalActionTaken(status) else item
+        }
+
+        try {
+            var signatureStoragePath: String? = null
+            var refreshedDocumentUrl: String? = null
+
+            if (status == "accept" && signatureBitmap != null) {
+                signatureStoragePath = uploadRenewalSignature(signatureBitmap, document)
+                refreshedDocumentUrl = uploadSignedRenewalPdf(signatureBitmap, document)
+            }
+
+            val idToken = authSession.ensureValidIdToken()
+                ?: throw IllegalStateException(L("payments.error.sign_in_again"))
+            val updated = restClient.patchDatabaseRoot(
+                idToken = idToken,
+                body = buildJsonObject {
+                    put("users/$uid/$databasePath/status", JsonPrimitive(status))
+                    put("users/$uid/$databasePath/isActionTaken", JsonPrimitive(true))
+                    put("users/$uid/$databasePath/read", JsonPrimitive(true))
+                    signatureStoragePath?.let { path ->
+                        put("users/$uid/$databasePath/signatureStoragePath", JsonPrimitive(path))
+                    }
+                }
+            )
+
+            if (!updated) {
+                throw IllegalStateException("Unable to update this renewal notice right now.")
+            }
+
+            refreshedDocumentUrl?.let { url ->
+                documents = documents.map { item ->
+                    if (item.id == document.id) item.markingRenewalActionTaken(status, url) else item
+                }
+            }
+        } catch (error: Exception) {
+            documents = previousDocuments
+            throw error
+        }
+    }
+
     fun setChatOpen(isOpen: Boolean) {
         isChatOpen = isOpen
         if (isOpen && unreadChatMessageIds.isNotEmpty()) {
@@ -922,21 +988,24 @@ class TenantDataStore(
             put("preferredDate", JsonPrimitive(requestDate))
             put("priority", JsonPrimitive(priority.defaultTitle))
             put("property", JsonPrimitive(record.propertyName))
-            put("status", JsonPrimitive("submitted"))
+            put("status", JsonPrimitive("pending"))
             put("tenant", JsonPrimitive(record.tenantProfile.name))
             put("unit", JsonPrimitive(record.unitNumber))
             put("updatedAt", JsonPrimitive(timestamp))
             validatedRefundAmount?.let { put("amount", JsonPrimitive(it)) }
         }
 
-        val updated = restClient.patchDatabaseRoot(
+        val tenantUpdated = restClient.putDatabaseValue(
+            path = requestPath,
             idToken = idToken,
-            body = buildJsonObject {
-                put(requestPath, payload)
-                put(landlordPath, payload)
-            }
+            value = payload
         )
-        if (!updated) {
+        val landlordUpdated = restClient.putDatabaseValue(
+            path = landlordPath,
+            idToken = idToken,
+            value = payload
+        )
+        if (!tenantUpdated || !landlordUpdated) {
             throw IllegalStateException("Unable to submit maintenance request.")
         }
 
@@ -957,14 +1026,17 @@ class TenantDataStore(
         val tenantPath = maintenanceRequestPath(uid = uid, date = requestDate, requestId = request.id)
         val landlordPath = maintenanceRequestPath(uid = landlordUid, date = requestDate, requestId = request.id)
 
-        val updated = restClient.patchDatabaseRoot(
+        val tenantUpdated = restClient.putDatabaseValue(
+            path = tenantPath,
             idToken = idToken,
-            body = buildJsonObject {
-                put(tenantPath, JsonNull)
-                put(landlordPath, JsonNull)
-            }
+            value = JsonNull
         )
-        if (!updated) {
+        val landlordUpdated = restClient.putDatabaseValue(
+            path = landlordPath,
+            idToken = idToken,
+            value = JsonNull
+        )
+        if (!tenantUpdated || !landlordUpdated) {
             throw IllegalStateException("Unable to delete request.")
         }
 
@@ -1215,6 +1287,7 @@ class TenantDataStore(
             rentEntries = emptyList()
             notificationPreferences = DoorTreeSampleData.notificationPreferences
             pendingInvoices = emptyList()
+            documents = emptyList()
             maintenanceRequests = emptyList()
             chatSections = emptyList()
             landlordInteracSettings = null
@@ -1236,6 +1309,7 @@ class TenantDataStore(
             rentEntries = emptyList()
             notificationPreferences = DoorTreeSampleData.notificationPreferences
             pendingInvoices = emptyList()
+            documents = emptyList()
             maintenanceRequests = emptyList()
             chatSections = emptyList()
             chatParticipantNameOverride = null
@@ -1262,6 +1336,11 @@ class TenantDataStore(
         tenantRecord = parsedTenantRecord
         rentEntries = parseRentEntries(objectValue)
         pendingInvoices = parsePendingInvoices(objectValue)
+        documents = parseLeaseDocuments(
+            renewalNoticesValue = objectValue["renewalNotices"],
+            rl31NoticesValue = objectValue["RL31Notices"],
+            rl31Value = objectValue["RL31"]
+        )
         debugMaintenanceRequestLog("loadTenantRecord pendingInvoices count=${pendingInvoices.size}")
         val chatConversation = parseChatConversation(
             messagesRoot = objectValue["messages"] as? JsonObject,
@@ -1374,6 +1453,7 @@ class TenantDataStore(
         rentEntries = emptyList()
         notificationPreferences = DoorTreeSampleData.notificationPreferences
         pendingInvoices = emptyList()
+        documents = emptyList()
         maintenanceRequests = emptyList()
         chatSections = emptyList()
         landlordInteracSettings = null
@@ -1608,12 +1688,96 @@ class TenantDataStore(
 
     private fun parseRentEntries(snapshot: JsonObject): List<RentLedgerEntry> {
         val rentRoot = snapshot["rent"] as? JsonObject ?: return emptyList()
-        return rentRoot.entries
+        val entriesRoot = activeRentEntriesRoot(rentRoot)
+        return entriesRoot.entries
             .mapNotNull { (dueDate, value) ->
                 val rentObject = value as? JsonObject ?: return@mapNotNull null
+                if (!isRentEntryNode(dueDate, rentObject)) {
+                    return@mapNotNull null
+                }
+
                 rentEntryFromSnapshot(dueDate, rentObject)
             }
             .sortedBy { it.sortDate ?: LocalDate.MIN }
+    }
+
+    private val activeLeaseStartDate: String?
+        get() {
+            val sortedEntries = rentEntries.sortedBy { it.sortDate ?: LocalDate.MAX }
+            return sortedEntries
+                .map { it.leaseStart }
+                .firstOrNull { it.isNotBlank() && it != "-" }
+                ?: sortedEntries.firstOrNull()?.dueDateDisplay
+        }
+
+    private val activeLeaseEndDate: String?
+        get() {
+            val sortedEntries = rentEntries.sortedBy { it.sortDate ?: LocalDate.MAX }
+            return sortedEntries
+                .asReversed()
+                .map { it.leaseEnd }
+                .firstOrNull { it.isNotBlank() && it != "-" }
+                ?: sortedEntries.lastOrNull()?.dueDateDisplay
+        }
+
+    private fun activeRentEntriesRoot(root: JsonObject): JsonObject {
+        if (containsRentEntryNodes(root)) {
+            return root
+        }
+
+        val activeLeaseKey = root["activeLease"].stringValue()
+        if (activeLeaseKey.isNotBlank()) {
+            (root[activeLeaseKey] as? JsonObject)?.let { return it }
+        }
+
+        root.entries.forEach { (key, value) ->
+            val leaseObject = value as? JsonObject ?: return@forEach
+            val nestedActiveLeaseKey = leaseObject["activeLease"].stringValue()
+            if (nestedActiveLeaseKey.isBlank()) {
+                return@forEach
+            }
+
+            (root[nestedActiveLeaseKey] as? JsonObject)?.let { return it }
+            if (key == nestedActiveLeaseKey) {
+                return leaseObject
+            }
+        }
+
+        val leaseContainers = root.entries.mapNotNull { (key, value) ->
+            val leaseObject = value as? JsonObject ?: return@mapNotNull null
+            if (key == "activeLease" || isRentEntryNode(key, leaseObject)) {
+                null
+            } else {
+                leaseObject
+            }
+        }
+
+        return leaseContainers.singleOrNull() ?: root
+    }
+
+    private fun containsRentEntryNodes(root: JsonObject): Boolean {
+        return root.entries.any { (key, value) ->
+            val rentObject = value as? JsonObject ?: return@any false
+            isRentEntryNode(key, rentObject)
+        }
+    }
+
+    private fun isRentEntryNode(fallbackDate: String, snapshot: JsonObject): Boolean {
+        if (fallbackDate == "activeLease") {
+            return false
+        }
+
+        if (parseLocalDate(fallbackDate) != null || parseMaintenanceDate(fallbackDate) != null) {
+            return true
+        }
+
+        return snapshot.containsKey("dueDate") ||
+            snapshot.containsKey("date") ||
+            snapshot.containsKey("amount") ||
+            snapshot.containsKey("balance") ||
+            snapshot.containsKey("status") ||
+            snapshot.containsKey("interac") ||
+            snapshot.containsKey("stripe")
     }
 
     private fun rentEntryFromSnapshot(
@@ -1699,6 +1863,467 @@ class TenantDataStore(
                 ?: parseMaintenanceDate(snapshot["createdAt"].stringValue())
                 ?: parseMaintenanceDate(snapshot["updatedAt"].stringValue())
         )
+    }
+
+    private data class LeaseDocumentDraft(
+        val id: String,
+        val title: String,
+        val subtitle: String,
+        val storageReference: String,
+        val databasePath: String,
+        val read: Boolean,
+        val isRenewalNotice: Boolean,
+        val isActionTaken: Boolean,
+        val status: String,
+        val sortDate: LocalDate?
+    )
+
+    private data class LeaseDocumentSource(
+        val value: JsonElement?,
+        val keyPath: List<String>,
+        val idPrefix: String,
+        val title: String,
+        val fileKeys: List<String>,
+        val isRenewalNotice: Boolean
+    )
+
+    private suspend fun parseLeaseDocuments(
+        renewalNoticesValue: JsonElement?,
+        rl31NoticesValue: JsonElement?,
+        rl31Value: JsonElement?
+    ): List<DocumentItem> {
+        val sources = listOf(
+            LeaseDocumentSource(
+                value = renewalNoticesValue,
+                keyPath = listOf("renewalNotices"),
+                idPrefix = "renewal-notice",
+                title = "Renewal Notice",
+                fileKeys = listOf(
+                    "renewalPDFfile",
+                    "renewalPDFFile",
+                    "renewalPdfFile",
+                    "renewalPDF",
+                    "storagePath",
+                    "downloadURL",
+                    "url",
+                    "file"
+                ),
+                isRenewalNotice = true
+            ),
+            LeaseDocumentSource(
+                value = rl31NoticesValue,
+                keyPath = listOf("RL31Notices"),
+                idPrefix = "rl31-notice",
+                title = "RL-31",
+                fileKeys = listOf(
+                    "RL31PDFfile",
+                    "RL31PDFFile",
+                    "RL31PDF",
+                    "RL-31PDFfile",
+                    "RL-31PDFFile",
+                    "rl31PDFfile",
+                    "storagePath",
+                    "downloadURL",
+                    "url",
+                    "file"
+                ),
+                isRenewalNotice = false
+            ),
+            LeaseDocumentSource(
+                value = rl31Value,
+                keyPath = listOf("RL31"),
+                idPrefix = "rl31",
+                title = "RL-31",
+                fileKeys = listOf(
+                    "RL-31PDFfile",
+                    "RL-31PDFFile",
+                    "RL31PDFfile",
+                    "RL31PDFFile",
+                    "rl31PDFfile",
+                    "storagePath",
+                    "downloadURL",
+                    "url",
+                    "file"
+                ),
+                isRenewalNotice = false
+            )
+        )
+
+        return sources
+            .flatMap { source ->
+                collectLeaseDocumentDrafts(
+                    value = source.value,
+                    keyPath = source.keyPath,
+                    idPrefix = source.idPrefix,
+                    title = source.title,
+                    fileKeys = source.fileKeys,
+                    isRenewalNotice = source.isRenewalNotice
+                )
+            }
+            .distinctBy { it.id }
+            .sortedWith(
+                compareByDescending<LeaseDocumentDraft> { it.sortDate ?: LocalDate.MIN }
+                    .thenBy { it.title }
+            )
+            .map { draft ->
+                DocumentItem(
+                    id = draft.id,
+                    filename = draft.title,
+                    subtitle = draft.subtitle,
+                    url = resolveLeaseDocumentUrl(draft.storageReference),
+                    storageReference = draft.storageReference,
+                    databasePath = draft.databasePath,
+                    read = draft.read,
+                    isRenewalNotice = draft.isRenewalNotice,
+                    isActionTaken = draft.isActionTaken,
+                    status = draft.status
+                )
+            }
+    }
+
+    private fun collectLeaseDocumentDrafts(
+        value: JsonElement?,
+        keyPath: List<String>,
+        idPrefix: String,
+        title: String,
+        fileKeys: List<String>,
+        isRenewalNotice: Boolean
+    ): List<LeaseDocumentDraft> {
+        return when (value) {
+            is JsonObject -> {
+                val fileReference = documentFileReference(value, fileKeys)
+                val drafts = mutableListOf<LeaseDocumentDraft>()
+
+                if (fileReference.isNotBlank()) {
+                    val rawDate = leaseDocumentDateValue(value, keyPath)
+                    val subtitle = formatLeaseDocumentDate(rawDate)
+                    val id = (listOf(idPrefix) + keyPath + fileReference)
+                        .joinToString("-")
+                        .replace("/", "-")
+
+                    drafts += LeaseDocumentDraft(
+                        id = id,
+                        title = title,
+                        subtitle = subtitle,
+                        storageReference = fileReference,
+                        databasePath = keyPath.joinToString("/"),
+                        read = value["read"]?.jsonPrimitive?.booleanOrNull ?: false,
+                        isRenewalNotice = isRenewalNotice,
+                        isActionTaken = !isRenewalNotice || (value["isActionTaken"]?.jsonPrimitive?.booleanOrNull ?: false),
+                        status = value["status"].stringValue(),
+                        sortDate = parseLocalDate(rawDate) ?: parseMaintenanceDate(rawDate)
+                    )
+                }
+
+                value.entries
+                    .sortedBy { it.key }
+                    .flatMapTo(drafts) { (key, nestedValue) ->
+                        collectLeaseDocumentDrafts(
+                            value = nestedValue,
+                            keyPath = keyPath + key,
+                            idPrefix = idPrefix,
+                            title = title,
+                            fileKeys = fileKeys,
+                            isRenewalNotice = isRenewalNotice
+                        )
+                    }
+
+                drafts
+            }
+            is JsonArray -> value.flatMapIndexed { index, nestedValue ->
+                collectLeaseDocumentDrafts(
+                    value = nestedValue,
+                    keyPath = keyPath + index.toString(),
+                    idPrefix = idPrefix,
+                    title = title,
+                    fileKeys = fileKeys,
+                    isRenewalNotice = isRenewalNotice
+                )
+            }
+            else -> emptyList()
+        }
+    }
+
+    private fun documentFileReference(snapshot: JsonObject, fileKeys: List<String>): String {
+        return fileKeys
+            .firstNotNullOfOrNull { key -> documentFileReference(snapshot[key]).takeIf { it.isNotBlank() } }
+            .orEmpty()
+    }
+
+    private fun documentFileReference(value: JsonElement?): String {
+        return when (value) {
+            is JsonPrimitive -> value.content.trim()
+            is JsonObject -> firstNonBlank(
+                value["downloadURL"].stringValue(),
+                value["downloadUrl"].stringValue(),
+                value["url"].stringValue(),
+                value["storagePath"].stringValue(),
+                value["path"].stringValue(),
+                value["fullPath"].stringValue(),
+                value["name"].stringValue(),
+                value["filename"].stringValue()
+            )
+            else -> ""
+        }
+    }
+
+    private fun leaseDocumentDateValue(snapshot: JsonObject, keyPath: List<String>): String {
+        val fieldDate = firstNonBlank(
+            snapshot["date"].stringValue(),
+            snapshot["sentAt"].stringValue(),
+            snapshot["issueDate"].stringValue(),
+            snapshot["createdAt"].stringValue(),
+            snapshot["updatedAt"].stringValue(),
+            snapshot["leaseEnd"].stringValue()
+        )
+
+        if (fieldDate.isNotBlank()) {
+            return fieldDate
+        }
+
+        return keyPath
+            .asReversed()
+            .firstOrNull { parseLocalDate(it) != null || parseMaintenanceDate(it) != null }
+            .orEmpty()
+    }
+
+    private fun formatLeaseDocumentDate(raw: String): String {
+        val date = parseLocalDate(raw) ?: parseMaintenanceDate(raw) ?: return raw
+        return date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.getDefault()))
+    }
+
+    private suspend fun resolveLeaseDocumentUrl(rawValue: String): String? {
+        val trimmed = rawValue.trim()
+        if (trimmed.isBlank()) {
+            return null
+        }
+
+        if (trimmed.startsWith("http://", ignoreCase = true) || trimmed.startsWith("https://", ignoreCase = true)) {
+            return trimmed
+        }
+
+        return runCatching {
+            val reference = if (trimmed.startsWith("gs://", ignoreCase = true)) {
+                storage.getReferenceFromUrl(trimmed)
+            } else {
+                storage.reference.child(trimmed.trim('/'))
+            }
+
+            reference.downloadUrl.await().toString()
+        }.onFailure { error ->
+            debugMaintenanceRequestLog("Failed to resolve lease document URL for $trimmed: ${error.localizedMessage ?: "Unknown error"}")
+        }.getOrNull()
+    }
+
+    private suspend fun uploadRenewalSignature(image: Bitmap, document: DocumentItem): String {
+        val signaturePath = renewalSignatureStoragePath(document)
+        val bytes = ByteArrayOutputStream().use { output ->
+            if (!image.compress(Bitmap.CompressFormat.PNG, 100, output)) {
+                throw IllegalStateException("Unable to save the signature image.")
+            }
+            output.toByteArray()
+        }
+        val metadata = StorageMetadata.Builder()
+            .setContentType("image/png")
+            .build()
+
+        storage.reference.child(signaturePath).putBytes(bytes, metadata).await()
+        return signaturePath
+    }
+
+    private suspend fun uploadSignedRenewalPdf(signatureBitmap: Bitmap, document: DocumentItem): String {
+        val documentPath = renewalDocumentStoragePath(document)
+        val originalPdfBytes = storage.reference.child(documentPath).getBytes(50L * 1024L * 1024L).await()
+        val signedPdfBytes = signedRenewalPdfBytes(
+            originalPdfBytes = originalPdfBytes,
+            signatureBitmap = signatureBitmap,
+            tenantName = tenantProfile.name
+        )
+        val metadata = StorageMetadata.Builder()
+            .setContentType("application/pdf")
+            .build()
+        val reference = storage.reference.child(documentPath)
+        reference.putBytes(signedPdfBytes, metadata).await()
+        return reference.downloadUrl.await().toString()
+    }
+
+    private suspend fun signedRenewalPdfBytes(
+        originalPdfBytes: ByteArray,
+        signatureBitmap: Bitmap,
+        tenantName: String
+    ): ByteArray = withContext(Dispatchers.IO) {
+        val inputFile = File.createTempFile("doortree-renewal", ".pdf")
+        try {
+            FileOutputStream(inputFile).use { output ->
+                output.write(originalPdfBytes)
+            }
+
+            val descriptor = ParcelFileDescriptor.open(inputFile, ParcelFileDescriptor.MODE_READ_ONLY)
+            try {
+                val renderer = PdfRenderer(descriptor)
+                try {
+                    val outputDocument = PdfDocument()
+                    try {
+                        for (index in 0 until renderer.pageCount) {
+                            val page = renderer.openPage(index)
+                            try {
+                                val width = page.width
+                                val height = page.height
+                                val pageBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                                try {
+                                    pageBitmap.eraseColor(Color.WHITE)
+                                    page.render(pageBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT)
+
+                                    val pageInfo = PdfDocument.PageInfo.Builder(width, height, index + 1).create()
+                                    val outputPage = outputDocument.startPage(pageInfo)
+                                    outputPage.canvas.drawBitmap(pageBitmap, 0f, 0f, null)
+
+                                    if (index == 0) {
+                                        drawRenewalSignatureBlock(
+                                            canvas = outputPage.canvas,
+                                            pageWidth = width.toFloat(),
+                                            pageHeight = height.toFloat(),
+                                            signatureBitmap = signatureBitmap,
+                                            tenantName = tenantName
+                                        )
+                                    }
+
+                                    outputDocument.finishPage(outputPage)
+                                } finally {
+                                    pageBitmap.recycle()
+                                }
+                            } finally {
+                                page.close()
+                            }
+                        }
+
+                        ByteArrayOutputStream().use { output ->
+                            outputDocument.writeTo(output)
+                            output.toByteArray()
+                        }
+                    } finally {
+                        outputDocument.close()
+                    }
+                } finally {
+                    renderer.close()
+                }
+            } finally {
+                descriptor.close()
+            }
+        } finally {
+            inputFile.delete()
+        }
+    }
+
+    private fun drawRenewalSignatureBlock(
+        canvas: Canvas,
+        pageWidth: Float,
+        pageHeight: Float,
+        signatureBitmap: Bitmap,
+        tenantName: String
+    ) {
+        val today = LocalDate.now()
+        val year = "%04d".format(today.year)
+        val month = "%02d".format(today.monthValue)
+        val day = "%02d".format(today.dayOfMonth)
+        val displayName = tenantName.trim().uppercase(Locale.getDefault())
+        val pageAspectRatio = max(pageWidth, pageHeight) / max(1f, min(pageWidth, pageHeight))
+        val isLegalPage = pageAspectRatio > 1.55f
+        val fieldHeight = max(13f, pageHeight * 0.022f)
+        val textTop = pageHeight * if (isLegalPage) 0.882f else 0.830f
+        val signatureHeight = max(26f, pageHeight * 0.05f)
+        val signatureTop = textTop - signatureHeight * 0.42f
+        val datePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.BLACK
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textSize = max(9f, pageHeight * 0.014f)
+        }
+        val namePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.BLACK
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textSize = max(8f, pageHeight * 0.013f)
+        }
+
+        canvas.drawCenteredText(year, RectF(pageWidth * 0.075f, textTop, pageWidth * 0.150f, textTop + fieldHeight), datePaint)
+        canvas.drawCenteredText(month, RectF(pageWidth * 0.154f, textTop, pageWidth * 0.194f, textTop + fieldHeight), datePaint)
+        canvas.drawCenteredText(day, RectF(pageWidth * 0.196f, textTop, pageWidth * 0.236f, textTop + fieldHeight), datePaint)
+        canvas.drawLeftAlignedText(displayName, RectF(pageWidth * 0.248f, textTop, pageWidth * 0.613f, textTop + fieldHeight), namePaint)
+
+        val signatureBounds = RectF(
+            pageWidth * 0.635f,
+            signatureTop,
+            pageWidth * 0.890f,
+            signatureTop + signatureHeight
+        )
+        val signatureRect = aspectFitRect(
+            imageWidth = signatureBitmap.width.toFloat(),
+            imageHeight = signatureBitmap.height.toFloat(),
+            bounds = signatureBounds
+        )
+        canvas.drawBitmap(signatureBitmap, null, signatureRect, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            isFilterBitmap = true
+        })
+    }
+
+    private fun Canvas.drawCenteredText(text: String, rect: RectF, paint: Paint) {
+        val baseline = rect.centerY() - (paint.descent() + paint.ascent()) / 2f
+        drawText(text, rect.centerX() - paint.measureText(text) / 2f, baseline, paint)
+    }
+
+    private fun Canvas.drawLeftAlignedText(text: String, rect: RectF, paint: Paint) {
+        val baseline = rect.centerY() - (paint.descent() + paint.ascent()) / 2f
+        drawText(text, rect.left, baseline, paint)
+    }
+
+    private fun aspectFitRect(imageWidth: Float, imageHeight: Float, bounds: RectF): RectF {
+        if (imageWidth <= 0f || imageHeight <= 0f) {
+            return bounds
+        }
+
+        val scale = min(bounds.width() / imageWidth, bounds.height() / imageHeight)
+        val width = imageWidth * scale
+        val height = imageHeight * scale
+        return RectF(
+            bounds.centerX() - width / 2f,
+            bounds.centerY() - height / 2f,
+            bounds.centerX() + width / 2f,
+            bounds.centerY() + height / 2f
+        )
+    }
+
+    private fun renewalSignatureStoragePath(document: DocumentItem): String {
+        val documentPath = renewalDocumentStoragePath(document)
+        val directory = documentPath.substringBeforeLast("/", missingDelimiterValue = "")
+        if (directory.isBlank()) {
+            throw IllegalStateException("Unable to save the signature beside the renewal notice.")
+        }
+        return "$directory/tenantSignature.png"
+    }
+
+    private fun renewalDocumentStoragePath(document: DocumentItem): String {
+        val documentPath = firebaseStoragePath(document.storageReference)
+        if (documentPath.isBlank()) {
+            throw IllegalStateException("Unable to find the renewal notice storage path.")
+        }
+        return documentPath
+    }
+
+    private fun firebaseStoragePath(rawValue: String): String {
+        val trimmed = rawValue.trim()
+        if (trimmed.isBlank()) {
+            return ""
+        }
+
+        if (trimmed.startsWith("gs://", ignoreCase = true)) {
+            val withoutScheme = trimmed.removePrefix("gs://")
+            return withoutScheme.substringAfter("/", missingDelimiterValue = "").trim('/')
+        }
+
+        if (trimmed.startsWith("http://", ignoreCase = true) || trimmed.startsWith("https://", ignoreCase = true)) {
+            return ""
+        }
+
+        return trimmed.trim('/')
     }
 
     private fun parseInteracRecipientSettings(snapshot: JsonObject): InteracRecipientSettings? {
@@ -1801,6 +2426,18 @@ class TenantDataStore(
         val createdAt = formatDateTime(snapshot["createdAt"].stringValue())
         val updatedAt = formatDateTime(snapshot["updatedAt"].stringValue())
         val statusLabel = localizedInvoiceStatus(snapshot["status"].stringValue())
+        val stripeSnapshot = snapshot["stripe"] as? JsonObject
+        val paymentLinkUrl = stripeSnapshot?.get("paymentLinkUrl").stringValue()
+        val stripe = if (stripeSnapshot == null && paymentLinkUrl.isBlank()) {
+            null
+        } else {
+            PendingInvoiceStripeDetails(
+                isActive = stripeSnapshot?.get("active")?.jsonPrimitive?.booleanOrNull ?: false,
+                checkoutSessionId = stripeSnapshot?.get("checkoutSessionId").stringValue(),
+                currency = stripeSnapshot?.get("currency").stringValue(),
+                paymentLinkUrl = paymentLinkUrl
+            )
+        }
 
         return PendingInvoiceItem(
             id = invoiceNumber,
@@ -1823,6 +2460,7 @@ class TenantDataStore(
             total = formatCurrency(snapshot["total"].doubleValue()),
             balance = formatCurrency(snapshot["balance"].doubleValue()),
             lineItems = parseInvoiceLineItems(snapshot["lineItems"]),
+            stripe = stripe,
             sortDate = parseLocalDate(snapshot["dueDate"].stringValue()) ?: parseLocalDate(snapshot["issueDate"].stringValue())
         )
     }
