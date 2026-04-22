@@ -60,7 +60,7 @@ fun InteracTransferSheetView(
                 ) {
                     HeaderIconButton(systemName = "xmark", onClick = onDismiss)
                     Text(
-                        text = "Interac e-Transfer",
+                        text = "One-Time Bank Transfer",
                         color = DoorTreeTheme.textPrimary,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold
@@ -74,7 +74,7 @@ fun InteracTransferSheetView(
                     verticalArrangement = Arrangement.spacedBy(18.dp)
                 ) {
                     Text(
-                        text = "Use the landlord's transfer details below to send this rent payment without leaving the app.",
+                        text = "Use the landlord's transfer details below for a one-off wire transfer or e-Transfer.",
                         color = DoorTreeTheme.textSecondary
                     )
 

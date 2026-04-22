@@ -50,6 +50,8 @@ fun DoorTreeAndroidApp() {
     val coroutineScope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
     var showSplash by remember { mutableStateOf(true) }
+    var splashAnimationCompleted by remember { mutableStateOf(false) }
+    var minimumVersionCheckCompleted by remember { mutableStateOf(false) }
     var forceUpdateRequired by remember { mutableStateOf(false) }
     var showEulaDialog by remember { mutableStateOf(false) }
     var didCheckEula by remember { mutableStateOf(false) }
@@ -59,14 +61,21 @@ fun DoorTreeAndroidApp() {
 
     LaunchedEffect(Unit) {
         forceUpdateRequired = checkMinimumVersionRequirement(database)
+        minimumVersionCheckCompleted = true
+    }
+
+    LaunchedEffect(splashAnimationCompleted, minimumVersionCheckCompleted) {
+        if (splashAnimationCompleted && minimumVersionCheckCompleted) {
+            showSplash = false
+        }
     }
 
     DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_START) {
-                coroutineScope.launch {
-                    forceUpdateRequired = checkMinimumVersionRequirement(database)
-                }
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_START) {
+                    coroutineScope.launch {
+                        forceUpdateRequired = checkMinimumVersionRequirement(database)
+                    }
             }
         }
 
@@ -112,7 +121,8 @@ fun DoorTreeAndroidApp() {
                 .background(DoorTreeTheme.backgroundPrimary)
         ) {
             when {
-                showSplash -> SplashLoadingView(onFinish = { showSplash = false })
+                forceUpdateRequired -> Unit
+                showSplash -> SplashLoadingView(onFinish = { splashAnimationCompleted = true })
                 authSession.isRestoringSession -> AuthLoadingOverlay(
                     title = L("auth.restoring.title"),
                     subtitle = L("auth.restoring.subtitle")
@@ -313,18 +323,18 @@ private fun ForceUpdateOverlay(onUpdate: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Update Required",
+                text = L("Update Required"),
                 color = androidx.compose.ui.graphics.Color.White,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Update to the latest version of DoorTree to continue using the app.",
+                text = L("Update to the latest version of DoorTree to continue using the app."),
                 color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.9f),
                 fontSize = 16.sp
             )
             Text(
-                text = "Update Now",
+                text = L("Update Now"),
                 color = androidx.compose.ui.graphics.Color.Black,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold,

@@ -105,13 +105,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre proprietaire cree votre profil locataire dans son systeme DoorTree."
+            "value": "Votre propriétaire crée votre profil locataire dans son système DoorTree."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre proprietaire cree votre profil de locataire dans son systeme DoorTree."
+            "value": "Votre propriétaire crée votre profil de locataire dans son système DoorTree."
           }
         }
       }
@@ -187,19 +187,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "To use DoorTree, you must accept our End-User License Agreement and Code of Conduct. We have zero tolerance for objectionable content or abusive behavior in Chat. Any abusive language, harassment, hate speech, threats, or other objectionable content will result in immediate removal from chats and may lead to removal from the app."
+            "value": "To use DoorTree, you must accept our End-User License Agreement and Code of Conduct. We have zéro tolérance for objectionable content or abusive behavior in Chat. Any abusive language, harassment, hate speech, threats, or other objectionable content will result in immédiate removal from chats and may lead to removal from the app."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pour utiliser DoorTree, vous devez accepter notre Contrat de licence utilisateur final et notre Code de conduite. Nous appliquons une tolerance zero envers tout contenu inapproprie ou comportement abusif dans la messagerie. Tout langage abusif, harcelement, discours haineux, menace ou autre contenu inapproprie entrainera une exclusion immediate des discussions et pourra mener a une exclusion de lapplication."
+            "value": "Pour utiliser DoorTree, vous devez accepter notre Contrat de licence utilisateur final et notre Code de conduite. Nous appliquons une tolérance zéro envers tout contenu inapproprié ou comportement abusif dans la messagerie. Tout langage abusif, harcèlement, discours haineux, menace ou autre contenu inapproprié entraînera une exclusion immédiate des discussions et pourra mener à une exclusion de l'application."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pour utiliser DoorTree, vous devez accepter notre Contrat de licence utilisateur final et notre Code de conduite. Nous appliquons une tolerance zero envers tout contenu inapproprie ou comportement abusif dans la messagerie. Tout langage abusif, harcelement, discours haineux, menace ou autre contenu inapproprie entrainera une exclusion immediate des discussions et pourra mener a une exclusion de lapplication."
+            "value": "Pour utiliser DoorTree, vous devez accepter notre Contrat de licence utilisateur final et notre Code de conduite. Nous appliquons une tolérance zéro envers tout contenu inapproprié ou comportement abusif dans la messagerie. Tout langage abusif, harcèlement, discours haineux, menace ou autre contenu inapproprié entraînera une exclusion immédiate des discussions et pourra mener à une exclusion de l'application."
           }
         }
       }
@@ -237,13 +237,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Etes-vous absolument sur?"
+            "value": "Êtes-vous absolument sûr?"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Etes-vous absolument sur?"
+            "value": "Êtes-vous absolument sûr?"
           }
         }
       }
@@ -369,13 +369,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Supprimer definitivement"
+            "value": "Supprimer définitivement"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Supprimer definitivement"
+            "value": "Supprimer définitivement"
           }
         }
       }
@@ -435,13 +435,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Message signale"
+            "value": "Message signalé"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Message signale"
+            "value": "Message signalé"
           }
         }
       }
@@ -523,13 +523,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Merci. Ce message a ete envoye pour examen."
+            "value": "Merci. Ce message a ete envoyé pour examen."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Merci. Ce message a ete envoye pour examen."
+            "value": "Merci. Ce message a ete envoyé pour examen."
           }
         }
       }
@@ -545,13 +545,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cette action est irreversible. Votre compte et votre profil locataire seront supprimes definitivement."
+            "value": "Cette action est irréversible. Votre compte et votre profil locataire seront supprimés définitivement."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cette action est irreversible. Votre compte et votre profil locataire seront supprimes definitivement."
+            "value": "Cette action est irréversible. Votre compte et votre profil locataire seront supprimés définitivement."
           }
         }
       }
@@ -567,13 +567,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cela supprimera definitivement votre compte DoorTree."
+            "value": "Cela supprimera définitivement votre compte DoorTree."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cela supprimera definitivement votre compte DoorTree."
+            "value": "Cela supprimera définitivement votre compte DoorTree."
           }
         }
       }
@@ -633,13 +633,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les conversations avec votre gestionnaire immobilier apparaitront ici lorsque des messages seront disponibles."
+            "value": "Les conversations avec votre gestionnaire immobilier apparaîtront ici lorsque des messages seront disponibles."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les conversations avec votre gestionnaire immobilier apparaitront ici lorsque des messages seront disponibles."
+            "value": "Les conversations avec votre gestionnaire immobilier apparaîtront ici lorsque des messages seront disponibles."
           }
         }
       }
@@ -743,13 +743,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pour des raisons de securite, veuillez vous deconnecter, vous reconnecter, puis reessayer de supprimer votre compte."
+            "value": "Pour des raisons de sécurité, veuillez vous déconnecter, vous reconnecter, puis réessayer de supprimer votre compte."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pour des raisons de securite, veuillez vous deconnecter, vous reconnecter, puis reessayer de supprimer votre compte."
+            "value": "Pour des raisons de sécurité, veuillez vous déconnecter, vous reconnecter, puis réessayer de supprimer votre compte."
           }
         }
       }
@@ -765,13 +765,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "DoorTree exige des communications respectueuses, legales et professionnelles en tout temps. Le harcelement, les discours haineux, les menaces, le langage discriminatoire, le contenu sexuellement explicite, le pourriel, la fraude et les comportements abusifs ne sont pas permis. Les messages ou demandes qui enfreignent ces regles peuvent etre supprimes, signales ou entrainer des restrictions de compte."
+            "value": "DoorTree exige des communications respectueuses, légales et professionnelles en tout temps. Le harcèlement, les discours haineux, les menaces, le langage discriminatoire, le contenu sexuellement explicite, le pourriel, la fraude et les comportements abusifs ne sont pas permis. Les messages ou demandes qui enfreignent ces règles peuvent être supprimés, signalés ou entraîner des restrictions de compte."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "DoorTree exige des communications respectueuses, legales et professionnelles en tout temps. Le harcelement, les discours haineux, les menaces, le langage discriminatoire, le contenu sexuellement explicite, le pourriel, la fraude et les comportements abusifs ne sont pas permis. Les messages ou demandes qui enfreignent ces regles peuvent etre supprimes, signales ou entrainer des restrictions de compte."
+            "value": "DoorTree exige des communications respectueuses, légales et professionnelles en tout temps. Le harcèlement, les discours haineux, les menaces, le langage discriminatoire, le contenu sexuellement explicite, le pourriel, la fraude et les comportements abusifs ne sont pas permis. Les messages ou demandes qui enfreignent ces règles peuvent être supprimés, signalés ou entraîner des restrictions de compte."
           }
         }
       }
@@ -803,7 +803,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "End User Licence Agreement"
+            "value": "End-User Licence Agreement"
           }
         },
         "fr": {
@@ -825,19 +825,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "DoorTree collects only the information needed to provide tenancy services, including account details, property details, lease information, maintenance records, invoices, and messages. This information is used to operate the app, improve support, maintain security, and meet legal obligations. DoorTree does not sell your personal information."
+            "value": "DoorTree collects only the information needed to provide tenancy services, including account détails, property détails, lease information, maintenance records, invoices, and messages. This information is used to operate the app, improve support, maintain security, and meet legal obligations. DoorTree does not sell your personal information."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "DoorTree recueille uniquement les renseignements necessaires pour fournir les services locatifs, y compris les details de compte, de propriete, de bail, les dossiers d'entretien, les factures et les messages. Ces renseignements sont utilises pour faire fonctionner lapplication, ameliorer le soutien, maintenir la securite et respecter les obligations legales. DoorTree ne vend pas vos renseignements personnels."
+            "value": "DoorTree recueille uniquement les renseignements nécessaires pour fournir les services locatifs, y compris les détails de compte, de propriété, de bail, les dossiers d'entretien, les factures et les messages. Ces renseignements sont utilisés pour faire fonctionner l'application, améliorer le soutien, maintenir la sécurité et respecter les obligations légales. DoorTree ne vend pas vos renseignements personnels."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "DoorTree recueille uniquement les renseignements necessaires pour fournir les services locatifs, y compris les details de compte, de propriete, de bail, les dossiers d'entretien, les factures et les messages. Ces renseignements sont utilises pour faire fonctionner lapplication, ameliorer le soutien, maintenir la securite et respecter les obligations legales. DoorTree ne vend pas vos renseignements personnels."
+            "value": "DoorTree recueille uniquement les renseignements nécessaires pour fournir les services locatifs, y compris les détails de compte, de propriété, de bail, les dossiers d'entretien, les factures et les messages. Ces renseignements sont utilisés pour faire fonctionner l'application, améliorer le soutien, maintenir la sécurité et respecter les obligations légales. DoorTree ne vend pas vos renseignements personnels."
           }
         }
       }
@@ -875,13 +875,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "DoorTree est fourni pour aider les locataires et les proprietaires a gerer les renseignements lies au logement, les paiements, les documents et les communications. Vous acceptez dutiliser lapplication uniquement a des fins locatives legales, de garder vos renseignements exacts, de proteger vos identifiants et de ne pas detourner, retroconcevoir ou perturber le service."
+            "value": "DoorTree est fourni pour aider les locataires et les propriétaires à gérer les renseignements liés au logement, les paiements, les documents et les communications. Vous acceptez d'utiliser l'application uniquement à des fins locatives légales, de garder vos renseignements exacts, de protéger vos identifiants et de ne pas détourner, rétroconcevoir ou perturber le service."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "DoorTree est fourni pour aider les locataires et les proprietaires a gerer les renseignements lies au logement, les paiements, les documents et les communications. Vous acceptez dutiliser lapplication uniquement a des fins locatives legales, de garder vos renseignements exacts, de proteger vos identifiants et de ne pas detourner, retroconcevoir ou perturber le service."
+            "value": "DoorTree est fourni pour aider les locataires et les propriétaires à gérer les renseignements liés au logement, les paiements, les documents et les communications. Vous acceptez d'utiliser l'application uniquement à des fins locatives légales, de garder vos renseignements exacts, de protéger vos identifiants et de ne pas détourner, rétroconcevoir ou perturber le service."
           }
         }
       }
@@ -942,7 +942,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le profil commence chez le proprietaire"
+            "value": "Le profil commence chez le propriétaire"
           }
         },
         "fr-CA": {
@@ -1011,13 +1011,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connectez-vous avec la meme adresse courriel qui a recu le courriel d'accueil et utilisez le mot de passe temporaire."
+            "value": "Connectez-vous avec la même adresse courriel qui a reçu le courriel d'accueil et utilisez le mot de passe temporaire."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connectez-vous avec la meme adresse courriel qui a recu le courriel d'accueil et utilisez le mot de passe temporaire."
+            "value": "Connectez-vous avec la même adresse courriel qui a reçu le courriel d'accueil et utilisez le mot de passe temporaire."
           }
         }
       }
@@ -1057,13 +1057,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les comptes DoorTree sont ouverts pour les locataires par le proprietaire, puis completes par le locataire."
+            "value": "Les comptes DoorTree sont ouverts pour les locataires par le propriétaire, puis complétés par le locataire."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les comptes DoorTree sont ouverts pour les locataires par le proprio, puis completes par le locataire."
+            "value": "Les comptes DoorTree sont ouverts pour les locataires par le proprio, puis complétés par le locataire."
           }
         }
       }
@@ -1080,13 +1080,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comment fonctionne la creation du compte"
+            "value": "Comment fonctionne la création du compte"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comment fonctionne la creation du compte"
+            "value": "Comment fonctionne la création du compte"
           }
         }
       }
@@ -1149,13 +1149,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La connexion Apple n'a pas retourne de jeton d'identite valide."
+            "value": "La connexion Apple n'a pas retourné de jeton d'identité valide."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "La connexion Apple n'a pas retourne de jeton d'identite valide."
+            "value": "La connexion Apple n'a pas retourné de jeton d'identité valide."
           }
         }
       }
@@ -1172,13 +1172,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de vous connecter avec Apple pour le moment. Reessayez."
+            "value": "Impossible de vous connecter avec Apple pour le moment. Réessayez."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de vous connecter avec Apple pour le moment. Reessayez."
+            "value": "Impossible de vous connecter avec Apple pour le moment. Réessayez."
           }
         }
       }
@@ -1195,13 +1195,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creer un compte"
+            "value": "Créer un compte"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creer un compte"
+            "value": "Créer un compte"
           }
         }
       }
@@ -1218,13 +1218,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creer un compte"
+            "value": "Créer un compte"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creer un compte"
+            "value": "Créer un compte"
           }
         }
       }
@@ -1235,19 +1235,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "We're setting up your DoorTree login and verification email."
+            "value": "We're setting up your DoorTree login and vérification email."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nous configurons votre connexion DoorTree et votre e-mail de verification."
+            "value": "Nous configurons votre connexion DoorTree et votre e-mail de vérification."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nous configurons votre connexion DoorTree et votre courriel de verification."
+            "value": "Nous configurons votre connexion DoorTree et votre courriel de vérification."
           }
         }
       }
@@ -1264,13 +1264,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creation du compte"
+            "value": "Création du compte"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creation du compte"
+            "value": "Création du compte"
           }
         }
       }
@@ -1281,19 +1281,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Create your DoorTree email account and we'll send you a verification link right away."
+            "value": "Create your DoorTree email account and we'll send you a vérification link right away."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creez votre compte DoorTree par e-mail et nous vous enverrons un lien de verification immediatement."
+            "value": "Créez votre compte DoorTree par e-mail et nous vous enverrons un lien de vérification immédiatement."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creez votre compte DoorTree par courriel et nous vous enverrons un lien de verification immediatement."
+            "value": "Créez votre compte DoorTree par courriel et nous vous enverrons un lien de vérification immédiatement."
           }
         }
       }
@@ -1310,13 +1310,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creer un compte"
+            "value": "Créer un compte"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Creer un compte"
+            "value": "Créer un compte"
           }
         }
       }
@@ -1402,13 +1402,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Utilisez l'e-mail et le mot de passe de votre compte DoorTree pour acceder au loyer, a l'entretien et aux messages."
+            "value": "Utilisez l'e-mail et le mot de passe de votre compte DoorTree pour acceder au loyer, à l'entretien et aux messages."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Utilisez le courriel et le mot de passe de votre compte DoorTree pour acceder au loyer, a l'entretien et aux messages."
+            "value": "Utilisez le courriel et le mot de passe de votre compte DoorTree pour acceder au loyer, à l'entretien et aux messages."
           }
         }
       }
@@ -1448,13 +1448,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cette adresse e-mail est deja associee a Apple. Continuez avec Apple."
+            "value": "Cette adresse e-mail est déjà associée à Apple. Continuez avec Apple."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce courriel est deja associe a Apple. Continuez avec Apple."
+            "value": "Ce courriel est déjà associé à Apple. Continuez avec Apple."
           }
         }
       }
@@ -1471,13 +1471,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un compte existe deja pour %@. Continuez avec l'e-mail."
+            "value": "Un compte existe déjà pour %@. Continuez avec l'e-mail."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un compte existe deja pour %@. Continuez avec le courriel."
+            "value": "Un compte existe déjà pour %@. Continuez avec le courriel."
           }
         }
       }
@@ -1494,13 +1494,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cette adresse e-mail est deja associee a Google. Continuez avec Google."
+            "value": "Cette adresse e-mail est déjà associée à Google. Continuez avec Google."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce courriel est deja associe a Google. Continuez avec Google."
+            "value": "Ce courriel est déjà associé à Google. Continuez avec Google."
           }
         }
       }
@@ -1517,13 +1517,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un compte existe deja avec une autre methode de connexion. Utilisez la methode d'origine."
+            "value": "Un compte existe déjà avec une autre methode de connexion. Utilisez la methode d'origine."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un compte existe deja avec une autre methode de connexion. Utilisez la methode d'origine."
+            "value": "Un compte existe déjà avec une autre methode de connexion. Utilisez la methode d'origine."
           }
         }
       }
@@ -1540,13 +1540,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de vous authentifier pour le moment. Reessayez."
+            "value": "Impossible de vous authentifier pour le moment. Réessayez."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de vous authentifier pour le moment. Reessayez."
+            "value": "Impossible de vous authentifier pour le moment. Réessayez."
           }
         }
       }
@@ -1563,13 +1563,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de creer votre compte pour le moment. Reessayez."
+            "value": "Impossible de créer votre compte pour le moment. Réessayez."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de creer votre compte pour le moment. Reessayez."
+            "value": "Impossible de créer votre compte pour le moment. Réessayez."
           }
         }
       }
@@ -1586,13 +1586,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un compte existe deja avec cette adresse e-mail."
+            "value": "Un compte existe déjà avec cette adresse e-mail."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un compte existe deja avec ce courriel."
+            "value": "Un compte existe déjà avec ce courriel."
           }
         }
       }
@@ -1701,13 +1701,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erreur reseau. Verifiez votre connexion et reessayez."
+            "value": "Erreur réseau. Vérifiez votre connexion et réessayez."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erreur reseau. Verifiez votre connexion et reessayez."
+            "value": "Erreur réseau. Vérifiez votre connexion et réessayez."
           }
         }
       }
@@ -1747,13 +1747,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de verifier votre profil DoorTree pour le moment. Essayez de vous reconnecter."
+            "value": "Impossible de vérifier votre profil DoorTree pour le moment. Essayez de vous reconnecter."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de verifier votre profil DoorTree pour le moment. Essayez de vous reconnecter."
+            "value": "Impossible de vérifier votre profil DoorTree pour le moment. Essayez de vous reconnecter."
           }
         }
       }
@@ -1770,13 +1770,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de terminer votre configuration de premiere connexion pour le moment. Reessayez."
+            "value": "Impossible de terminer votre configuration de première connexion pour le moment. Réessayez."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de terminer votre configuration de premiere connexion pour le moment. Reessayez."
+            "value": "Impossible de terminer votre configuration de première connexion pour le moment. Réessayez."
           }
         }
       }
@@ -1793,13 +1793,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible d'actualiser votre compte pour le moment. Reessayez."
+            "value": "Impossible d'actualiser votre compte pour le moment. Réessayez."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible d'actualiser votre compte pour le moment. Reessayez."
+            "value": "Impossible d'actualiser votre compte pour le moment. Réessayez."
           }
         }
       }
@@ -1810,19 +1810,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in again to resend your verification email."
+            "value": "Sign in again to resend your vérification email."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reconnectez-vous pour renvoyer votre e-mail de verification."
+            "value": "Reconnectez-vous pour renvoyer votre e-mail de vérification."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reconnectez-vous pour renvoyer votre courriel de verification."
+            "value": "Reconnectez-vous pour renvoyer votre courriel de vérification."
           }
         }
       }
@@ -1833,19 +1833,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unable to resend the verification email right now. Please try again."
+            "value": "Unable to resend the vérification email right now. Please try again."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de renvoyer l'e-mail de verification pour le moment. Reessayez."
+            "value": "Impossible de renvoyer l'e-mail de vérification pour le moment. Réessayez."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de renvoyer le courriel de verification pour le moment. Reessayez."
+            "value": "Impossible de renvoyer le courriel de vérification pour le moment. Réessayez."
           }
         }
       }
@@ -1862,13 +1862,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible d'envoyer l'e-mail de reinitialisation pour le moment. Reessayez."
+            "value": "Impossible d'envoyer l'e-mail de réinitialisation pour le moment. Réessayez."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible d'envoyer le courriel de reinitialisation pour le moment. Reessayez."
+            "value": "Impossible d'envoyer le courriel de réinitialisation pour le moment. Réessayez."
           }
         }
       }
@@ -1879,19 +1879,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unable to send the verification email right now. Please try again."
+            "value": "Unable to send the vérification email right now. Please try again."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible d'envoyer l'e-mail de verification pour le moment. Reessayez."
+            "value": "Impossible d'envoyer l'e-mail de vérification pour le moment. Réessayez."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible d'envoyer le courriel de verification pour le moment. Reessayez."
+            "value": "Impossible d'envoyer le courriel de vérification pour le moment. Réessayez."
           }
         }
       }
@@ -1931,13 +1931,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de vous connecter pour le moment. Reessayez."
+            "value": "Impossible de vous connecter pour le moment. Réessayez."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de vous connecter pour le moment. Reessayez."
+            "value": "Impossible de vous connecter pour le moment. Réessayez."
           }
         }
       }
@@ -1954,13 +1954,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trop de tentatives. Attendez quelques minutes puis reessayez."
+            "value": "Trop de tentatives. Attendez quelques minutes puis réessayez."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trop de tentatives. Attendez quelques minutes puis reessayez."
+            "value": "Trop de tentatives. Attendez quelques minutes puis réessayez."
           }
         }
       }
@@ -1977,13 +1977,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le mot de passe est trop faible. Utilisez au moins 6 caracteres."
+            "value": "Le mot de passe est trop faible. Utilisez au moins 6 caractères."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le mot de passe est trop faible. Utilisez au moins 6 caracteres."
+            "value": "Le mot de passe est trop faible. Utilisez au moins 6 caractères."
           }
         }
       }
@@ -2000,13 +2000,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Terminer la verification de votre e-mail"
+            "value": "Terminer la vérification de votre e-mail"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Terminer la verification de votre courriel"
+            "value": "Terminer la vérification de votre courriel"
           }
         }
       }
@@ -2023,13 +2023,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La connexion est activee pour Apple, Google et l'e-mail."
+            "value": "La connexion est activée pour Apple, Google et l'e-mail."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "La connexion est activee pour Apple, Google et le courriel."
+            "value": "La connexion est activée pour Apple, Google et le courriel."
           }
         }
       }
@@ -2046,13 +2046,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Avant d'entrer dans DoorTree, reinitialisez le mot de passe temporaire de votre courriel d'accueil. Nous allons maintenant envoyer un lien de reinitialisation a cette meme adresse e-mail."
+            "value": "Avant d'entrer dans DoorTree, réinitialisez le mot de passe temporaire de votre courriel d'accueil. Nous allons maintenant envoyer un lien de réinitialisation à cette même adresse e-mail."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Avant d'entrer dans DoorTree, reinitialisez le mot de passe temporaire de votre courriel d'accueil. Nous allons maintenant envoyer un lien de reinitialisation a cette meme adresse courriel."
+            "value": "Avant d'entrer dans DoorTree, réinitialisez le mot de passe temporaire de votre courriel d'accueil. Nous allons maintenant envoyer un lien de réinitialisation à cette même adresse courriel."
           }
         }
       }
@@ -2161,13 +2161,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La connexion Google n'a pas retourne de session valide."
+            "value": "La connexion Google n'a pas retourné de session valide."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "La connexion Google n'a pas retourne de session valide."
+            "value": "La connexion Google n'a pas retourné de session valide."
           }
         }
       }
@@ -2184,13 +2184,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La connexion Google n'est pas configuree pour cette version."
+            "value": "La connexion Google n'est pas configurée pour cette version."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "La connexion Google n'est pas configuree pour cette version."
+            "value": "La connexion Google n'est pas configurée pour cette version."
           }
         }
       }
@@ -2207,13 +2207,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible d'afficher la connexion Google pour le moment. Reessayez."
+            "value": "Impossible d'afficher la connexion Google pour le moment. Réessayez."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible d'afficher la connexion Google pour le moment. Reessayez."
+            "value": "Impossible d'afficher la connexion Google pour le moment. Réessayez."
           }
         }
       }
@@ -2230,13 +2230,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de vous connecter avec Google pour le moment. Reessayez."
+            "value": "Impossible de vous connecter avec Google pour le moment. Réessayez."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de vous connecter avec Google pour le moment. Reessayez."
+            "value": "Impossible de vous connecter avec Google pour le moment. Réessayez."
           }
         }
       }
@@ -2299,13 +2299,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Envoyer l'e-mail de reinitialisation"
+            "value": "Envoyer l'e-mail de réinitialisation"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Envoyer le courriel de reinitialisation"
+            "value": "Envoyer le courriel de réinitialisation"
           }
         }
       }
@@ -2322,13 +2322,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vous pourrez envoyer un autre e-mail de reinitialisation dans %d secondes."
+            "value": "Vous pourrez envoyer un autre e-mail de réinitialisation dans %d secondes."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vous pourrez envoyer un autre courriel de reinitialisation dans %d secondes."
+            "value": "Vous pourrez envoyer un autre courriel de réinitialisation dans %d secondes."
           }
         }
       }
@@ -2345,13 +2345,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nous demandons de facon securisee une reinitialisation du mot de passe."
+            "value": "Nous demandons de facon sécurisée une réinitialisation du mot de passe."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nous demandons de facon securisee une reinitialisation du mot de passe."
+            "value": "Nous demandons de facon sécurisée une réinitialisation du mot de passe."
           }
         }
       }
@@ -2391,13 +2391,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "E-mail de reinitialisation envoye a %@. Verifiez votre boite de reception et vos indésirables."
+            "value": "E-mail de réinitialisation envoyé à %@. Vérifiez votre boîte de réception et vos indésirables."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Courriel de reinitialisation envoye a %@. Verifiez votre boite de reception et vos pourriels."
+            "value": "Courriel de réinitialisation envoyé à %@. Vérifiez votre boîte de réception et vos pourriels."
           }
         }
       }
@@ -2414,13 +2414,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confirmez votre adresse e-mail et nous vous enverrons votre e-mail de reinitialisation du mot de passe."
+            "value": "Confirmez votre adresse e-mail et nous vous enverrons votre e-mail de réinitialisation du mot de passe."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confirmez votre courriel et nous vous enverrons votre courriel de reinitialisation du mot de passe."
+            "value": "Confirmez votre courriel et nous vous enverrons votre courriel de réinitialisation du mot de passe."
           }
         }
       }
@@ -2437,13 +2437,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reinitialiser le mot de passe"
+            "value": "Réinitialiser le mot de passe"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reinitialiser le mot de passe"
+            "value": "Réinitialiser le mot de passe"
           }
         }
       }
@@ -2460,13 +2460,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verification de l'etat de connexion DoorTree."
+            "value": "Vérification de l'état de connexion DoorTree."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verification de l'etat de connexion DoorTree."
+            "value": "Vérification de l'état de connexion DoorTree."
           }
         }
       }
@@ -2506,13 +2506,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connexion securisee a votre compte DoorTree."
+            "value": "Connexion sécurisée à votre compte DoorTree."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connexion securisee a votre compte DoorTree."
+            "value": "Connexion sécurisée à votre compte DoorTree."
           }
         }
       }
@@ -2569,19 +2569,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verify your email before continuing. Open the verification link we sent, then return here."
+            "value": "Verify your email before continuing. Open the vérification link we sent, then return here."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verifiez votre adresse e-mail avant de continuer. Ouvrez le lien de verification que nous avons envoye, puis revenez ici."
+            "value": "Vérifiez votre adresse e-mail avant de continuer. Ouvrez le lien de vérification que nous avons envoyé, puis revenez ici."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verifiez votre courriel avant de continuer. Ouvrez le lien de verification que nous avons envoye, puis revenez ici."
+            "value": "Vérifiez votre courriel avant de continuer. Ouvrez le lien de vérification que nous avons envoyé, puis revenez ici."
           }
         }
       }
@@ -2598,13 +2598,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "J'ai verifie mon e-mail"
+            "value": "J'ai vérifié mon e-mail"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "J'ai verifie mon courriel"
+            "value": "J'ai vérifié mon courriel"
           }
         }
       }
@@ -2621,13 +2621,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Actualisation de l'etat de votre compte."
+            "value": "Actualisation de l'état de votre compte."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Actualisation de l'etat de votre compte."
+            "value": "Actualisation de l'état de votre compte."
           }
         }
       }
@@ -2638,19 +2638,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Checking Verification"
+            "value": "Checking Vérification"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verification en cours"
+            "value": "Vérification en cours"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verification en cours"
+            "value": "Vérification en cours"
           }
         }
       }
@@ -2667,13 +2667,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre adresse e-mail n'est pas encore verifiee."
+            "value": "Votre adresse e-mail n'est pas encore vérifiée."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre courriel n'est pas encore verifie."
+            "value": "Votre courriel n'est pas encore vérifié."
           }
         }
       }
@@ -2690,13 +2690,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre adresse e-mail n'est pas encore verifiee. Apres avoir touche le lien dans votre boite de reception, revenez ici et reessayez."
+            "value": "Votre adresse e-mail n'est pas encore vérifiée. Après avoir touché le lien dans votre boîte de réception, revenez ici et réessayez."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre courriel n'est pas encore verifie. Apres avoir touche le lien dans votre boite de reception, revenez ici et reessayez."
+            "value": "Votre courriel n'est pas encore vérifié. Après avoir touché le lien dans votre boîte de réception, revenez ici et réessayez."
           }
         }
       }
@@ -2707,19 +2707,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Resend Verification Email"
+            "value": "Resend Vérification Email"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Renvoyer l'e-mail de verification"
+            "value": "Renvoyer l'e-mail de vérification"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Renvoyer le courriel de verification"
+            "value": "Renvoyer le courriel de vérification"
           }
         }
       }
@@ -2730,19 +2730,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A fresh verification email was sent to %@."
+            "value": "A fresh vérification email was sent to %@."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un nouvel e-mail de verification a ete envoye a %@."
+            "value": "Un nouvel e-mail de vérification a ete envoyé à %@."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un nouveau courriel de verification a ete envoye a %@."
+            "value": "Un nouveau courriel de vérification a ete envoyé à %@."
           }
         }
       }
@@ -2753,19 +2753,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "We sent a verification link to the email below. Open that message, tap the link, then return here to continue."
+            "value": "We sent a vérification link to the email below. Open that message, tap the link, then return here to continue."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nous avons envoye un lien de verification a l'adresse ci-dessous. Ouvrez ce message, touchez le lien, puis revenez ici pour continuer."
+            "value": "Nous avons envoyé un lien de vérification à l'adresse ci-dessous. Ouvrez ce message, touchez le lien, puis revenez ici pour continuer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nous avons envoye un lien de verification a l'adresse ci-dessous. Ouvrez ce message, touchez le lien, puis revenez ici pour continuer."
+            "value": "Nous avons envoyé un lien de vérification à l'adresse ci-dessous. Ouvrez ce message, touchez le lien, puis revenez ici pour continuer."
           }
         }
       }
@@ -2782,13 +2782,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verifier votre e-mail"
+            "value": "Vérifier votre e-mail"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verifier votre courriel"
+            "value": "Vérifier votre courriel"
           }
         }
       }
@@ -2805,13 +2805,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'endroit ou le loyer se paie, les reparations se reglent et la vie locative reste bien organisee."
+            "value": "L'endroit où le loyer se paie, les réparations se règlent et la vie locative reste bien organisée."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'endroit ou le loyer se paie, les reparations se reglent et la vie locative reste bien organisee."
+            "value": "L'endroit où le loyer se paie, les réparations se règlent et la vie locative reste bien organisée."
           }
         }
       }
@@ -2926,7 +2926,7 @@
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gestionnaire de propriete"
+            "value": "Gestionnaire de propriété"
           }
         }
       }
@@ -3310,13 +3310,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si vous ne voyez pas le courriel de reinitialisation, verifiez votre boite de courrier indesirable."
+            "value": "Si vous ne voyez pas le courriel de réinitialisation, vérifiez votre boîte de courrier indésirable."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si vous ne voyez pas le courriel de reinitialisation, verifiez votre dossier Courrier indesirable."
+            "value": "Si vous ne voyez pas le courriel de réinitialisation, vérifiez votre dossier Courrier indésirable."
           }
         }
       }
@@ -3542,13 +3542,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Joindre le recu"
+            "value": "Joindre le reçu"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Joindre le recu"
+            "value": "Joindre le reçu"
           }
         }
       }
@@ -3703,13 +3703,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Decrivez le probleme..."
+            "value": "Decrivez le problème..."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Decrivez le probleme..."
+            "value": "Decrivez le problème..."
           }
         }
       }
@@ -3795,13 +3795,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Obligatoire lorsque Autre est selectionne"
+            "value": "Obligatoire lorsque Autre est sélectionné"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Obligatoire lorsque Autre est selectionne"
+            "value": "Obligatoire lorsque Autre est sélectionné"
           }
         }
       }
@@ -3818,13 +3818,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$d photo(s) sur %2$d selectionnee(s)"
+            "value": "%1$d photo(s) sur %2$d sélectionnée(s)"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$d photo(s) sur %2$d selectionnee(s)"
+            "value": "%1$d photo(s) sur %2$d sélectionnée(s)"
           }
         }
       }
@@ -3933,13 +3933,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Soumettez les remboursements de depenses approuves pour examen."
+            "value": "Soumettez les remboursements de dépenses approuvés pour examen."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Soumettez les remboursements de depenses approuves pour revision."
+            "value": "Soumettez les remboursements de dépenses approuvés pour révision."
           }
         }
       }
@@ -4180,7 +4180,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Détails"
+            "value": "Details"
           }
         },
         "fr": {
@@ -4192,7 +4192,7 @@
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Details"
+            "value": "Détails"
           }
         }
       }
@@ -4985,19 +4985,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The plumber is confirmed for Thursday between 9 AM and 12 PM."
+            "value": "The plumber is confirméd for Thursday between 9 AM and 12 PM."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le plombier est confirme pour jeudi entre 9 h et 12 h."
+            "value": "Le plombier est confirmé pour jeudi entre 9 h et 12 h."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le plombier est confirme pour jeudi entre 9 h et 12 h."
+            "value": "Le plombier est confirmé pour jeudi entre 9 h et 12 h."
           }
         }
       }
@@ -5014,13 +5014,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parfait. Je vous enverrai un rappel la veille au cas ou quelque chose changerait."
+            "value": "Parfait. Je vous enverrai un rappel la veille au cas où quelque chose changerait."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parfait. Je vais vous envoyer un rappel la veille au cas ou quelque chose changerait."
+            "value": "Parfait. Je vais vous envoyer un rappel la veille au cas où quelque chose changerait."
           }
         }
       }
@@ -5037,13 +5037,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parfait, je vais m'assurer que quelqu'un soit sur place. Merci pour la mise a jour."
+            "value": "Parfait, je vais m'assurer que quelqu'un soit sur place. Merci pour la mise à jour."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parfait, je vais m'assurer que quelqu'un soit a la maison. Merci pour la mise a jour."
+            "value": "Parfait, je vais m'assurer que quelqu'un soit a la maison. Merci pour la mise à jour."
           }
         }
       }
@@ -5060,13 +5060,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bonjour Sarah, j'ai bien recu votre confirmation de loyer pour mars. Tout est en ordre de mon cote."
+            "value": "Bonjour Sarah, j'ai bien reçu votre confirmation de loyer pour mars. Tout est en ordre de mon côté."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bonjour Sarah, j'ai bien recu votre confirmation de loyer pour mars. Tout est beau de mon cote."
+            "value": "Bonjour Sarah, j'ai bien reçu votre confirmation de loyer pour mars. Tout est beau de mon côté."
           }
         }
       }
@@ -5083,13 +5083,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Merci, James. Je voulais aussi faire un suivi concernant la demande pour le robinet de la semaine derniere."
+            "value": "Merci, James. Je voulais aussi faire un suivi concernant la demande pour le robinet de la semaine dernière."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Merci, James. Je voulais aussi faire un suivi sur la demande pour le robinet de la semaine derniere."
+            "value": "Merci, James. Je voulais aussi faire un suivi sur la demande pour le robinet de la semaine dernière."
           }
         }
       }
@@ -5267,13 +5267,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Attribue a %@"
+            "value": "Attribue à %@"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Attribue a %@"
+            "value": "Attribue à %@"
           }
         }
       }
@@ -5290,13 +5290,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Attribue a %@"
+            "value": "Attribue à %@"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Attribue a %@"
+            "value": "Attribue à %@"
           }
         }
       }
@@ -5313,13 +5313,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Echeance 3 avr."
+            "value": "Échéance 3 avr."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Echeance 3 avr."
+            "value": "Échéance 3 avr."
           }
         }
       }
@@ -5359,13 +5359,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Echeance 9 avr."
+            "value": "Échéance 9 avr."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Echeance 9 avr."
+            "value": "Échéance 9 avr."
           }
         }
       }
@@ -5405,13 +5405,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "31 aout 2026"
+            "value": "31 août 2026"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "31 aout 2026"
+            "value": "31 août 2026"
           }
         }
       }
@@ -5612,13 +5612,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carte de credit"
+            "value": "Carte de crédit"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carte de credit"
+            "value": "Carte de crédit"
           }
         }
       }
@@ -5842,13 +5842,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clavarder avec le proprietaire"
+            "value": "Clavarder avec le propriétaire"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clavarder avec le proprietaire"
+            "value": "Clavarder avec le propriétaire"
           }
         }
       }
@@ -5865,13 +5865,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Actif jusqu'en aout 2026"
+            "value": "Actif jusqu'en août 2026"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Actif jusqu'en aout 2026"
+            "value": "Actif jusqu'en août 2026"
           }
         }
       }
@@ -5957,13 +5957,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le loyer de mars est du dans 5 jours"
+            "value": "Le loyer de mars est dû dans 5 jours"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le loyer de mars est du dans 5 jours"
+            "value": "Le loyer de mars est dû dans 5 jours"
           }
         }
       }
@@ -6166,13 +6166,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les mises a jour de paiement, de bail et de compte apparaissent ici."
+            "value": "Les mises à jour de paiement, de bail et de compte apparaissent ici."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les mises a jour de paiement, de bail et de compte s'affichent ici."
+            "value": "Les mises à jour de paiement, de bail et de compte s'affichent ici."
           }
         }
       }
@@ -6189,13 +6189,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du dans 5 jours"
+            "value": "Dû dans 5 jours"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du dans 5 jours"
+            "value": "Dû dans 5 jours"
           }
         }
       }
@@ -6212,13 +6212,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Echeance 1 mars"
+            "value": "Échéance 1 mars"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Echeance 1 mars"
+            "value": "Échéance 1 mars"
           }
         }
       }
@@ -6390,19 +6390,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bank verification pending"
+            "value": "Bank vérification pending"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verification bancaire en attente"
+            "value": "Vérification bancaire en attente"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verification bancaire en attente"
+            "value": "Vérification bancaire en attente"
           }
         }
       }
@@ -6413,19 +6413,42 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Automatic bank debit active"
+            "value": "Automatic Bank Debit Active"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prelevement bancaire automatique actif"
+            "value": "Prélèvement bancaire automatique actif"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prelevement bancaire automatique actif"
+            "value": "Prélèvement bancaire automatique actif"
+          }
+        }
+      }
+    },
+    "payments.preference.title.bank_disabled": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pre-authorized bank transfer unavailable"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prélèvement bancaire préautorisé indisponible"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prélèvement bancaire préautorisé indisponible"
           }
         }
       }
@@ -6453,6 +6476,29 @@
         }
       }
     },
+    "payments.preference.title.card_disabled": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Credit card payments unavailable"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paiements par carte de crédit indisponibles"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paiements par carte de crédit indisponibles"
+          }
+        }
+      }
+    },
     "payments.preference.subtitle.card_setup_in_progress": {
       "extractionState": "manual",
       "localizations": {
@@ -6465,13 +6511,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe attend que vous terminiez la configuration hebergee de la carte."
+            "value": "Stripe attend que vous terminiez la configuration hébergée de la carte."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe attend que vous terminiez la configuration hebergee de la carte."
+            "value": "Stripe attend que vous terminiez la configuration hébergée de la carte."
           }
         }
       }
@@ -6488,13 +6534,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe attend que vous terminiez la configuration hebergee du compte bancaire."
+            "value": "Stripe attend que vous terminiez la configuration hébergée du compte bancaire."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe attend que vous terminiez la configuration hebergee du compte bancaire."
+            "value": "Stripe attend que vous terminiez la configuration hébergée du compte bancaire."
           }
         }
       }
@@ -6505,19 +6551,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe may still need bank verification before automatic PAD rent becomes active."
+            "value": "Stripe may still need bank vérification before automatic PAD rent becomes active."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe pourrait encore avoir besoin d'une verification bancaire avant que le PAD automatique soit actif."
+            "value": "Stripe pourrait encore avoir besoin d'une vérification bancaire avant que le PAD automatique soit actif."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe pourrait encore avoir besoin d'une verification bancaire avant que le PAD automatique soit actif."
+            "value": "Stripe pourrait encore avoir besoin d'une vérification bancaire avant que le PAD automatique soit actif."
           }
         }
       }
@@ -6534,13 +6580,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ sera preleve automatiquement a l'echeance du loyer."
+            "value": "%1$@ sera prélevé automatiquement à l'échéance du loyer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ sera preleve automatiquement a l'echeance du loyer."
+            "value": "%1$@ sera prélevé automatiquement à l'échéance du loyer."
           }
         }
       }
@@ -6574,7 +6620,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open Payment Portal"
+            "value": "One-Time Credit Card"
           }
         },
         "fr": {
@@ -6626,13 +6672,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un paiement automatique est deja en cours pour ce loyer."
+            "value": "Un paiement automatique est déjà en cours pour ce loyer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un paiement automatique est deja en cours pour ce loyer."
+            "value": "Un paiement automatique est déjà en cours pour ce loyer."
           }
         }
       }
@@ -6643,7 +6689,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Automatic card pay"
+            "value": "Automatic Credit Card"
           }
         },
         "fr": {
@@ -6672,13 +6718,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe attend que vous terminiez la configuration hebergee de la carte."
+            "value": "Stripe attend que vous terminiez la configuration hébergée de la carte."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe attend que vous terminiez la configuration hebergee de la carte."
+            "value": "Stripe attend que vous terminiez la configuration hébergée de la carte."
           }
         }
       }
@@ -6718,13 +6764,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja enregistree. Selectionnez cette option pour la reutiliser pour les paiements automatiques mensuels du loyer."
+            "value": "%1$@ est déjà enregistrée. Sélectionnez cette option pour la réutiliser pour les paiements automatiques mensuels du loyer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja enregistree. Selectionnez cette option pour la reutiliser pour les paiements automatiques mensuels du loyer."
+            "value": "%1$@ est déjà enregistrée. Sélectionnez cette option pour la réutiliser pour les paiements automatiques mensuels du loyer."
           }
         }
       }
@@ -6741,13 +6787,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un profil de carte Stripe enregistre est disponible. Ouvrez Stripe seulement si vous devez remplacer la carte au dossier."
+            "value": "Un profil de carte Stripe enregistré est disponible. Ouvrez Stripe seulement si vous devez remplacer la carte au dossier."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un profil de carte Stripe enregistre est disponible. Ouvrez Stripe seulement si vous devez remplacer la carte au dossier."
+            "value": "Un profil de carte Stripe enregistré est disponible. Ouvrez Stripe seulement si vous devez remplacer la carte au dossier."
           }
         }
       }
@@ -6781,19 +6827,111 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Automatic bank debit"
+            "value": "Automatic Bank Debit"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prelevement bancaire automatique"
+            "value": "Prélèvement bancaire automatique"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prelevement bancaire automatique"
+            "value": "Prélèvement bancaire automatique"
+          }
+        }
+      }
+    },
+    "payments.method.bank_transfer.subtitle.recipient": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recipient email: %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Courriel du destinataire : %1$@"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Courriel du destinataire : %1$@"
+          }
+        }
+      }
+    },
+    "payments.method.bank_transfer.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One-Time Bank Transfer"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Virement bancaire ponctuel"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Virement bancaire ponctuel"
+          }
+        }
+      }
+    },
+    "payments.disabled.bank_debit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your landlord has disabled rent-collection by pre-authorized bank transfer."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre propriétaire a désactivé la perception du loyer par prélèvement bancaire préautorisé."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre propriétaire a désactivé la perception du loyer par prélèvement bancaire préautorisé."
+          }
+        }
+      }
+    },
+    "payments.disabled.credit_card": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your landlord has disabled rent-collection by credit card."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre propriétaire a désactivé la perception du loyer par carte de crédit."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre propriétaire a désactivé la perception du loyer par carte de crédit."
           }
         }
       }
@@ -6810,13 +6948,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe attend que vous terminiez la configuration hebergee du compte bancaire."
+            "value": "Stripe attend que vous terminiez la configuration hébergée du compte bancaire."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe attend que vous terminiez la configuration hebergee du compte bancaire."
+            "value": "Stripe attend que vous terminiez la configuration hébergée du compte bancaire."
           }
         }
       }
@@ -6827,19 +6965,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe may still need bank verification before PAD autopay becomes active."
+            "value": "Stripe may still need bank vérification before PAD autopay becomes active."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe pourrait encore avoir besoin d'une verification bancaire avant que le PAD automatique soit actif."
+            "value": "Stripe pourrait encore avoir besoin d'une vérification bancaire avant que le PAD automatique soit actif."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe pourrait encore avoir besoin d'une verification bancaire avant que le PAD automatique soit actif."
+            "value": "Stripe pourrait encore avoir besoin d'une vérification bancaire avant que le PAD automatique soit actif."
           }
         }
       }
@@ -6879,13 +7017,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja enregistre. Selectionnez cette option pour le reutiliser pour les paiements automatiques mensuels PAD du loyer."
+            "value": "%1$@ est déjà enregistré. Sélectionnez cette option pour le réutiliser pour les paiements automatiques mensuels PAD du loyer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja enregistre. Selectionnez cette option pour le reutiliser pour les paiements automatiques mensuels PAD du loyer."
+            "value": "%1$@ est déjà enregistré. Sélectionnez cette option pour le réutiliser pour les paiements automatiques mensuels PAD du loyer."
           }
         }
       }
@@ -6902,13 +7040,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un profil bancaire Stripe enregistre est disponible. Ouvrez Stripe seulement si vous devez remplacer le compte au dossier."
+            "value": "Un profil bancaire Stripe enregistré est disponible. Ouvrez Stripe seulement si vous devez remplacer le compte au dossier."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un profil bancaire Stripe enregistre est disponible. Ouvrez Stripe seulement si vous devez remplacer le compte au dossier."
+            "value": "Un profil bancaire Stripe enregistré est disponible. Ouvrez Stripe seulement si vous devez remplacer le compte au dossier."
           }
         }
       }
@@ -6919,7 +7057,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Save bank details once for automatic monthly PAD rent payments."
+            "value": "Save bank détails once for automatic monthly PAD rent payments."
           }
         },
         "fr": {
@@ -6948,13 +7086,36 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reconnectez-vous avant de gerer les paiements de loyer."
+            "value": "Reconnectez-vous avant de gérer les paiements de loyer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reconnectez-vous avant de gerer les paiements de loyer."
+            "value": "Reconnectez-vous avant de gérer les paiements de loyer."
+          }
+        }
+      }
+    },
+    "payments.error.selection_sync_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unable to sync the selected payment method right now."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de synchroniser le mode de paiement sélectionné pour le moment."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de synchroniser le mode de paiement sélectionné pour le moment."
           }
         }
       }
@@ -6971,13 +7132,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe prepare encore le lien de paiement du loyer."
+            "value": "Stripe prépare encore le lien de paiement du loyer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stripe prepare encore le lien de paiement du loyer."
+            "value": "Stripe prépare encore le lien de paiement du loyer."
           }
         }
       }
@@ -6994,13 +7155,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un paiement automatique est deja en cours pour ce loyer."
+            "value": "Un paiement automatique est déjà en cours pour ce loyer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un paiement automatique est deja en cours pour ce loyer."
+            "value": "Un paiement automatique est déjà en cours pour ce loyer."
           }
         }
       }
@@ -7051,6 +7212,29 @@
         }
       }
     },
+    "payments.action.view_transfer_details": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View Transfer Details"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir les détails du virement"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir les détails du virement"
+          }
+        }
+      }
+    },
     "payments.action.continue_card_setup": {
       "extractionState": "manual",
       "localizations": {
@@ -7086,13 +7270,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gerer la carte enregistree"
+            "value": "Gérer la carte enregistrée"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gerer la carte enregistree"
+            "value": "Gérer la carte enregistrée"
           }
         }
       }
@@ -7109,13 +7293,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Utiliser la carte enregistree"
+            "value": "Utiliser la carte enregistrée"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Utiliser la carte enregistree"
+            "value": "Utiliser la carte enregistrée"
           }
         }
       }
@@ -7178,13 +7362,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gerer le compte bancaire enregistre"
+            "value": "Gérer le compte bancaire enregistré"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gerer le compte bancaire enregistre"
+            "value": "Gérer le compte bancaire enregistré"
           }
         }
       }
@@ -7201,13 +7385,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Utiliser le compte bancaire enregistre"
+            "value": "Utiliser le compte bancaire enregistré"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Utiliser le compte bancaire enregistre"
+            "value": "Utiliser le compte bancaire enregistré"
           }
         }
       }
@@ -7247,13 +7431,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja au dossier pour les paiements automatiques du loyer. Ouvrez Stripe seulement si vous voulez la remplacer."
+            "value": "%1$@ est déjà au dossier pour les paiements automatiques du loyer. Ouvrez Stripe seulement si vous voulez la remplacer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja au dossier pour les paiements automatiques du loyer. Ouvrez Stripe seulement si vous voulez la remplacer."
+            "value": "%1$@ est déjà au dossier pour les paiements automatiques du loyer. Ouvrez Stripe seulement si vous voulez la remplacer."
           }
         }
       }
@@ -7270,13 +7454,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une carte enregistree est deja au dossier pour les paiements automatiques du loyer. Ouvrez Stripe seulement si vous voulez la remplacer."
+            "value": "Une carte enregistrée est déjà au dossier pour les paiements automatiques du loyer. Ouvrez Stripe seulement si vous voulez la remplacer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une carte enregistree est deja au dossier pour les paiements automatiques du loyer. Ouvrez Stripe seulement si vous voulez la remplacer."
+            "value": "Une carte enregistrée est déjà au dossier pour les paiements automatiques du loyer. Ouvrez Stripe seulement si vous voulez la remplacer."
           }
         }
       }
@@ -7293,13 +7477,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja enregistree. En choisissant cette option, vous la reutiliserez pour les paiements automatiques mensuels du loyer."
+            "value": "%1$@ est déjà enregistrée. En choisissant cette option, vous la reutiliserez pour les paiements automatiques mensuels du loyer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja enregistree. En choisissant cette option, vous la reutiliserez pour les paiements automatiques mensuels du loyer."
+            "value": "%1$@ est déjà enregistrée. En choisissant cette option, vous la reutiliserez pour les paiements automatiques mensuels du loyer."
           }
         }
       }
@@ -7316,13 +7500,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une carte enregistree est deja disponible. En choisissant cette option, vous la reutiliserez pour les paiements automatiques mensuels du loyer."
+            "value": "Une carte enregistrée est déjà disponible. En choisissant cette option, vous la reutiliserez pour les paiements automatiques mensuels du loyer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une carte enregistree est deja disponible. En choisissant cette option, vous la reutiliserez pour les paiements automatiques mensuels du loyer."
+            "value": "Une carte enregistrée est déjà disponible. En choisissant cette option, vous la reutiliserez pour les paiements automatiques mensuels du loyer."
           }
         }
       }
@@ -7339,13 +7523,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un profil de carte Stripe enregistre est deja disponible. Ouvrez Stripe seulement si vous devez remplacer la carte au dossier."
+            "value": "Un profil de carte Stripe enregistré est déjà disponible. Ouvrez Stripe seulement si vous devez remplacer la carte au dossier."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un profil de carte Stripe enregistre est deja disponible. Ouvrez Stripe seulement si vous devez remplacer la carte au dossier."
+            "value": "Un profil de carte Stripe enregistré est déjà disponible. Ouvrez Stripe seulement si vous devez remplacer la carte au dossier."
           }
         }
       }
@@ -7362,13 +7546,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja au dossier pour les paiements automatiques mensuels PAD du loyer. Ouvrez Stripe seulement si vous voulez remplacer le compte bancaire enregistre."
+            "value": "%1$@ est déjà au dossier pour les paiements automatiques mensuels PAD du loyer. Ouvrez Stripe seulement si vous voulez remplacer le compte bancaire enregistré."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja au dossier pour les paiements automatiques mensuels PAD du loyer. Ouvrez Stripe seulement si vous voulez remplacer le compte bancaire enregistre."
+            "value": "%1$@ est déjà au dossier pour les paiements automatiques mensuels PAD du loyer. Ouvrez Stripe seulement si vous voulez remplacer le compte bancaire enregistré."
           }
         }
       }
@@ -7385,13 +7569,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un compte bancaire enregistre est deja au dossier pour les paiements automatiques mensuels PAD du loyer. Ouvrez Stripe seulement si vous voulez le remplacer."
+            "value": "Un compte bancaire enregistré est déjà au dossier pour les paiements automatiques mensuels PAD du loyer. Ouvrez Stripe seulement si vous voulez le remplacer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un compte bancaire enregistre est deja au dossier pour les paiements automatiques mensuels PAD du loyer. Ouvrez Stripe seulement si vous voulez le remplacer."
+            "value": "Un compte bancaire enregistré est déjà au dossier pour les paiements automatiques mensuels PAD du loyer. Ouvrez Stripe seulement si vous voulez le remplacer."
           }
         }
       }
@@ -7408,13 +7592,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja enregistre. En choisissant cette option, vous reutiliserez la configuration PAD enregistree sans reconnecter la banque."
+            "value": "%1$@ est déjà enregistré. En choisissant cette option, vous réutiliserez la configuration PAD enregistrée sans reconnecter la banque."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja enregistre. En choisissant cette option, vous reutiliserez la configuration PAD enregistree sans reconnecter la banque."
+            "value": "%1$@ est déjà enregistré. En choisissant cette option, vous réutiliserez la configuration PAD enregistrée sans reconnecter la banque."
           }
         }
       }
@@ -7431,13 +7615,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un compte bancaire enregistre est deja disponible. En choisissant cette option, vous reutiliserez la configuration PAD enregistree sans reconnecter la banque."
+            "value": "Un compte bancaire enregistré est déjà disponible. En choisissant cette option, vous réutiliserez la configuration PAD enregistrée sans reconnecter la banque."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un compte bancaire enregistre est deja disponible. En choisissant cette option, vous reutiliserez la configuration PAD enregistree sans reconnecter la banque."
+            "value": "Un compte bancaire enregistré est déjà disponible. En choisissant cette option, vous réutiliserez la configuration PAD enregistrée sans reconnecter la banque."
           }
         }
       }
@@ -7454,13 +7638,59 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un profil bancaire Stripe enregistre est deja disponible. Ouvrez Stripe seulement si vous devez remplacer le compte au dossier."
+            "value": "Un profil bancaire Stripe enregistré est déjà disponible. Ouvrez Stripe seulement si vous devez remplacer le compte au dossier."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un profil bancaire Stripe enregistre est deja disponible. Ouvrez Stripe seulement si vous devez remplacer le compte au dossier."
+            "value": "Un profil bancaire Stripe enregistré est déjà disponible. Ouvrez Stripe seulement si vous devez remplacer le compte au dossier."
+          }
+        }
+      }
+    },
+    "payments.message.bank_transfer.recipient": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send the one-time bank transfer to %1$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyez le virement bancaire ponctuel à %1$@."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyez le virement bancaire ponctuel à %1$@."
+          }
+        }
+      }
+    },
+    "payments.message.bank_transfer.unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "One-time bank transfer détails are not available yet."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les détails du virement bancaire ponctuel ne sont pas encore disponibles."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les détails du virement bancaire ponctuel ne sont pas encore disponibles."
           }
         }
       }
@@ -7477,13 +7707,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La carte enregistree est maintenant active pour les paiements automatiques du loyer."
+            "value": "La carte enregistrée est maintenant active pour les paiements automatiques du loyer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "La carte enregistree est maintenant active pour les paiements automatiques du loyer."
+            "value": "La carte enregistrée est maintenant active pour les paiements automatiques du loyer."
           }
         }
       }
@@ -7494,19 +7724,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The saved bank account still needs Stripe verification before automatic PAD rent can start."
+            "value": "The saved bank account still needs Stripe vérification before automatic PAD rent can start."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le compte bancaire enregistre doit encore etre verifie par Stripe avant que les paiements PAD automatiques puissent commencer."
+            "value": "Le compte bancaire enregistré doit encore être vérifié par Stripe avant que les paiements PAD automatiques puissent commencer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le compte bancaire enregistre doit encore etre verifie par Stripe avant que les paiements PAD automatiques puissent commencer."
+            "value": "Le compte bancaire enregistré doit encore être vérifié par Stripe avant que les paiements PAD automatiques puissent commencer."
           }
         }
       }
@@ -7523,13 +7753,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le compte bancaire enregistre est maintenant actif pour les paiements automatiques PAD du loyer."
+            "value": "Le compte bancaire enregistré est maintenant actif pour les paiements automatiques PAD du loyer."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le compte bancaire enregistre est maintenant actif pour les paiements automatiques PAD du loyer."
+            "value": "Le compte bancaire enregistré est maintenant actif pour les paiements automatiques PAD du loyer."
           }
         }
       }
@@ -7546,13 +7776,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carte enregistree deja au dossier"
+            "value": "Carte enregistrée déjà au dossier"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carte enregistree deja au dossier"
+            "value": "Carte enregistrée déjà au dossier"
           }
         }
       }
@@ -7569,13 +7799,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja au dossier pour les paiements automatiques du loyer. Si vous voulez la changer, Stripe vous demandera une carte de remplacement."
+            "value": "%1$@ est déjà au dossier pour les paiements automatiques du loyer. Si vous voulez la changer, Stripe vous demandera une carte de remplacement."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja au dossier pour les paiements automatiques du loyer. Si vous voulez la changer, Stripe vous demandera une carte de remplacement."
+            "value": "%1$@ est déjà au dossier pour les paiements automatiques du loyer. Si vous voulez la changer, Stripe vous demandera une carte de remplacement."
           }
         }
       }
@@ -7592,13 +7822,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une carte enregistree est deja au dossier pour les paiements automatiques du loyer. Si vous voulez la changer, Stripe vous demandera une carte de remplacement."
+            "value": "Une carte enregistrée est déjà au dossier pour les paiements automatiques du loyer. Si vous voulez la changer, Stripe vous demandera une carte de remplacement."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une carte enregistree est deja au dossier pour les paiements automatiques du loyer. Si vous voulez la changer, Stripe vous demandera une carte de remplacement."
+            "value": "Une carte enregistrée est déjà au dossier pour les paiements automatiques du loyer. Si vous voulez la changer, Stripe vous demandera une carte de remplacement."
           }
         }
       }
@@ -7615,13 +7845,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remplacer la carte enregistree"
+            "value": "Remplacer la carte enregistrée"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remplacer la carte enregistree"
+            "value": "Remplacer la carte enregistrée"
           }
         }
       }
@@ -7661,13 +7891,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compte bancaire enregistre deja au dossier"
+            "value": "Compte bancaire enregistré déjà au dossier"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compte bancaire enregistre deja au dossier"
+            "value": "Compte bancaire enregistré déjà au dossier"
           }
         }
       }
@@ -7678,19 +7908,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ is already on file for automatic PAD rent payments. Stripe does not expose the current bank details here. If you want to change the account, Stripe will ask you to replace it with a new one."
+            "value": "%1$@ is already on file for automatic PAD rent payments. Stripe does not expose the current bank détails here. If you want to change the account, Stripe will ask you to replace it with a new one."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja au dossier pour les paiements automatiques PAD du loyer. Stripe n'affiche pas les details bancaires actuels ici. Si vous voulez changer le compte, Stripe vous demandera de le remplacer par un nouveau."
+            "value": "%1$@ est déjà au dossier pour les paiements automatiques PAD du loyer. Stripe n'affiche pas les détails bancaires actuels ici. Si vous voulez changer le compte, Stripe vous demandera de le remplacer par un nouveau."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est deja au dossier pour les paiements automatiques PAD du loyer. Stripe n'affiche pas les details bancaires actuels ici. Si vous voulez changer le compte, Stripe vous demandera de le remplacer par un nouveau."
+            "value": "%1$@ est déjà au dossier pour les paiements automatiques PAD du loyer. Stripe n'affiche pas les détails bancaires actuels ici. Si vous voulez changer le compte, Stripe vous demandera de le remplacer par un nouveau."
           }
         }
       }
@@ -7701,19 +7931,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A saved bank account is already on file for automatic PAD rent payments. Stripe does not expose the current bank details here. If you want to change the account, Stripe will ask you to replace it with a new one."
+            "value": "A saved bank account is already on file for automatic PAD rent payments. Stripe does not expose the current bank détails here. If you want to change the account, Stripe will ask you to replace it with a new one."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un compte bancaire enregistre est deja au dossier pour les paiements automatiques PAD du loyer. Stripe n'affiche pas les details bancaires actuels ici. Si vous voulez changer le compte, Stripe vous demandera de le remplacer par un nouveau."
+            "value": "Un compte bancaire enregistré est déjà au dossier pour les paiements automatiques PAD du loyer. Stripe n'affiche pas les détails bancaires actuels ici. Si vous voulez changer le compte, Stripe vous demandera de le remplacer par un nouveau."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un compte bancaire enregistre est deja au dossier pour les paiements automatiques PAD du loyer. Stripe n'affiche pas les details bancaires actuels ici. Si vous voulez changer le compte, Stripe vous demandera de le remplacer par un nouveau."
+            "value": "Un compte bancaire enregistré est déjà au dossier pour les paiements automatiques PAD du loyer. Stripe n'affiche pas les détails bancaires actuels ici. Si vous voulez changer le compte, Stripe vous demandera de le remplacer par un nouveau."
           }
         }
       }
@@ -7730,13 +7960,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remplacer le compte bancaire enregistre"
+            "value": "Remplacer le compte bancaire enregistré"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Remplacer le compte bancaire enregistre"
+            "value": "Remplacer le compte bancaire enregistré"
           }
         }
       }
@@ -7822,13 +8052,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vos prochaines dates d'echeance du loyer apparaitront ici lorsque les dates de votre bail seront disponibles."
+            "value": "Vos prochaines dates d'échéance du loyer apparaîtront ici lorsque les dates de votre bail seront disponibles."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vos prochaines dates d'echeance du loyer s'afficheront ici lorsque les dates de votre bail seront disponibles."
+            "value": "Vos prochaines dates d'échéance du loyer s'afficheront ici lorsque les dates de votre bail seront disponibles."
           }
         }
       }
@@ -7868,13 +8098,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Echeance ce mois-ci"
+            "value": "Échéance ce mois-ci"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Echeance ce mois-ci"
+            "value": "Échéance ce mois-ci"
           }
         }
       }
@@ -7891,13 +8121,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Echeance precedente"
+            "value": "Échéance precedente"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Echeance precedente"
+            "value": "Échéance precedente"
           }
         }
       }
@@ -7914,13 +8144,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prochaine echeance"
+            "value": "Prochaine échéance"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prochaine echeance"
+            "value": "Prochaine échéance"
           }
         }
       }
@@ -8006,13 +8236,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mises a jour d'entretien"
+            "value": "Mises à jour d'entretien"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mises a jour d'entretien"
+            "value": "Mises à jour d'entretien"
           }
         }
       }
@@ -8052,13 +8282,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ma propriete"
+            "value": "Ma propriété"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ma propriete"
+            "value": "Ma propriété"
           }
         }
       }
@@ -8121,13 +8351,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "SECURITE"
+            "value": "SÉCURITÉ"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "SECURITE"
+            "value": "SÉCURITÉ"
           }
         }
       }
@@ -8144,13 +8374,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se deconnecter"
+            "value": "Se déconnecter"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se deconnecter"
+            "value": "Se déconnecter"
           }
         }
       }
@@ -8560,13 +8790,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reessayer"
+            "value": "Réessayer"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reessayer"
+            "value": "Réessayer"
           }
         }
       }
@@ -8608,13 +8838,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nous enverrons un lien de reinitialisation du mot de passe a l'adresse courriel de votre compte."
+            "value": "Nous enverrons un lien de réinitialisation du mot de passe à l'adresse courriel de votre compte."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nous enverrons un lien de reinitialisation de mot de passe a l'adresse courriel de votre compte."
+            "value": "Nous enverrons un lien de réinitialisation de mot de passe à l'adresse courriel de votre compte."
           }
         }
       }
@@ -8674,13 +8904,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Probleme"
+            "value": "Problème"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Probleme"
+            "value": "Problème"
           }
         }
       }
@@ -8762,13 +8992,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Date preferee"
+            "value": "Date préférée"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Date preferee"
+            "value": "Date préférée"
           }
         }
       }
@@ -8850,13 +9080,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Propriete"
+            "value": "Propriété"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Propriete"
+            "value": "Propriété"
           }
         }
       }
@@ -8916,13 +9146,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cree le"
+            "value": "Créé le"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cree le"
+            "value": "Créé le"
           }
         }
       }
@@ -8938,13 +9168,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mis a jour le"
+            "value": "Mis à jour le"
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mis a jour le"
+            "value": "Mis à jour le"
           }
         }
       }
@@ -9466,13 +9696,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Veuillez decrire le probleme avant l'envoi."
+            "value": "Veuillez décrire le problème avant l'envoi."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Veuillez decrire le probleme avant l'envoi."
+            "value": "Veuillez décrire le problème avant l'envoi."
           }
         }
       }
@@ -9488,13 +9718,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de trouver le compte du proprietaire pour cette propriete."
+            "value": "Impossible de trouver le compte du propriétaire pour cette propriété."
           }
         },
         "fr-CA": {
           "stringUnit": {
             "state": "translated",
-            "value": "Impossible de trouver le compte du proprietaire pour cette propriete."
+            "value": "Impossible de trouver le compte du propriétaire pour cette propriété."
           }
         }
       }

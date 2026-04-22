@@ -351,8 +351,12 @@ data class TenantRecord(
             val root = value as? JsonObject ?: return TenantStripeConnectAssociationState.Empty
             val associationNode = root["association"] as? JsonObject
             val creditCardNode = root["creditCard"] as? JsonObject
+            val oneTimeCreditCardNode = root["oneTimeCreditCard"] as? JsonObject
+            val oneTimeBankTransferNode = root["oneTimeBankTransfer"] as? JsonObject
             val hasAssociationNode = associationNode != null
             val hasCreditCardNode = creditCardNode != null
+            val hasOneTimeCreditCardNode = oneTimeCreditCardNode != null
+            val hasOneTimeBankTransferNode = oneTimeBankTransferNode != null
             val legacyStripePaymentMethodId = root["stripePaymentMethodId"].stringValue().ifBlank { null }
             val legacyStripeMandateId = root["stripeMandateId"].stringValue().ifBlank { null }
             val legacyMethodType = when {
@@ -379,7 +383,10 @@ data class TenantRecord(
             val cardState = stripeConnectMethodNodeState(cardSource, "card")
             val creditCardActive = cardState?.isActive == true
             val debitActive = bankState?.isActive == true
+            val oneTimeCreditCardActive = oneTimeCreditCardNode?.get("isActive")?.jsonPrimitive?.booleanOrNull ?: false
+            val oneTimeBankTransferActive = oneTimeBankTransferNode?.get("isActive")?.jsonPrimitive?.booleanOrNull ?: false
             val activeMethodType = when {
+                oneTimeCreditCardActive || oneTimeBankTransferActive -> null
                 creditCardActive &&
                     !cardState?.stripeCustomerId.isNullOrBlank() &&
                     !cardState?.stripePaymentMethodId.isNullOrBlank() -> "card"
@@ -391,9 +398,11 @@ data class TenantRecord(
             }
             val hasAssociationPayload =
                 hasStripeConnectMethodNodePayload(bankSource, "acss_debit") ||
-                    hasStripeConnectMethodNodePayload(cardSource, "card")
+                    hasStripeConnectMethodNodePayload(cardSource, "card") ||
+                    oneTimeCreditCardActive ||
+                    oneTimeBankTransferActive
 
-            if (!hasAssociationNode && !hasCreditCardNode && !hasAssociationPayload) {
+            if (!hasAssociationNode && !hasCreditCardNode && !hasOneTimeCreditCardNode && !hasOneTimeBankTransferNode && !hasAssociationPayload) {
                 return TenantStripeConnectAssociationState.Empty
             }
 
@@ -440,6 +449,8 @@ data class TenantRecord(
                 debitActive = debitActive,
                 landlordUserId = bankState?.landlordUserId ?: cardState?.landlordUserId,
                 linkedAt = bankState?.linkedAt ?: cardState?.linkedAt,
+                oneTimeBankTransferActive = oneTimeBankTransferActive,
+                oneTimeCreditCardActive = oneTimeCreditCardActive,
                 status = status,
                 stripeCustomerId = stripeCustomerId,
                 stripeMandateId = stripeMandateId,
@@ -513,6 +524,8 @@ class TenantDataStore(
         private set
     var landlordInteracSettings by mutableStateOf<InteracRecipientSettings?>(null)
         private set
+    var landlordRentCollectionSettings by mutableStateOf<LandlordRentCollectionSettings?>(null)
+        private set
     var unreadChatCount by mutableStateOf(0)
         private set
     var isLoading by mutableStateOf(false)
@@ -564,10 +577,12 @@ class TenantDataStore(
             val hasSavedBankProfile = tenantRecord?.let(::hasSavedBankRentPaymentProfileForRecord) ?: rentPayment.hasSavedBankStripeProfile
             val cardLabel = tenantRecord?.let(::savedCardPaymentMethodLabelForRecord)
             val bankLabel = tenantRecord?.let(::savedBankPaymentMethodLabelForRecord)
-            val isCardActive = tenantRecord?.let(::isCardAutopayActiveForRecord) ?: rentPayment.isCardAutopayActive
-            val isBankActive = tenantRecord?.let(::isBankAutopayActiveForRecord) ?: rentPayment.isBankAutopayActive
-            val isBankVerificationPending =
-                tenantRecord?.let(::isBankAutopayVerificationPendingForRecord) ?: rentPayment.isBankAutopayVerificationPending
+            val isCardActive = isCreditCardRentCollectionEnabled &&
+                (tenantRecord?.let(::isCardAutopayActiveForRecord) ?: rentPayment.isCardAutopayActive)
+            val isBankActive = isBankDebitsRentCollectionEnabled &&
+                (tenantRecord?.let(::isBankAutopayActiveForRecord) ?: rentPayment.isBankAutopayActive)
+            val isBankVerificationPending = isBankDebitsRentCollectionEnabled &&
+                (tenantRecord?.let(::isBankAutopayVerificationPendingForRecord) ?: rentPayment.isBankAutopayVerificationPending)
             val isPendingCardSetup = rentPayment.pendingSetupMethodType == "card" && !hasSavedCardProfile
             val isPendingBankSetup = rentPayment.pendingSetupMethodType == "acss_debit" && !hasSavedBankProfile
             val manualSubtitle = if (currentRentEntry?.isAutopayProcessing == true) {
@@ -624,8 +639,25 @@ class TenantDataStore(
                     icon = "building.columns.fill",
                     kind = PaymentMethodItem.Kind.AutopayBank
                 )
-            )
+            ) + bankTransferPaymentMethods()
         }
+
+    private fun bankTransferPaymentMethods(): List<PaymentMethodItem> {
+        val transferDetails = interacTransferDetails ?: return emptyList()
+        if (!isBankTransferRentCollectionEnabled || transferDetails.recipientEmail.isBlank()) {
+            return emptyList()
+        }
+
+        return listOf(
+            PaymentMethodItem(
+                id = "one-time-bank-transfer",
+                title = L("payments.method.bank_transfer.title"),
+                subtitle = LF("payments.method.bank_transfer.subtitle.recipient", transferDetails.recipientEmail),
+                icon = "arrow.left.arrow.right.circle.fill",
+                kind = PaymentMethodItem.Kind.OneTimeBankTransfer
+            )
+        )
+    }
 
     val currentRentPayment: TenantRentPaymentState
         get() = tenantRecord?.rentPayment ?: TenantRentPaymentState.Empty
@@ -633,14 +665,17 @@ class TenantDataStore(
     val stripeConnectAssociation: TenantStripeConnectAssociationState
         get() = tenantRecord?.stripeConnectAssociation ?: TenantStripeConnectAssociationState.Empty
 
+    val syncedPreferredPaymentSelectionKind: PaymentMethodItem.Kind?
+        get() = stripeConnectAssociation.syncedSelectedPaymentKind
+
     val hasStripeRentPaymentManagement: Boolean
         get() = tenantRecord?.let(::hasStripeRentPaymentManagement) ?: false
 
     val hasCardRentPaymentManagement: Boolean
-        get() = tenantRecord?.let(::hasCardRentPaymentManagement) ?: false
+        get() = isCreditCardRentCollectionEnabled && (tenantRecord?.let(::hasCardRentPaymentManagement) ?: false)
 
     val hasBankRentPaymentManagement: Boolean
-        get() = tenantRecord?.let(::hasBankRentPaymentManagement) ?: false
+        get() = isBankDebitsRentCollectionEnabled && (tenantRecord?.let(::hasBankRentPaymentManagement) ?: false)
 
     val hasSavedCardRentPaymentProfile: Boolean
         get() = tenantRecord?.let(::hasSavedCardRentPaymentProfileForRecord) ?: false
@@ -655,13 +690,25 @@ class TenantDataStore(
         get() = tenantRecord?.let(::savedBankPaymentMethodLabelForRecord)
 
     val isCardRentPaymentActive: Boolean
-        get() = tenantRecord?.let(::isCardAutopayActiveForRecord) ?: currentRentPayment.isCardAutopayActive
+        get() = isCreditCardRentCollectionEnabled &&
+            (tenantRecord?.let(::isCardAutopayActiveForRecord) ?: currentRentPayment.isCardAutopayActive)
 
     val isBankRentPaymentActive: Boolean
-        get() = tenantRecord?.let(::isBankAutopayActiveForRecord) ?: currentRentPayment.isBankAutopayActive
+        get() = isBankDebitsRentCollectionEnabled &&
+            (tenantRecord?.let(::isBankAutopayActiveForRecord) ?: currentRentPayment.isBankAutopayActive)
 
     val isBankRentPaymentVerificationPending: Boolean
-        get() = tenantRecord?.let(::isBankAutopayVerificationPendingForRecord) ?: currentRentPayment.isBankAutopayVerificationPending
+        get() = isBankDebitsRentCollectionEnabled &&
+            (tenantRecord?.let(::isBankAutopayVerificationPendingForRecord) ?: currentRentPayment.isBankAutopayVerificationPending)
+
+    val isCreditCardRentCollectionEnabled: Boolean
+        get() = landlordRentCollectionSettings?.creditCardActive ?: true
+
+    val isBankDebitsRentCollectionEnabled: Boolean
+        get() = landlordRentCollectionSettings?.bankDebitsActive ?: true
+
+    val isBankTransferRentCollectionEnabled: Boolean
+        get() = landlordRentCollectionSettings?.bankTransferActive ?: true
 
     val paymentHistory: List<PaymentItem>
         get() = rentEntries
@@ -714,6 +761,10 @@ class TenantDataStore(
         }
 
     fun payableRentEntry(kind: PaymentMethodItem.Kind): RentLedgerEntry? {
+        if (kind == PaymentMethodItem.Kind.ManualMonthly && !isCreditCardRentCollectionEnabled) {
+            return null
+        }
+
         val next = nextRentEntry
         if (next != null && !next.isPaid && next.hostedCheckoutUrl(kind) != null) {
             return next
@@ -733,9 +784,14 @@ class TenantDataStore(
 
     val interacTransferDetails: InteracTransferDetails?
         get() {
-            val settings = landlordInteracSettings
             val rentEntry = nextRentEntry ?: currentRentEntry
-            if (settings == null || !settings.isEnabled || settings.email.isBlank() || rentEntry == null) {
+            if (!isBankTransferRentCollectionEnabled || rentEntry == null) {
+                return null
+            }
+            val transferEmail = landlordRentCollectionSettings?.bankTransferEmail?.trim().orEmpty()
+            val fallbackSettings = landlordInteracSettings
+            val recipientEmail = if (transferEmail.isNotBlank()) transferEmail else fallbackSettings?.email.orEmpty()
+            if (recipientEmail.isBlank()) {
                 return null
             }
 
@@ -749,12 +805,12 @@ class TenantDataStore(
 
             return InteracTransferDetails(
                 id = rentEntry.id,
-                recipientEmail = settings.email,
-                recipientName = settings.displayName.ifBlank { propertyManagerName },
+                recipientEmail = recipientEmail,
+                recipientName = fallbackSettings?.displayName?.takeIf { it.isNotBlank() } ?: propertyManagerName,
                 amount = if (rentEntry.balance == "-") rentEntry.amount else rentEntry.balance,
                 dueDate = rentEntry.dueDateDisplay,
                 reference = reference,
-                autodepositEnabled = settings.autodepositEnabled
+                autodepositEnabled = fallbackSettings?.autodepositEnabled ?: false
             )
         }
 
@@ -803,6 +859,10 @@ class TenantDataStore(
 
         return when (kind) {
             PaymentMethodItem.Kind.ManualMonthly -> {
+                if (!isCreditCardRentCollectionEnabled) {
+                    throw IllegalStateException(L("payments.disabled.credit_card"))
+                }
+
                 val manualCheckoutUrl = hostedCheckoutUrl(PaymentMethodItem.Kind.ManualMonthly)
                     ?: throw IllegalStateException(L("payments.error.link_preparing"))
 
@@ -816,6 +876,10 @@ class TenantDataStore(
             }
 
             PaymentMethodItem.Kind.AutopayCard -> {
+                if (!isCreditCardRentCollectionEnabled) {
+                    throw IllegalStateException(L("payments.disabled.credit_card"))
+                }
+
                 val action = if (managementMode) "manage-card" else "setup-card"
                 val result = submitRentPaymentPreferenceJob(uid, action)
                 refresh()
@@ -823,11 +887,53 @@ class TenantDataStore(
             }
 
             PaymentMethodItem.Kind.AutopayBank -> {
+                if (!isBankDebitsRentCollectionEnabled) {
+                    throw IllegalStateException(L("payments.disabled.bank_debit"))
+                }
+
                 val action = if (managementMode) "manage-pad" else "setup-pad"
                 val result = submitRentPaymentPreferenceJob(uid, action)
                 refresh()
                 result.url
             }
+
+            PaymentMethodItem.Kind.OneTimeBankTransfer -> null
+        }
+    }
+
+    suspend fun deactivateAutopayForOneTimePaymentIfNeeded() {
+        val uid = activeUid ?: throw IllegalStateException(L("payments.error.sign_in_again"))
+        val rentPayment = currentRentPayment
+        val shouldSwitchToManual =
+            rentPayment.selectedMethodType == "card" ||
+                rentPayment.selectedMethodType == "acss_debit" ||
+                rentPayment.pendingSetupMethodType == "card" ||
+                rentPayment.pendingSetupMethodType == "acss_debit"
+
+        if (!shouldSwitchToManual) {
+            return
+        }
+
+        submitRentPaymentPreferenceJob(uid, "switch-manual")
+        refresh()
+    }
+
+    suspend fun persistSharedRentPaymentSelection(kind: PaymentMethodItem.Kind) {
+        val uid = activeUid ?: throw IllegalStateException(L("payments.error.sign_in_again"))
+        val idToken = authSession.ensureValidIdToken()
+            ?: throw IllegalStateException(L("payments.error.sign_in_again"))
+        val updated = restClient.patchDatabaseRoot(
+            idToken = idToken,
+            body = buildJsonObject {
+                put("users/$uid/stripeConnect/association/isActive", JsonPrimitive(kind == PaymentMethodItem.Kind.AutopayBank))
+                put("users/$uid/stripeConnect/creditCard/isActive", JsonPrimitive(kind == PaymentMethodItem.Kind.AutopayCard))
+                put("users/$uid/stripeConnect/oneTimeCreditCard/isActive", JsonPrimitive(kind == PaymentMethodItem.Kind.ManualMonthly))
+                put("users/$uid/stripeConnect/oneTimeBankTransfer/isActive", JsonPrimitive(kind == PaymentMethodItem.Kind.OneTimeBankTransfer))
+            }
+        )
+
+        if (!updated) {
+            throw IllegalStateException(L("payments.error.selection_sync_failed"))
         }
     }
 
@@ -1291,6 +1397,7 @@ class TenantDataStore(
             maintenanceRequests = emptyList()
             chatSections = emptyList()
             landlordInteracSettings = null
+            landlordRentCollectionSettings = null
             chatParticipantNameOverride = null
             unreadChatCount = 0
             unreadChatMessageIds = emptyList()
@@ -1312,6 +1419,8 @@ class TenantDataStore(
             documents = emptyList()
             maintenanceRequests = emptyList()
             chatSections = emptyList()
+            landlordInteracSettings = null
+            landlordRentCollectionSettings = null
             chatParticipantNameOverride = null
             unreadChatCount = 0
             unreadChatMessageIds = emptyList()
@@ -1348,15 +1457,19 @@ class TenantDataStore(
         )
         applyChatConversation(chatConversation)
         observeChatConversation(uid = uid, landlordUid = tenantRecord?.landlordUID.orEmpty())
-        landlordInteracSettings = tenantRecord
+        val landlordSnapshot = tenantRecord
             ?.landlordUID
             ?.takeIf { it.isNotBlank() }
             ?.let { landlordUid ->
-                runCatching { restClient.fetchInteracSettings(landlordUid, idToken) }
+                runCatching { restClient.fetchUser(landlordUid, idToken) }
                     .getOrNull()
                     .asJsonObjectOrNull()
-                    ?.let(::parseInteracRecipientSettings)
             }
+        landlordInteracSettings = landlordSnapshot
+            ?.get("interacSettings")
+            ?.asJsonObjectOrNull()
+            ?.let(::parseInteracRecipientSettings)
+        landlordRentCollectionSettings = landlordSnapshot?.let(::parseLandlordRentCollectionSettings)
         val maintenanceRequestsSnapshot = runCatching {
             restClient.fetchMaintenanceRequests(uid, idToken)
         }.getOrNull()
@@ -1457,6 +1570,7 @@ class TenantDataStore(
         maintenanceRequests = emptyList()
         chatSections = emptyList()
         landlordInteracSettings = null
+        landlordRentCollectionSettings = null
         chatParticipantNameOverride = null
         unreadChatCount = 0
         unreadChatMessageIds = emptyList()
@@ -2337,6 +2451,15 @@ class TenantDataStore(
             displayName = snapshot["displayName"].stringValue(),
             autodepositEnabled = snapshot["autodepositEnabled"]?.jsonPrimitive?.booleanOrNull ?: false,
             isEnabled = snapshot["isEnabled"]?.jsonPrimitive?.booleanOrNull ?: false
+        )
+    }
+
+    private fun parseLandlordRentCollectionSettings(snapshot: JsonObject): LandlordRentCollectionSettings {
+        return LandlordRentCollectionSettings(
+            bankDebitsActive = snapshot["bankDebitsActive"]?.jsonPrimitive?.booleanOrNull ?: true,
+            bankTransferActive = snapshot["bankTransferActive"]?.jsonPrimitive?.booleanOrNull ?: true,
+            bankTransferEmail = snapshot["bankTransferEmail"].stringValue(),
+            creditCardActive = snapshot["creditCardActive"]?.jsonPrimitive?.booleanOrNull ?: true
         )
     }
 

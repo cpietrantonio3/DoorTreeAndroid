@@ -167,6 +167,8 @@ data class TenantStripeConnectAssociationState(
     val debitActive: Boolean,
     val landlordUserId: String?,
     val linkedAt: String?,
+    val oneTimeBankTransferActive: Boolean,
+    val oneTimeCreditCardActive: Boolean,
     val status: String,
     val stripeCustomerId: String?,
     val stripeMandateId: String?,
@@ -197,6 +199,8 @@ data class TenantStripeConnectAssociationState(
             debitActive = false,
             landlordUserId = null,
             linkedAt = null,
+            oneTimeBankTransferActive = false,
+            oneTimeCreditCardActive = false,
             status = "manual",
             stripeCustomerId = null,
             stripeMandateId = null,
@@ -224,6 +228,15 @@ data class TenantStripeConnectAssociationState(
 
     val isBankAutopayVerificationPending: Boolean
         get() = debitActive && bankStatus == "verification_pending" && hasSavedBankStripeProfile
+
+    val syncedSelectedPaymentKind: PaymentMethodItem.Kind?
+        get() = when {
+            oneTimeCreditCardActive -> PaymentMethodItem.Kind.ManualMonthly
+            oneTimeBankTransferActive -> PaymentMethodItem.Kind.OneTimeBankTransfer
+            creditCardActive -> PaymentMethodItem.Kind.AutopayCard
+            debitActive -> PaymentMethodItem.Kind.AutopayBank
+            else -> null
+        }
 
     val hasConnectedCustomerProfile: Boolean
         get() = associated ||
@@ -253,6 +266,13 @@ data class InteracRecipientSettings(
     val displayName: String,
     val autodepositEnabled: Boolean,
     val isEnabled: Boolean
+)
+
+data class LandlordRentCollectionSettings(
+    val bankDebitsActive: Boolean,
+    val bankTransferActive: Boolean,
+    val bankTransferEmail: String,
+    val creditCardActive: Boolean
 )
 
 data class InteracTransferDetails(
@@ -300,7 +320,8 @@ data class RentLedgerEntry(
             stripe?.takeIf { it.isActive && it.paymentLinkUrl.isNotBlank() }?.paymentLinkUrl
 
         PaymentMethodItem.Kind.AutopayCard,
-        PaymentMethodItem.Kind.AutopayBank -> null
+        PaymentMethodItem.Kind.AutopayBank,
+        PaymentMethodItem.Kind.OneTimeBankTransfer -> null
     }
 }
 
@@ -420,7 +441,8 @@ data class PaymentMethodItem(
     enum class Kind {
         ManualMonthly,
         AutopayCard,
-        AutopayBank
+        AutopayBank,
+        OneTimeBankTransfer
     }
 }
 

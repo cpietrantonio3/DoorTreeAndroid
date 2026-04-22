@@ -42,7 +42,9 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
     val scope = rememberCoroutineScope()
     var selectedMethodId by remember { mutableStateOf<String?>(null) }
     var hasUserSelectedMethod by remember { mutableStateOf(false) }
+    var lastSyncedPreferredMethodId by remember { mutableStateOf<String?>(null) }
     var checkoutRequest by remember { mutableStateOf<HostedCheckoutRequest?>(null) }
+    var transferDetails by remember { mutableStateOf<InteracTransferDetails?>(null) }
     var isStartingPaymentFlow by remember { mutableStateOf(false) }
     var paymentFlowMessage by remember { mutableStateOf<String?>(null) }
     var managementPrompt by remember { mutableStateOf<SavedPaymentManagementPrompt?>(null) }
@@ -50,7 +52,8 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
         paymentMethodIdForKind(
             paymentMethods = paymentMethods,
             kind = preferredSelectedPaymentKind(tenantDataStore)
-        ) ?: paymentMethods.firstOrNull()?.id
+        ) ?: paymentMethods.firstOrNull { !isPaymentMethodDisabled(tenantDataStore, it.kind) }?.id
+            ?: paymentMethods.firstOrNull()?.id
 
     suspend fun continuePaymentFlow(
         kind: PaymentMethodItem.Kind,
@@ -60,6 +63,14 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
         isStartingPaymentFlow = true
 
         try {
+            if (kind == PaymentMethodItem.Kind.OneTimeBankTransfer) {
+                tenantDataStore.deactivateAutopayForOneTimePaymentIfNeeded()
+                isStartingPaymentFlow = false
+                transferDetails = tenantDataStore.interacTransferDetails
+                paymentFlowMessage = if (transferDetails == null) L("payments.message.bank_transfer.unavailable") else null
+                return
+            }
+
             val url = tenantDataStore.startRentPaymentFlow(kind, managementMode)
             isStartingPaymentFlow = false
 
@@ -80,6 +91,7 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
                         } else {
                             L("payments.message.saved_bank_activated")
                         }
+                    PaymentMethodItem.Kind.OneTimeBankTransfer -> null
                 }
             }
         } catch (error: Throwable) {
@@ -88,10 +100,23 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
         }
     }
 
-    LaunchedEffect(preferredSelectedMethodId, paymentMethods, hasUserSelectedMethod) {
-        val hasValidSelection = selectedMethodId != null && paymentMethods.any { it.id == selectedMethodId }
-        if (!hasUserSelectedMethod || !hasValidSelection) {
+    transferDetails?.let { details ->
+        InteracTransferSheetView(
+            details = details,
+            onDismiss = { transferDetails = null }
+        )
+    }
+
+    LaunchedEffect(preferredSelectedMethodId, paymentMethods) {
+        val hasValidSelection = selectedMethodId != null && paymentMethods.any {
+            it.id == selectedMethodId && !isPaymentMethodDisabled(tenantDataStore, it.kind)
+        }
+        val preferredSelectionChanged = preferredSelectedMethodId != lastSyncedPreferredMethodId
+
+        if (preferredSelectionChanged || !hasUserSelectedMethod || !hasValidSelection) {
             selectedMethodId = preferredSelectedMethodId
+            hasUserSelectedMethod = false
+            lastSyncedPreferredMethodId = preferredSelectedMethodId
         }
     }
 
@@ -136,28 +161,56 @@ fun PayRentView(tenantDataStore: TenantDataStore) {
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = tenantDataStore.currentRentPayment.currentPreferenceTitle,
+                        text = paymentPreferenceSummaryTitle(
+                            tenantDataStore = tenantDataStore,
+                            selectedMethodId = selectedMethodId
+                        ),
                         color = DoorTreeTheme.textPrimary,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = tenantDataStore.currentRentPayment.currentPreferenceSubtitle,
+                        text = paymentPreferenceSummarySubtitle(
+                            tenantDataStore = tenantDataStore,
+                            selectedMethodId = selectedMethodId
+                        ),
                         color = DoorTreeTheme.textSecondary
                     )
                 }
 
                 paymentMethods.forEach { method ->
+                    val disabledReason = disabledReason(tenantDataStore, method.kind)
+
                     PaymentMethodRow(
                         method = method,
                         isSelected = selectedMethodId == method.id,
+                        isDisabled = disabledReason != null,
+                        disabledMessage = disabledReason,
                         onClick = {
+                            if (disabledReason != null) {
+                                return@PaymentMethodRow
+                            }
+
                             hasUserSelectedMethod = true
                             selectedMethodId = method.id
                             paymentFlowMessage = null
 
-                            if (shouldApplySelectedPaymentMethodImmediately(tenantDataStore, method.kind, isStartingPaymentFlow)) {
-                                scope.launch {
-                                    continuePaymentFlow(method.kind)
+                            scope.launch {
+                                runCatching {
+                                    tenantDataStore.persistSharedRentPaymentSelection(method.kind)
+                                }.onFailure { error ->
+                                    paymentFlowMessage = error.message
+                                }
+
+                                runCatching {
+                                    if (shouldDeactivateAutopayOnSelection(tenantDataStore, method.kind)) {
+                                        tenantDataStore.deactivateAutopayForOneTimePaymentIfNeeded()
+                                    }
+
+                                    if (shouldApplySelectedPaymentMethodImmediately(tenantDataStore, method.kind, isStartingPaymentFlow)) {
+                                        continuePaymentFlow(method.kind)
+                                    }
+                                }.onFailure { error ->
+                                    paymentFlowMessage = error.message
                                 }
                             }
                         }
@@ -353,10 +406,30 @@ private fun selectedHostedCheckoutUrl(
 
 private fun preferredSelectedPaymentKind(tenantDataStore: TenantDataStore): PaymentMethodItem.Kind {
     return when {
+        tenantDataStore.syncedPreferredPaymentSelectionKind == PaymentMethodItem.Kind.ManualMonthly &&
+            !isPaymentMethodDisabled(tenantDataStore, PaymentMethodItem.Kind.ManualMonthly) ->
+            PaymentMethodItem.Kind.ManualMonthly
+        tenantDataStore.syncedPreferredPaymentSelectionKind == PaymentMethodItem.Kind.OneTimeBankTransfer &&
+            !isPaymentMethodDisabled(tenantDataStore, PaymentMethodItem.Kind.OneTimeBankTransfer) &&
+            tenantDataStore.interacTransferDetails != null ->
+            PaymentMethodItem.Kind.OneTimeBankTransfer
+        tenantDataStore.syncedPreferredPaymentSelectionKind == PaymentMethodItem.Kind.AutopayCard &&
+            !isPaymentMethodDisabled(tenantDataStore, PaymentMethodItem.Kind.AutopayCard) ->
+            PaymentMethodItem.Kind.AutopayCard
+        tenantDataStore.syncedPreferredPaymentSelectionKind == PaymentMethodItem.Kind.AutopayBank &&
+            !isPaymentMethodDisabled(tenantDataStore, PaymentMethodItem.Kind.AutopayBank) ->
+            PaymentMethodItem.Kind.AutopayBank
         tenantDataStore.isCardRentPaymentActive -> PaymentMethodItem.Kind.AutopayCard
         tenantDataStore.isBankRentPaymentActive || tenantDataStore.isBankRentPaymentVerificationPending ->
             PaymentMethodItem.Kind.AutopayBank
-        else -> PaymentMethodItem.Kind.ManualMonthly
+        !isPaymentMethodDisabled(tenantDataStore, PaymentMethodItem.Kind.ManualMonthly) ->
+            PaymentMethodItem.Kind.ManualMonthly
+        !isPaymentMethodDisabled(tenantDataStore, PaymentMethodItem.Kind.OneTimeBankTransfer) &&
+            tenantDataStore.interacTransferDetails != null ->
+            PaymentMethodItem.Kind.OneTimeBankTransfer
+        !isPaymentMethodDisabled(tenantDataStore, PaymentMethodItem.Kind.AutopayBank) ->
+            PaymentMethodItem.Kind.AutopayBank
+        else -> PaymentMethodItem.Kind.AutopayCard
     }
 }
 
@@ -372,6 +445,9 @@ private fun canStartPaymentFlow(
     selectedMethodId: String?
 ): Boolean {
     val selectedMethod = tenantDataStore.paymentMethods.firstOrNull { it.id == selectedMethodId } ?: return false
+    if (isPaymentMethodDisabled(tenantDataStore, selectedMethod.kind)) {
+        return false
+    }
     return when (selectedMethod.kind) {
         PaymentMethodItem.Kind.ManualMonthly ->
             selectedHostedCheckoutUrl(tenantDataStore, selectedMethodId) != null &&
@@ -380,6 +456,7 @@ private fun canStartPaymentFlow(
         PaymentMethodItem.Kind.AutopayCard -> tenantDataStore.isCardRentPaymentActive
         PaymentMethodItem.Kind.AutopayBank ->
             tenantDataStore.isBankRentPaymentActive || tenantDataStore.isBankRentPaymentVerificationPending
+        PaymentMethodItem.Kind.OneTimeBankTransfer -> tenantDataStore.interacTransferDetails != null
     }
 }
 
@@ -388,11 +465,15 @@ private fun showsPrimaryActionButton(
     selectedMethodId: String?
 ): Boolean {
     val selectedMethod = tenantDataStore.paymentMethods.firstOrNull { it.id == selectedMethodId } ?: return false
+    if (isPaymentMethodDisabled(tenantDataStore, selectedMethod.kind)) {
+        return false
+    }
     return when (selectedMethod.kind) {
         PaymentMethodItem.Kind.ManualMonthly -> true
         PaymentMethodItem.Kind.AutopayCard -> tenantDataStore.isCardRentPaymentActive
         PaymentMethodItem.Kind.AutopayBank ->
             tenantDataStore.isBankRentPaymentActive || tenantDataStore.isBankRentPaymentVerificationPending
+        PaymentMethodItem.Kind.OneTimeBankTransfer -> true
     }
 }
 
@@ -405,11 +486,34 @@ private fun shouldApplySelectedPaymentMethodImmediately(
         return false
     }
 
+    if (isPaymentMethodDisabled(tenantDataStore, kind)) {
+        return false
+    }
+
     return when (kind) {
         PaymentMethodItem.Kind.ManualMonthly -> false
         PaymentMethodItem.Kind.AutopayCard -> !tenantDataStore.isCardRentPaymentActive
         PaymentMethodItem.Kind.AutopayBank ->
             !tenantDataStore.isBankRentPaymentActive && !tenantDataStore.isBankRentPaymentVerificationPending
+        PaymentMethodItem.Kind.OneTimeBankTransfer -> true
+    }
+}
+
+private fun shouldDeactivateAutopayOnSelection(
+    tenantDataStore: TenantDataStore,
+    kind: PaymentMethodItem.Kind
+): Boolean {
+    return when (kind) {
+        PaymentMethodItem.Kind.ManualMonthly,
+        PaymentMethodItem.Kind.OneTimeBankTransfer ->
+            tenantDataStore.isCardRentPaymentActive ||
+                tenantDataStore.isBankRentPaymentActive ||
+                tenantDataStore.isBankRentPaymentVerificationPending ||
+                (tenantDataStore.currentRentPayment.pendingSetupMethodType == "card" && !tenantDataStore.hasSavedCardRentPaymentProfile) ||
+                (tenantDataStore.currentRentPayment.pendingSetupMethodType == "acss_debit" && !tenantDataStore.hasSavedBankRentPaymentProfile)
+
+        PaymentMethodItem.Kind.AutopayCard,
+        PaymentMethodItem.Kind.AutopayBank -> false
     }
 }
 
@@ -428,6 +532,8 @@ private fun primaryActionTitle(
     val hasSavedBankProfile = tenantDataStore.hasSavedBankRentPaymentProfile
     val isPendingCardSetup = currentRentPayment.pendingSetupMethodType == "card" && !hasSavedCardProfile
     val isPendingBankSetup = currentRentPayment.pendingSetupMethodType == "acss_debit" && !hasSavedBankProfile
+
+    disabledReason(tenantDataStore, selectedMethod?.kind)?.let { return it }
 
     return when (selectedMethod?.kind) {
         PaymentMethodItem.Kind.ManualMonthly -> L("payments.action.continue_to_stripe")
@@ -454,6 +560,8 @@ private fun primaryActionTitle(
                 L("payments.action.setup_bank")
             }
         }
+
+        PaymentMethodItem.Kind.OneTimeBankTransfer -> L("payments.action.view_transfer_details")
 
         null -> L("payments.pay_now")
     }
@@ -538,6 +646,11 @@ private fun paymentStatusMessage(
 
             else -> null
         }
+
+        PaymentMethodItem.Kind.OneTimeBankTransfer ->
+            tenantDataStore.interacTransferDetails?.let {
+                LF("payments.message.bank_transfer.recipient", it.recipientEmail)
+            }
     }
 }
 
@@ -545,7 +658,9 @@ private fun managementPromptFor(
     tenantDataStore: TenantDataStore,
     kind: PaymentMethodItem.Kind
 ): SavedPaymentManagementPrompt? {
-    val currentRentPayment = tenantDataStore.currentRentPayment
+    if (isPaymentMethodDisabled(tenantDataStore, kind)) {
+        return null
+    }
 
     return when (kind) {
         PaymentMethodItem.Kind.ManualMonthly -> null
@@ -588,6 +703,85 @@ private fun managementPromptFor(
                 title = L("payments.alert.saved_bank.title")
             )
         }
+        PaymentMethodItem.Kind.OneTimeBankTransfer -> null
+    }
+}
+
+private fun isPaymentMethodDisabled(
+    tenantDataStore: TenantDataStore,
+    kind: PaymentMethodItem.Kind
+): Boolean = disabledReason(tenantDataStore, kind) != null
+
+private fun paymentPreferenceSummaryTitle(
+    tenantDataStore: TenantDataStore,
+    selectedMethodId: String?
+): String {
+    val selectedMethod = tenantDataStore.paymentMethods.firstOrNull { it.id == selectedMethodId }
+    if (selectedMethod != null && !isPaymentMethodDisabled(tenantDataStore, selectedMethod.kind)) {
+        return selectedMethod.title
+    }
+
+    return when (disabledCurrentPreferenceKind(tenantDataStore)) {
+        PaymentMethodItem.Kind.ManualMonthly,
+        PaymentMethodItem.Kind.AutopayCard -> L("payments.preference.title.card_disabled")
+        PaymentMethodItem.Kind.AutopayBank -> L("payments.preference.title.bank_disabled")
+        PaymentMethodItem.Kind.OneTimeBankTransfer,
+        null -> tenantDataStore.currentRentPayment.currentPreferenceTitle
+    }
+}
+
+private fun paymentPreferenceSummarySubtitle(
+    tenantDataStore: TenantDataStore,
+    selectedMethodId: String?
+): String {
+    val selectedMethod = tenantDataStore.paymentMethods.firstOrNull { it.id == selectedMethodId }
+    if (selectedMethod != null) {
+        disabledReason(tenantDataStore, selectedMethod.kind)?.let { return it }
+        return selectedMethod.subtitle
+    }
+
+    val disabledKind = disabledCurrentPreferenceKind(tenantDataStore)
+    return disabledReason(tenantDataStore, disabledKind)
+        ?: tenantDataStore.currentRentPayment.currentPreferenceSubtitle
+}
+
+private fun disabledCurrentPreferenceKind(tenantDataStore: TenantDataStore): PaymentMethodItem.Kind? {
+    val rentPayment = tenantDataStore.currentRentPayment
+
+    if ((rentPayment.pendingSetupMethodType == "card" ||
+            rentPayment.selectedMethodType == "card" ||
+            rentPayment.paymentMethodType == "card") &&
+        !tenantDataStore.isCreditCardRentCollectionEnabled
+    ) {
+        return PaymentMethodItem.Kind.AutopayCard
+    }
+
+    if ((rentPayment.pendingSetupMethodType == "acss_debit" ||
+            rentPayment.selectedMethodType == "acss_debit" ||
+            rentPayment.paymentMethodType == "acss_debit") &&
+        !tenantDataStore.isBankDebitsRentCollectionEnabled
+    ) {
+        return PaymentMethodItem.Kind.AutopayBank
+    }
+
+    return null
+}
+
+private fun disabledReason(
+    tenantDataStore: TenantDataStore,
+    kind: PaymentMethodItem.Kind?
+): String? {
+    return when (kind) {
+        PaymentMethodItem.Kind.ManualMonthly,
+        PaymentMethodItem.Kind.AutopayCard ->
+            if (tenantDataStore.isCreditCardRentCollectionEnabled) null else L("payments.disabled.credit_card")
+
+        PaymentMethodItem.Kind.AutopayBank ->
+            if (tenantDataStore.isBankDebitsRentCollectionEnabled) null else L("payments.disabled.bank_debit")
+
+        PaymentMethodItem.Kind.OneTimeBankTransfer -> null
+
+        null -> null
     }
 }
 
@@ -595,52 +789,81 @@ private fun managementPromptFor(
 private fun PaymentMethodRow(
     method: PaymentMethodItem,
     isSelected: Boolean,
+    isDisabled: Boolean,
+    disabledMessage: String?,
     onClick: () -> Unit
 ) {
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .liquidGlassSurface(
                 cornerRadius = 16.dp,
-                interactive = true,
+                interactive = !isDisabled,
                 tint = if (isSelected) DoorTreeTheme.gradientStart.copy(alpha = 0.18f) else Color.Unspecified
             )
-            .clickable(onClick = onClick)
-            .padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .clickable(enabled = !isDisabled, onClick = onClick)
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .background(DoorTreeTheme.paidBackground.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
-                .padding(14.dp)
-        ) {
-            Icon(systemIcon(method.icon), contentDescription = null, tint = DoorTreeTheme.gradientStart)
-        }
-
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(text = method.title, color = DoorTreeTheme.textPrimary)
-            Text(text = method.subtitle, color = DoorTreeTheme.textSecondary)
-        }
-
-        Box(
-            modifier = Modifier
-                .background(
-                    color = if (isSelected) DoorTreeTheme.gradientStart else Color.Transparent,
-                    shape = RoundedCornerShape(999.dp)
-                )
-                .size(18.dp)
-                .padding(3.dp)
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .background(DoorTreeTheme.paidBackground.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
+                    .padding(14.dp)
+            ) {
+                Icon(systemIcon(method.icon), contentDescription = null, tint = DoorTreeTheme.gradientStart)
+            }
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(text = method.title, color = DoorTreeTheme.textPrimary)
+                    Text(text = method.subtitle, color = DoorTreeTheme.textSecondary)
+                }
+            }
+
+            Box(
+                modifier = Modifier
                     .background(
                         color = if (isSelected) DoorTreeTheme.gradientStart else Color.Transparent,
                         shape = RoundedCornerShape(999.dp)
                     )
-                    .padding(6.dp)
-            )
+                    .size(18.dp)
+                    .padding(3.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            color = if (isSelected) DoorTreeTheme.gradientStart else Color.Transparent,
+                            shape = RoundedCornerShape(999.dp)
+                        )
+                        .padding(6.dp)
+                )
+            }
+        }
+
+        if (isDisabled && disabledMessage != null) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(DoorTreeTheme.backgroundPrimary.copy(alpha = 0.82f), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 18.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = disabledMessage,
+                    color = DoorTreeTheme.textPrimary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }
