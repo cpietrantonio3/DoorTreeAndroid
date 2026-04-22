@@ -50,7 +50,7 @@ object RentScheduleBuilder {
             dueDates.last() == endDate &&
             startDate.dayOfMonth == endDate.dayOfMonth
         ) {
-            dueDates.removeLast()
+            dueDates.removeAt(dueDates.lastIndex)
         }
 
         return dueDates.map { dueDate ->
