@@ -287,13 +287,14 @@ private fun isVersionOlder(current: String, required: String): Boolean {
 }
 
 private fun openPlayStorePage(context: android.content.Context) {
-    val packageName = context.packageName
-    val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
+    val playStorePackageId = "codewhale.doortreeandroid"
+    val playStoreWebUrl = "https://play.google.com/store/apps/details?id=codewhale.doortreeandroid"
+    val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$playStorePackageId")).apply {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     val webIntent = Intent(
         Intent.ACTION_VIEW,
-        Uri.parse("https://play.google.com/store/apps/details?id=$packageName")
+        Uri.parse(playStoreWebUrl)
     ).apply {
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
