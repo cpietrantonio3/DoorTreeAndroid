@@ -1,5 +1,6 @@
 package codewhale.doortreeandroid
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -495,7 +496,8 @@ data class TenantRecord(
 }
 
 class TenantDataStore(
-    private val authSession: AuthSessionStore
+    private val authSession: AuthSessionStore,
+    private val context: Context
 ) {
     private val restClient = FirebaseRestClient()
     private val realtimeDatabase = FirebaseDatabase.getInstance(FirebaseConfig.databaseUrl).reference
@@ -525,6 +527,8 @@ class TenantDataStore(
     var landlordInteracSettings by mutableStateOf<InteracRecipientSettings?>(null)
         private set
     var landlordRentCollectionSettings by mutableStateOf<LandlordRentCollectionSettings?>(null)
+        private set
+    var landlordCompanyName by mutableStateOf<String?>(null)
         private set
     var unreadChatCount by mutableStateOf(0)
         private set
@@ -993,9 +997,13 @@ class TenantDataStore(
         try {
             var signatureStoragePath: String? = null
             var refreshedDocumentUrl: String? = null
+            val tenantReplyPath = uploadRenewalReplyPdf(status, signatureBitmap, document)
+
+            if (signatureBitmap != null) {
+                signatureStoragePath = uploadRenewalSignature(signatureBitmap, document)
+            }
 
             if (status == "accept" && signatureBitmap != null) {
-                signatureStoragePath = uploadRenewalSignature(signatureBitmap, document)
                 refreshedDocumentUrl = uploadSignedRenewalPdf(signatureBitmap, document)
             }
 
@@ -1007,6 +1015,8 @@ class TenantDataStore(
                     put("users/$uid/$databasePath/status", JsonPrimitive(status))
                     put("users/$uid/$databasePath/isActionTaken", JsonPrimitive(true))
                     put("users/$uid/$databasePath/read", JsonPrimitive(true))
+                    put("users/$uid/$databasePath/tenantReplyPDFfile", JsonPrimitive(tenantReplyPath))
+                    put("users/$uid/$databasePath/tenantReplyCreatedAt", JsonPrimitive(Instant.now().toString()))
                     signatureStoragePath?.let { path ->
                         put("users/$uid/$databasePath/signatureStoragePath", JsonPrimitive(path))
                     }
@@ -1398,6 +1408,7 @@ class TenantDataStore(
             chatSections = emptyList()
             landlordInteracSettings = null
             landlordRentCollectionSettings = null
+            landlordCompanyName = null
             chatParticipantNameOverride = null
             unreadChatCount = 0
             unreadChatMessageIds = emptyList()
@@ -1421,6 +1432,7 @@ class TenantDataStore(
             chatSections = emptyList()
             landlordInteracSettings = null
             landlordRentCollectionSettings = null
+            landlordCompanyName = null
             chatParticipantNameOverride = null
             unreadChatCount = 0
             unreadChatMessageIds = emptyList()
@@ -1470,6 +1482,7 @@ class TenantDataStore(
             ?.asJsonObjectOrNull()
             ?.let(::parseInteracRecipientSettings)
         landlordRentCollectionSettings = landlordSnapshot?.let(::parseLandlordRentCollectionSettings)
+        landlordCompanyName = landlordSnapshot?.let(::parseLandlordCompanyName)
         val maintenanceRequestsSnapshot = runCatching {
             restClient.fetchMaintenanceRequests(uid, idToken)
         }.getOrNull()
@@ -1571,6 +1584,7 @@ class TenantDataStore(
         chatSections = emptyList()
         landlordInteracSettings = null
         landlordRentCollectionSettings = null
+        landlordCompanyName = null
         chatParticipantNameOverride = null
         unreadChatCount = 0
         unreadChatMessageIds = emptyList()
@@ -2025,6 +2039,22 @@ class TenantDataStore(
                 isRenewalNotice = true
             ),
             LeaseDocumentSource(
+                value = renewalNoticesValue,
+                keyPath = listOf("renewalNotices"),
+                idPrefix = "renewal-reply",
+                title = "Tenant Reply",
+                fileKeys = listOf(
+                    "tenantReplyPDFfile",
+                    "tenantReplyPDFFile",
+                    "tenantReplyPdfFile",
+                    "tenantReplyPDF",
+                    "replyPDFfile",
+                    "replyPDFFile",
+                    "replyPDF"
+                ),
+                isRenewalNotice = false
+            ),
+            LeaseDocumentSource(
                 value = rl31NoticesValue,
                 keyPath = listOf("RL31Notices"),
                 idPrefix = "rl31-notice",
@@ -2261,6 +2291,233 @@ class TenantDataStore(
         return reference.downloadUrl.await().toString()
     }
 
+    private suspend fun uploadRenewalReplyPdf(
+        status: String,
+        signatureBitmap: Bitmap?,
+        document: DocumentItem
+    ): String {
+        val replyPath = renewalReplyStoragePath(document)
+        val replyPdfBytes = renewalReplyPdfBytes(
+            status = status,
+            signatureBitmap = signatureBitmap,
+            landlordName = renewalReplyLandlordName(),
+            tenantName = tenantProfile.name,
+            dwellingAddress = renewalReplyDwellingAddress(),
+            replyDate = LocalDate.now().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.getDefault()))
+        )
+        val metadata = StorageMetadata.Builder()
+            .setContentType("application/pdf")
+            .build()
+
+        storage.reference.child(replyPath).putBytes(replyPdfBytes, metadata).await()
+        return replyPath
+    }
+
+    private suspend fun renewalReplyPdfBytes(
+        status: String,
+        signatureBitmap: Bitmap?,
+        landlordName: String,
+        tenantName: String,
+        dwellingAddress: String,
+        replyDate: String
+    ): ByteArray = withContext(Dispatchers.IO) {
+        val inputFile = File.createTempFile("doortree-renewal-reply-template", ".pdf")
+        try {
+            context.assets.open("TAL_810_E.pdf").use { input ->
+                FileOutputStream(inputFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            val descriptor = ParcelFileDescriptor.open(inputFile, ParcelFileDescriptor.MODE_READ_ONLY)
+            try {
+                val renderer = PdfRenderer(descriptor)
+                try {
+                    val outputDocument = PdfDocument()
+                    try {
+                        for (index in 0 until renderer.pageCount) {
+                            val page = renderer.openPage(index)
+                            try {
+                                val width = page.width
+                                val height = page.height
+                                val pageBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                                try {
+                                    pageBitmap.eraseColor(Color.WHITE)
+                                    page.render(pageBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_PRINT)
+
+                                    val pageInfo = PdfDocument.PageInfo.Builder(width, height, index + 1).create()
+                                    val outputPage = outputDocument.startPage(pageInfo)
+                                    outputPage.canvas.drawBitmap(pageBitmap, 0f, 0f, null)
+
+                                    if (index == 0) {
+                                        drawRenewalReplyFields(
+                                            canvas = outputPage.canvas,
+                                            pageWidth = width.toFloat(),
+                                            pageHeight = height.toFloat(),
+                                            status = status,
+                                            landlordName = landlordName,
+                                            tenantName = tenantName,
+                                            dwellingAddress = dwellingAddress,
+                                            replyDate = replyDate,
+                                            signatureBitmap = signatureBitmap
+                                        )
+                                    }
+
+                                    outputDocument.finishPage(outputPage)
+                                } finally {
+                                    pageBitmap.recycle()
+                                }
+                            } finally {
+                                page.close()
+                            }
+                        }
+
+                        ByteArrayOutputStream().use { output ->
+                            outputDocument.writeTo(output)
+                            output.toByteArray()
+                        }
+                    } finally {
+                        outputDocument.close()
+                    }
+                } finally {
+                    renderer.close()
+                }
+            } finally {
+                descriptor.close()
+            }
+        } finally {
+            inputFile.delete()
+        }
+    }
+
+    private fun drawRenewalReplyFields(
+        canvas: Canvas,
+        pageWidth: Float,
+        pageHeight: Float,
+        status: String,
+        landlordName: String,
+        tenantName: String,
+        dwellingAddress: String,
+        replyDate: String,
+        signatureBitmap: Bitmap?
+    ) {
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.BLACK
+            textSize = max(10f, pageHeight * 0.015f)
+        }
+        val checkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.BLACK
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textSize = max(11f, pageHeight * 0.017f)
+        }
+
+        canvas.drawPdfFieldText(landlordName, PdfFieldRect(36.55f, 630.06f, 519.724f, 21.799f), pageWidth, pageHeight, textPaint)
+        canvas.drawPdfFieldText(dwellingAddress, PdfFieldRect(36.713f, 566.791f, 519.397f, 21.636f), pageWidth, pageHeight, textPaint)
+        canvas.drawPdfFieldText(replyDate, PdfFieldRect(38.844f, 230.454f, 101.126f, 21.635f), pageWidth, pageHeight, textPaint)
+        canvas.drawPdfFieldText(tenantName, PdfFieldRect(160.457f, 229.798f, 202.744f, 21.8f), pageWidth, pageHeight, textPaint)
+
+        val normalizedStatus = status.trim().lowercase(Locale.getDefault())
+        val checkbox = when (normalizedStatus) {
+            "accept" -> PdfFieldRect(47.367f, 491.066f, 8.687f, 8.687f)
+            "refuse" -> PdfFieldRect(47.367f, 472.873f, 8.687f, 8.687f)
+            "notrenewing", "not_renewing", "not-renewing" -> PdfFieldRect(47.367f, 454.843f, 8.687f, 8.851f)
+            else -> null
+        }
+        checkbox?.let { rect ->
+            val bounds = rect.toAndroidRect(pageWidth, pageHeight)
+            canvas.drawText("X", bounds.left, bounds.bottom, checkPaint)
+        }
+
+        if (signatureBitmap != null) {
+            val signatureBounds = PdfFieldRect(363.201f, 229.798f, 186.909f, 21.8f)
+                .toAndroidRect(pageWidth, pageHeight)
+                .let { field ->
+                    RectF(field.left, field.top - 16f * pageHeight / 792f, field.right, field.top + 18f * pageHeight / 792f)
+                }
+            val signatureRect = aspectFitRect(
+                imageWidth = signatureBitmap.width.toFloat(),
+                imageHeight = signatureBitmap.height.toFloat(),
+                bounds = signatureBounds
+            )
+            canvas.drawBitmap(signatureBitmap, null, signatureRect, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                isFilterBitmap = true
+            })
+        }
+    }
+
+    private data class PdfFieldRect(
+        val x: Float,
+        val y: Float,
+        val width: Float,
+        val height: Float
+    ) {
+        fun toAndroidRect(pageWidth: Float, pageHeight: Float): RectF {
+            val scaleX = pageWidth / 612f
+            val scaleY = pageHeight / 792f
+            return RectF(
+                x * scaleX,
+                (792f - y - height) * scaleY,
+                (x + width) * scaleX,
+                (792f - y) * scaleY
+            )
+        }
+    }
+
+    private fun Canvas.drawPdfFieldText(
+        text: String,
+        field: PdfFieldRect,
+        pageWidth: Float,
+        pageHeight: Float,
+        paint: Paint
+    ) {
+        if (text.isBlank()) return
+
+        val bounds = field.toAndroidRect(pageWidth, pageHeight)
+        val baseline = bounds.centerY() - (paint.descent() + paint.ascent()) / 2f
+        drawText(text, bounds.left, baseline, paint)
+    }
+
+    private suspend fun renewalReplyLandlordName(): String {
+        val cachedCompanyName = landlordCompanyName?.trim().orEmpty()
+        if (cachedCompanyName.isNotBlank()) {
+            return cachedCompanyName
+        }
+
+        val landlordUid = tenantRecord?.landlordUID?.trim().orEmpty()
+        val idToken = authSession.ensureValidIdToken()
+        if (landlordUid.isNotBlank() && !idToken.isNullOrBlank()) {
+            val companyName = runCatching {
+                restClient.fetchUser(landlordUid, idToken)
+                    .asJsonObjectOrNull()
+                    ?.let(::parseLandlordCompanyName)
+                    .orEmpty()
+            }.getOrDefault("")
+
+            if (companyName.isNotBlank()) {
+                landlordCompanyName = companyName
+                return companyName
+            }
+        }
+
+        val record = tenantRecord
+        val propertyName = record?.propertyName?.trim().orEmpty()
+        return propertyName.ifBlank { record?.propertyManagerDisplayName ?: "Property Manager" }
+    }
+
+    private fun renewalReplyDwellingAddress(): String {
+        val record = tenantRecord ?: return ""
+        return listOf(
+            record.unitNumber.trim().takeIf { it.isNotBlank() }?.let { "Unit $it" }.orEmpty(),
+            record.streetAddress,
+            record.city,
+            record.province,
+            record.postalCode
+        )
+            .map(String::trim)
+            .filter(String::isNotBlank)
+            .joinToString(", ")
+    }
+
     private suspend fun signedRenewalPdfBytes(
         originalPdfBytes: ByteArray,
         signatureBitmap: Bitmap,
@@ -2414,6 +2671,15 @@ class TenantDataStore(
         return "$directory/tenantSignature.png"
     }
 
+    private fun renewalReplyStoragePath(document: DocumentItem): String {
+        val documentPath = renewalDocumentStoragePath(document)
+        val directory = documentPath.substringBeforeLast("/", missingDelimiterValue = "")
+        if (directory.isBlank()) {
+            throw IllegalStateException("Unable to save the tenant reply beside the renewal notice.")
+        }
+        return "$directory/tenantRenewalReply.pdf"
+    }
+
     private fun renewalDocumentStoragePath(document: DocumentItem): String {
         val documentPath = firebaseStoragePath(document.storageReference)
         if (documentPath.isBlank()) {
@@ -2460,6 +2726,15 @@ class TenantDataStore(
             bankTransferActive = snapshot["bankTransferActive"]?.jsonPrimitive?.booleanOrNull ?: true,
             bankTransferEmail = snapshot["bankTransferEmail"].stringValue(),
             creditCardActive = snapshot["creditCardActive"]?.jsonPrimitive?.booleanOrNull ?: true
+        )
+    }
+
+    private fun parseLandlordCompanyName(snapshot: JsonObject): String {
+        return firstNonBlank(
+            snapshot["companyName"].stringValue(),
+            snapshot["company"].stringValue(),
+            snapshot["businessName"].stringValue(),
+            snapshot["legalName"].stringValue()
         )
     }
 

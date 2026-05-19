@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="codewhale.doortreeandroid"
-    android:versionCode="2"
-    android:versionName="1.0" >
+    android:versionCode="3"
+    android:versionName="1.0.1" >
 
     <uses-sdk
         android:minSdkVersion="26"
@@ -44,6 +44,7 @@
 
         <activity
             android:name="codewhale.doortreeandroid.MainActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="true"
             android:theme="@style/Theme.DoorTreeAndroid" >
             <intent-filter>

@@ -46,7 +46,7 @@ fun DoorTreeAndroidApp() {
     remember { Localization.ensureLoaded(context); true }
 
     val authSession = remember { AuthSessionStore(context) }
-    val tenantDataStore = remember { TenantDataStore(authSession) }
+    val tenantDataStore = remember { TenantDataStore(authSession, context.applicationContext) }
     val coroutineScope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
     var showSplash by remember { mutableStateOf(true) }

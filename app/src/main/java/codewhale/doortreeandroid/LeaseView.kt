@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -123,64 +124,25 @@ private fun LeaseDocumentsSection(tenantDataStore: TenantDataStore) {
                 message = "Lease documents will appear here when they are linked to this tenant."
             )
         } else {
-            tenantDataStore.documents.forEach { document ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .glassCard(cornerRadius = 16.dp)
-                        .then(
-                            if (document.url != null) {
-                                Modifier.clickable {
-                                    tenantDataStore.markDocumentRead(document)
-                                    selectedDocument = document
-                                }
-                            } else {
-                                Modifier
-                            }
-                        )
-                        .padding(14.dp),
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(systemIcon("doc.fill"), contentDescription = null, tint = DoorTreeTheme.leaseAccent)
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(text = document.filename, color = DoorTreeTheme.textPrimary)
-                                if (document.requiresRenewalAction) {
-                                    Text(
-                                        text = "Action Required",
-                                        color = DoorTreeTheme.destructive,
-                                        fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier
-                                            .background(
-                                                DoorTreeTheme.destructive.copy(alpha = 0.14f),
-                                                RoundedCornerShape(999.dp)
-                                            )
-                                            .padding(horizontal = 8.dp, vertical = 3.dp)
-                                    )
-                                }
-                            }
-                            if (document.subtitle.isNotBlank()) {
-                                Text(text = document.subtitle, color = DoorTreeTheme.textSecondary)
-                            }
+            val documentsModifier = if (tenantDataStore.documents.size > 4) {
+                Modifier
+                    .height(358.dp)
+                    .verticalScroll(rememberScrollState())
+            } else {
+                Modifier
+            }
+            Column(
+                modifier = documentsModifier,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                tenantDataStore.documents.forEach { document ->
+                    LeaseDocumentRow(
+                        document = document,
+                        onOpen = {
+                            tenantDataStore.markDocumentRead(document)
+                            selectedDocument = document
                         }
-                        Icon(systemIcon("arrow.down.circle.fill"), contentDescription = null, tint = DoorTreeTheme.textSecondary)
-                    }
-
-                    if (document.shouldShowNotificationBadge) {
-                        NotificationDotBadge(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                        )
-                    }
+                    )
                 }
             }
         }
@@ -192,9 +154,73 @@ private fun LeaseDocumentsSection(tenantDataStore: TenantDataStore) {
             tenantName = tenantDataStore.tenantProfile.name,
             onRenewalDecision = { status, signatureBitmap ->
                 tenantDataStore.recordRenewalDecision(document, status, signatureBitmap)
+                tenantDataStore.refresh()
             },
             onDismiss = { selectedDocument = null }
         )
+    }
+}
+
+@Composable
+private fun LeaseDocumentRow(
+    document: DocumentItem,
+    onOpen: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(82.dp)
+            .glassCard(cornerRadius = 16.dp)
+            .then(if (document.url != null) Modifier.clickable(onClick = onOpen) else Modifier)
+            .padding(14.dp),
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(systemIcon("doc.fill"), contentDescription = null, tint = DoorTreeTheme.leaseAccent)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = document.filename,
+                        color = DoorTreeTheme.textPrimary,
+                        maxLines = 1,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (document.requiresRenewalAction) {
+                        Text(
+                            text = L("Action Required"),
+                            color = DoorTreeTheme.destructive,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            modifier = Modifier
+                                .background(
+                                    DoorTreeTheme.destructive.copy(alpha = 0.14f),
+                                    RoundedCornerShape(999.dp)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+                if (document.subtitle.isNotBlank()) {
+                    Text(text = document.subtitle, color = DoorTreeTheme.textSecondary, maxLines = 1)
+                }
+            }
+            Icon(systemIcon("arrow.down.circle.fill"), contentDescription = null, tint = DoorTreeTheme.textSecondary)
+        }
+
+        if (document.shouldShowNotificationBadge) {
+            NotificationDotBadge(
+                modifier = Modifier.align(Alignment.TopEnd)
+            )
+        }
     }
 }
 

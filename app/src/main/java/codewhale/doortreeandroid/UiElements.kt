@@ -243,6 +243,11 @@ fun Modifier.topSafeAreaPadding(): Modifier {
     return windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
 }
 
+@Composable
+fun Modifier.bottomSafeAreaPadding(): Modifier {
+    return windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RefreshableScreen(

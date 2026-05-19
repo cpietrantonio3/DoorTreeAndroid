@@ -4,24 +4,7 @@
             "outputFile": "codewhale.doortreeandroid.app-mergeDebugResources-75:/values-watch-v20/values-watch-v20.xml",
             "map": [
                 {
-                    "source": "/Users/claudiopietrantonio/.gradle/caches/8.13/transforms/fbb1ebb92a33651006f1108710a04225/transformed/play-services-auth-20.7.0/res/values-watch-v20/values.xml",
-                    "from": {
-                        "startLines": "4,5,6,7,8,9,10,11",
-                        "startColumns": "0,0,0,0,0,0,0,0",
-                        "startOffsets": "173,248,324,399,474,561,638,725",
-                        "endColumns": "74,75,74,74,86,76,86,75",
-                        "endOffsets": "247,323,398,473,560,637,724,800"
-                    },
-                    "to": {
-                        "startLines": "2,3,4,5,6,7,8,9",
-                        "startColumns": "4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,134,214,293,372,463,544,635",
-                        "endColumns": "78,79,78,78,90,80,90,79",
-                        "endOffsets": "129,209,288,367,458,539,630,710"
-                    }
-                },
-                {
-                    "source": "/Users/claudiopietrantonio/.gradle/caches/8.13/transforms/c9d492942c9b54b6c0a1097e7b342dc2/transformed/appcompat-1.7.0/res/values-watch-v20/values-watch-v20.xml",
+                    "source": "/Users/claudiopietrantonio/.gradle/caches/9.3.1/transforms/ab75ba08e7c7ad37798f4e9204c3f52c/transformed/appcompat-1.7.0/res/values-watch-v20/values-watch-v20.xml",
                     "from": {
                         "startLines": "2,5,8",
                         "startColumns": "4,4,4",
@@ -37,6 +20,23 @@
                         "endLines": "12,15,18",
                         "endColumns": "12,12,12",
                         "endOffsets": "869,1040,1213"
+                    }
+                },
+                {
+                    "source": "/Users/claudiopietrantonio/.gradle/caches/9.3.1/transforms/cef8fdc62ac0244aa4c067cf8402632a/transformed/play-services-auth-20.7.0/res/values-watch-v20/values.xml",
+                    "from": {
+                        "startLines": "4,5,6,7,8,9,10,11",
+                        "startColumns": "0,0,0,0,0,0,0,0",
+                        "startOffsets": "173,248,324,399,474,561,638,725",
+                        "endColumns": "74,75,74,74,86,76,86,75",
+                        "endOffsets": "247,323,398,473,560,637,724,800"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,134,214,293,372,463,544,635",
+                        "endColumns": "78,79,78,78,90,80,90,79",
+                        "endOffsets": "129,209,288,367,458,539,630,710"
                     }
                 }
             ]

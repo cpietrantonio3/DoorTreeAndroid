@@ -24,25 +24,32 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.core.content.FileProvider
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -50,6 +57,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,14 +65,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import codewhale.doortreeandroid.ui.theme.DoorTreeTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -90,7 +99,14 @@ fun PDFDocumentSheetView(
     val scope = rememberCoroutineScope()
     var isPreparingDocument by remember(document.id) { mutableStateOf(false) }
     var isSubmittingDecision by remember(document.id) { mutableStateOf(false) }
-    var showingSignatureCapture by remember(document.id) { mutableStateOf(false) }
+    var showingSignatureCapture by rememberSaveable(document.id) { mutableStateOf(false) }
+    var showingDecisionConfirmation by rememberSaveable(document.id) { mutableStateOf(false) }
+    var pendingRenewalStatus by rememberSaveable(document.id) { mutableStateOf("accept") }
+
+    fun confirmRenewalDecision(status: String) {
+        pendingRenewalStatus = status
+        showingDecisionConfirmation = true
+    }
 
     fun submitRenewalDecision(status: String, signatureBitmap: Bitmap?) {
         if (isSubmittingDecision) return
@@ -185,6 +201,15 @@ fun PDFDocumentSheetView(
                     }
                 }
 
+                if (document.requiresRenewalAction) {
+                    RenewalDecisionBar(
+                        isSubmitting = isSubmittingDecision,
+                        onRefuse = { confirmRenewalDecision("refuse") },
+                        onNotRenewing = { confirmRenewalDecision("notRenewing") },
+                        onAccept = { confirmRenewalDecision("accept") }
+                    )
+                }
+
                 val url = document.url
                 if (url == null) {
                     Box(modifier = Modifier.padding(DoorTreeTheme.screenHorizontalPadding)) {
@@ -200,16 +225,37 @@ fun PDFDocumentSheetView(
                         modifier = Modifier.weight(1f)
                     )
                 }
-
-                if (document.requiresRenewalAction) {
-                    RenewalDecisionBar(
-                        isSubmitting = isSubmittingDecision,
-                        onRefuse = { submitRenewalDecision("refuse", null) },
-                        onAccept = { showingSignatureCapture = true }
-                    )
-                }
             }
         }
+    }
+
+    if (showingDecisionConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showingDecisionConfirmation = false },
+            containerColor = DoorTreeTheme.backgroundPrimary,
+            titleContentColor = DoorTreeTheme.textPrimary,
+            textContentColor = DoorTreeTheme.textSecondary,
+            title = { Text(L("Are you sure?")) },
+            text = { Text(L("You will be asked to sign before sending your reply to the landlord.")) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showingDecisionConfirmation = false
+                        showingSignatureCapture = true
+                    }
+                ) {
+                    Text(
+                        text = renewalDecisionConfirmationTitle(pendingRenewalStatus),
+                        color = DoorTreeTheme.gradientStart
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showingDecisionConfirmation = false }) {
+                    Text(L("Cancel"), color = DoorTreeTheme.textSecondary)
+                }
+            }
+        )
     }
 
     if (showingSignatureCapture) {
@@ -218,7 +264,7 @@ fun PDFDocumentSheetView(
             onCancel = { showingSignatureCapture = false },
             onComplete = { signatureBitmap ->
                 showingSignatureCapture = false
-                submitRenewalDecision("accept", signatureBitmap)
+                submitRenewalDecision(pendingRenewalStatus, signatureBitmap)
             }
         )
     }
@@ -228,42 +274,77 @@ fun PDFDocumentSheetView(
 private fun RenewalDecisionBar(
     isSubmitting: Boolean,
     onRefuse: () -> Unit,
+    onNotRenewing: () -> Unit,
     onAccept: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(DoorTreeTheme.barGlassTint)
-            .padding(horizontal = DoorTreeTheme.screenHorizontalPadding, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = DoorTreeTheme.screenHorizontalPadding, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "Action Required",
+                text = L("Action Required"),
                 color = DoorTreeTheme.destructive,
                 fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                maxLines = 1,
                 modifier = Modifier
                     .background(DoorTreeTheme.destructive.copy(alpha = 0.14f), RoundedCornerShape(999.dp))
                     .padding(horizontal = 9.dp, vertical = 4.dp)
             )
             Text(
-                text = "Choose how you want to respond to this renewal notice.",
-                color = DoorTreeTheme.textSecondary
+                text = L("Choose how you want to respond to this renewal notice."),
+                color = DoorTreeTheme.textSecondary,
+                fontSize = 15.sp,
+                lineHeight = 18.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(
                 onClick = onRefuse,
                 enabled = !isSubmitting,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(42.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
             ) {
-                Text("Refuse", color = DoorTreeTheme.destructive)
+                Text(
+                    text = L("Refuse"),
+                    color = DoorTreeTheme.destructive,
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            OutlinedButton(
+                onClick = onNotRenewing,
+                enabled = !isSubmitting,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(42.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+            ) {
+                Text(
+                    text = L("Not Renewing"),
+                    color = DoorTreeTheme.destructive,
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
             Button(
                 onClick = onAccept,
                 enabled = !isSubmitting,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .height(42.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
             ) {
                 if (isSubmitting) {
                     CircularProgressIndicator(
@@ -271,10 +352,24 @@ private fun RenewalDecisionBar(
                         color = DoorTreeTheme.textPrimary
                     )
                 } else {
-                    Text("Accept")
+                    Text(
+                        text = L("Accept"),
+                        fontSize = 13.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         }
+    }
+}
+
+private fun renewalDecisionConfirmationTitle(status: String): String {
+    return when (status) {
+        "accept" -> L("Accept")
+        "refuse" -> L("Refuse")
+        "notRenewing" -> L("Not Renewing")
+        else -> L("common.continue")
     }
 }
 
@@ -293,39 +388,70 @@ private fun RenewalSignatureCaptureView(
     DisposableEffect(Unit) {
         val activity = context.findActivity()
         val previousOrientation = activity?.requestedOrientation
+        val window = activity?.window
+        val insetsController = window?.let { WindowInsetsControllerCompat(it, it.decorView) }
+        window?.let { WindowCompat.setDecorFitsSystemWindows(it, false) }
+        insetsController?.hide(WindowInsetsCompat.Type.systemBars())
+        insetsController?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         onDispose {
             if (previousOrientation != null) {
                 activity.requestedOrientation = previousOrientation
             }
+            if (window != null) {
+                WindowCompat.setDecorFitsSystemWindows(window, true)
+            }
+            insetsController?.show(WindowInsetsCompat.Type.systemBars())
         }
     }
 
     Dialog(
         onDismissRequest = onCancel,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(DoorTreeTheme.backgroundPrimary)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+                .safeDrawingPadding()
+                .padding(horizontal = 18.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        text = "Sign Renewal Notice",
+                        text = L("Sign Renewal Notice"),
                         color = DoorTreeTheme.textPrimary,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     val displayName = tenantName.trim().ifBlank { "Tenant" }
                     Text(
                         text = "$displayName - ${LocalDate.now().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.getDefault()))}",
-                        color = DoorTreeTheme.textSecondary
+                        color = DoorTreeTheme.textSecondary,
+                        fontSize = 13.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
-                HeaderIconButton(systemName = "xmark", onClick = onCancel)
+                OutlinedButton(
+                    onClick = onCancel,
+                    modifier = Modifier.height(40.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp)
+                ) {
+                    Text(L("Cancel"), maxLines = 1)
+                }
             }
 
             Box(
@@ -374,7 +500,7 @@ private fun RenewalSignatureCaptureView(
                 }
 
                 Text(
-                    text = "Sign here",
+                    text = L("Sign here"),
                     color = DoorTreeTheme.textSecondary,
                     modifier = Modifier
                         .align(Alignment.BottomStart)
@@ -382,24 +508,34 @@ private fun RenewalSignatureCaptureView(
                 )
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 OutlinedButton(
                     onClick = {
                         lines.clear()
                         currentLine = emptyList()
                     },
-                    enabled = hasSignature
+                    enabled = hasSignature,
+                    modifier = Modifier.height(42.dp),
+                    contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp)
                 ) {
-                    Text("Clear")
+                    Text(L("Clear"))
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Button(
                     onClick = {
                         onComplete(signatureBitmap(lines.toList() + listOf(currentLine), canvasSize))
                     },
-                    enabled = hasSignature
+                    enabled = hasSignature,
+                    modifier = Modifier.height(42.dp),
+                    contentPadding = PaddingValues(horizontal = 18.dp, vertical = 0.dp)
                 ) {
-                    Text("Use Signature")
+                    Text(L("Use Signature"))
                 }
             }
         }

@@ -9861,6 +9861,28 @@
         }
       }
     },
+    "Are you sure?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Are you sure?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Êtes-vous sûr?"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Êtes-vous sûr?"
+          }
+        }
+      }
+    },
     "Autodeposit enabled": {
       "localizations": {
         "en": {
@@ -9989,6 +10011,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Virement Interac"
+          }
+        }
+      }
+    },
+    "Not Renewing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not Renewing"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne renouvelle pas"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne renouvelle pas"
           }
         }
       }
@@ -10231,6 +10275,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "Utiliser la signature"
+          }
+        }
+      }
+    },
+    "You will be asked to sign before sending your reply to the landlord.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You will be asked to sign before sending your reply to the landlord."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous devrez signer avant d’envoyer votre réponse au locateur."
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous devrez signer avant d’envoyer votre réponse au locateur."
           }
         }
       }
