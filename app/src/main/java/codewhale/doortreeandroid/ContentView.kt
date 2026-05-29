@@ -36,6 +36,7 @@ fun ContentView(
     tenantDataStore: TenantDataStore
 ) {
     var selectedTab by remember { mutableStateOf(DoorTreeTab.Home) }
+    var paymentViewMode by remember { mutableStateOf(PaymentViewMode.Rent) }
     var showingLease by remember { mutableStateOf(false) }
     var showingMaintenanceRequest by remember { mutableStateOf(false) }
     var selectedInvoice by remember { mutableStateOf<PendingInvoiceItem?>(null) }
@@ -57,14 +58,21 @@ fun ContentView(
                         onSelectProfile = { selectedTab = DoorTreeTab.Profile },
                         onSelectAction = { route ->
                             when (route) {
-                                QuickActionRoute.Payments -> selectedTab = DoorTreeTab.Payments
+                                QuickActionRoute.Payments -> {
+                                    paymentViewMode = PaymentViewMode.Rent
+                                    selectedTab = DoorTreeTab.Payments
+                                }
+                                QuickActionRoute.Parking -> {
+                                    paymentViewMode = PaymentViewMode.Parking
+                                    selectedTab = DoorTreeTab.Payments
+                                }
                                 QuickActionRoute.Requests -> showingMaintenanceRequest = true
                                 QuickActionRoute.Chat -> selectedTab = DoorTreeTab.Chat
                                 QuickActionRoute.Lease -> showingLease = true
                             }
                         }
                     )
-                    DoorTreeTab.Payments -> PayRentView(tenantDataStore = tenantDataStore)
+                    DoorTreeTab.Payments -> PayRentView(tenantDataStore = tenantDataStore, mode = paymentViewMode)
                     DoorTreeTab.Requests -> MaintenanceView(
                         tenantDataStore = tenantDataStore,
                         onNewRequest = { showingMaintenanceRequest = true },

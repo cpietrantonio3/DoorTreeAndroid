@@ -325,6 +325,49 @@ data class RentLedgerEntry(
     }
 }
 
+data class TenantParkingInfo(
+    val unit: String,
+    val priceValue: Double?,
+    val price: String,
+    val type: String,
+    val startDate: String,
+    val endDate: String
+) {
+    val hasPrice: Boolean
+        get() = (priceValue ?: 0.0) > 0.0
+}
+
+data class ParkingLedgerEntry(
+    val id: String,
+    val dueDate: String,
+    val dueDateDisplay: String,
+    val amountValue: Double?,
+    val amount: String,
+    val balanceValue: Double?,
+    val balance: String,
+    val statusLabel: String,
+    val statusStyle: StatusBadgeStyle,
+    val startDate: String,
+    val endDate: String,
+    val type: String,
+    val unit: String,
+    val stripe: RentStripeDetails?,
+    val sortDate: LocalDate?
+) {
+    val isPaid: Boolean
+        get() = statusStyle == StatusBadgeStyle.Paid ||
+            statusStyle == StatusBadgeStyle.Completed ||
+            ((balanceValue ?: amountValue ?: 0.0) <= 0.0 && (balanceValue != null || amountValue != null))
+
+    val hostedCheckoutUrl: String?
+        get() = stripe?.takeIf { it.isActive && it.paymentLinkUrl.isNotBlank() }?.paymentLinkUrl
+}
+
+enum class PaymentViewMode {
+    Rent,
+    Parking
+}
+
 enum class StatusBadgeStyle(val localizationKey: String) {
     Due("status.due"),
     Paid("status.paid"),
@@ -416,6 +459,7 @@ data class InvoiceLineItem(
 
 enum class QuickActionRoute {
     Payments,
+    Parking,
     Requests,
     Chat,
     Lease

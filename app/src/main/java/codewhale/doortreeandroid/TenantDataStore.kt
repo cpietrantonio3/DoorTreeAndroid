@@ -14,6 +14,7 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import codewhale.doortreeandroid.ui.theme.DoorTreeTheme
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -87,6 +88,7 @@ data class TenantRecord(
     val streetAddress: String,
     val unitNumber: String,
     val userType: String,
+    val parkingInfo: TenantParkingInfo?,
     val rentPayment: TenantRentPaymentState,
     val stripeConnectAssociation: TenantStripeConnectAssociationState
 ) {
@@ -190,8 +192,22 @@ data class TenantRecord(
                 streetAddress = snapshot["streetAddress"].stringValue(),
                 unitNumber = snapshot["unitNumber"].stringValue(),
                 userType = snapshot["userType"].stringValue(),
+                parkingInfo = parkingInfo(snapshot["parking"]),
                 rentPayment = rentPaymentState(snapshot["rentPayment"]),
                 stripeConnectAssociation = stripeConnectAssociation(snapshot["stripeConnect"])
+            )
+        }
+
+        private fun parkingInfo(value: JsonElement?): TenantParkingInfo? {
+            val snapshot = value as? JsonObject ?: return null
+            val price = snapshot["price"].doubleValue()
+            return TenantParkingInfo(
+                unit = snapshot["unit"].stringValue(),
+                priceValue = price,
+                price = formattedCurrency(price),
+                type = snapshot["type"].stringValue(),
+                startDate = formattedDate(snapshot["startDate"].stringValue()),
+                endDate = formattedDate(snapshot["endDate"].stringValue())
             )
         }
 
@@ -514,6 +530,8 @@ class TenantDataStore(
         private set
     var rentEntries by mutableStateOf<List<RentLedgerEntry>>(emptyList())
         private set
+    var parkingEntries by mutableStateOf<List<ParkingLedgerEntry>>(emptyList())
+        private set
     var notificationPreferences by mutableStateOf(DoorTreeSampleData.notificationPreferences)
         private set
     var pendingInvoices by mutableStateOf<List<PendingInvoiceItem>>(emptyList())
@@ -572,7 +590,23 @@ class TenantDataStore(
             .ifBlank { "PM" }
 
     val quickActions: List<QuickActionItem>
-        get() = DoorTreeSampleData.quickActions
+        get() {
+            val actions = DoorTreeSampleData.quickActions.toMutableList()
+            if (tenantRecord?.parkingInfo?.hasPrice == true) {
+                actions.add(
+                    1.coerceAtMost(actions.size),
+                    QuickActionItem(
+                        title = "Pay Parking",
+                        subtitle = upcomingParkingDescription,
+                        icon = "car.fill",
+                        iconColor = DoorTreeTheme.dueText,
+                        iconBackground = DoorTreeTheme.dueBackground.copy(alpha = 0.75f),
+                        route = QuickActionRoute.Parking
+                    )
+                )
+            }
+            return actions
+        }
 
     val paymentMethods: List<PaymentMethodItem>
         get() {
@@ -740,6 +774,21 @@ class TenantDataStore(
             leaseDetails = leaseDetails
         )
 
+    val parkingScheduleEntries: List<RentScheduleEntry>
+        get() = parkingEntries
+            .sortedBy { it.sortDate ?: LocalDate.MIN }
+            .mapNotNull { entry ->
+                val dueDate = entry.sortDate ?: return@mapNotNull null
+                val status = scheduleStatusFor(entry, dueDate)
+                RentScheduleEntry(
+                    dueDate = dueDate,
+                    amount = entry.amount,
+                    statusLabel = status.label,
+                    accentColor = status.accentColor,
+                    accentBackground = status.accentBackground
+                )
+            }
+
     val currentRentEntry: RentLedgerEntry?
         get() {
             val sortedEntries = rentEntries.sortedBy { it.sortDate ?: LocalDate.MAX }
@@ -762,6 +811,54 @@ class TenantDataStore(
                 !entry.isPaid && ((entry.sortDate ?: LocalDate.MIN) >= today)
             }
             return nextDue ?: sortedEntries.firstOrNull { !it.isPaid } ?: sortedEntries.lastOrNull()
+        }
+
+    val currentParkingEntry: ParkingLedgerEntry?
+        get() {
+            val sortedEntries = parkingEntries.sortedBy { it.sortDate ?: LocalDate.MAX }
+            val today = LocalDate.now()
+            val nextDue = sortedEntries.firstOrNull { entry ->
+                !entry.isPaid && ((entry.sortDate ?: LocalDate.MIN) >= today)
+            }
+            if (nextDue != null) {
+                return nextDue
+            }
+
+            return sortedEntries.lastOrNull { !it.isPaid } ?: sortedEntries.lastOrNull()
+        }
+
+    val nextParkingEntry: ParkingLedgerEntry?
+        get() {
+            val sortedEntries = parkingEntries.sortedBy { it.sortDate ?: LocalDate.MAX }
+            val today = LocalDate.now()
+            val nextDue = sortedEntries.firstOrNull { entry ->
+                !entry.isPaid && ((entry.sortDate ?: LocalDate.MIN) >= today)
+            }
+            return nextDue ?: sortedEntries.firstOrNull { !it.isPaid } ?: sortedEntries.lastOrNull()
+        }
+
+    val payableParkingEntry: ParkingLedgerEntry?
+        get() {
+            val next = nextParkingEntry
+            if (next != null && !next.isPaid && !next.hostedCheckoutUrl.isNullOrBlank()) {
+                return next
+            }
+
+            return parkingEntries
+                .filter { !it.isPaid && !it.hostedCheckoutUrl.isNullOrBlank() }
+                .sortedBy { it.sortDate ?: LocalDate.MAX }
+                .firstOrNull()
+        }
+
+    val upcomingParkingDescription: String
+        get() {
+            val entry = nextParkingEntry ?: currentParkingEntry
+            if (entry != null) {
+                return "Spot ${entry.unit} • Due ${entry.dueDateDisplay}"
+            }
+
+            val unit = tenantRecord?.parkingInfo?.unit.orEmpty()
+            return if (unit.isBlank()) "Parking payment" else "Spot $unit"
         }
 
     fun payableRentEntry(kind: PaymentMethodItem.Kind): RentLedgerEntry? {
@@ -1401,6 +1498,7 @@ class TenantDataStore(
             stopObservingChatConversation()
             tenantRecord = null
             rentEntries = emptyList()
+            parkingEntries = emptyList()
             notificationPreferences = DoorTreeSampleData.notificationPreferences
             pendingInvoices = emptyList()
             documents = emptyList()
@@ -1425,6 +1523,7 @@ class TenantDataStore(
             stopObservingChatConversation()
             tenantRecord = null
             rentEntries = emptyList()
+            parkingEntries = emptyList()
             notificationPreferences = DoorTreeSampleData.notificationPreferences
             pendingInvoices = emptyList()
             documents = emptyList()
@@ -1456,6 +1555,7 @@ class TenantDataStore(
 
         tenantRecord = parsedTenantRecord
         rentEntries = parseRentEntries(objectValue)
+        parkingEntries = parseParkingEntries(objectValue)
         pendingInvoices = parsePendingInvoices(objectValue)
         documents = parseLeaseDocuments(
             renewalNoticesValue = objectValue["renewalNotices"],
@@ -1577,6 +1677,7 @@ class TenantDataStore(
         activeUid = null
         tenantRecord = null
         rentEntries = emptyList()
+        parkingEntries = emptyList()
         notificationPreferences = DoorTreeSampleData.notificationPreferences
         pendingInvoices = emptyList()
         documents = emptyList()
@@ -1827,6 +1928,79 @@ class TenantDataStore(
                 rentEntryFromSnapshot(dueDate, rentObject)
             }
             .sortedBy { it.sortDate ?: LocalDate.MIN }
+    }
+
+    private fun parseParkingEntries(snapshot: JsonObject): List<ParkingLedgerEntry> {
+        val parkingRoot = snapshot["parking"] as? JsonObject ?: return emptyList()
+        val scheduleRoot = parkingRoot["1"] as? JsonObject ?: return emptyList()
+        return scheduleRoot.entries
+            .mapNotNull { (dueDate, value) ->
+                val parkingObject = value as? JsonObject ?: return@mapNotNull null
+                parkingEntryFromSnapshot(dueDate, parkingRoot, parkingObject)
+            }
+            .sortedBy { it.sortDate ?: LocalDate.MIN }
+    }
+
+    private fun parkingEntryFromSnapshot(
+        fallbackDate: String,
+        fallbackSnapshot: JsonObject,
+        snapshot: JsonObject
+    ): ParkingLedgerEntry {
+        val dueDate = firstNonBlank(
+            snapshot["dueDate"].stringValue(),
+            fallbackDate
+        )
+        val parsedDueDate = parseLocalDate(dueDate) ?: parseMaintenanceDate(dueDate)
+        val amountValue = snapshot["amount"].doubleValue() ?: fallbackSnapshot["price"].doubleValue()
+        val balanceValue = snapshot["balance"].doubleValue() ?: amountValue
+        val statusStyle = rentStatusStyle(
+            snapshot = snapshot,
+            dueDate = parsedDueDate,
+            amountValue = amountValue,
+            balanceValue = balanceValue
+        )
+        val stripeSnapshot = snapshot["stripe"] as? JsonObject
+        val paymentLinkId = stripeSnapshot?.get("paymentLinkId").stringValue()
+        val paymentLinkUrl = stripeSnapshot?.get("paymentLinkUrl").stringValue()
+        val autopaySnapshot = stripeSnapshot?.get("autopay") as? JsonObject
+        val stripe = if (stripeSnapshot == null && paymentLinkId.isBlank() && paymentLinkUrl.isBlank()) {
+            null
+        } else {
+            RentStripeDetails(
+                autopay = autopaySnapshot?.let { autopay ->
+                    RentStripeAutopayDetails(
+                        lastAttemptAt = autopay["lastAttemptAt"].stringValue().ifBlank { null },
+                        lastChargeId = autopay["lastChargeId"].stringValue().ifBlank { null },
+                        lastError = autopay["lastError"].stringValue().ifBlank { null },
+                        lastPaymentIntentId = autopay["lastPaymentIntentId"].stringValue().ifBlank { null },
+                        lastProcessedAt = autopay["lastProcessedAt"].stringValue().ifBlank { null },
+                        lastStatus = autopay["lastStatus"].stringValue().ifBlank { null },
+                        methodType = autopay["methodType"].stringValue().ifBlank { null }
+                    )
+                },
+                isActive = stripeSnapshot?.get("active")?.jsonPrimitive?.booleanOrNull ?: false,
+                paymentLinkId = paymentLinkId,
+                paymentLinkUrl = paymentLinkUrl
+            )
+        }
+
+        return ParkingLedgerEntry(
+            id = fallbackDate,
+            dueDate = dueDate,
+            dueDateDisplay = formatDate(dueDate),
+            amountValue = amountValue,
+            amount = formatCurrency(amountValue),
+            balanceValue = balanceValue,
+            balance = formatCurrency(balanceValue),
+            statusLabel = localizedRentStatus(statusStyle, snapshot["status"].stringValue(), parsedDueDate),
+            statusStyle = statusStyle,
+            startDate = formatDate(firstNonBlank(snapshot["startDate"].stringValue(), fallbackSnapshot["startDate"].stringValue())),
+            endDate = formatDate(firstNonBlank(snapshot["endDate"].stringValue(), fallbackSnapshot["endDate"].stringValue())),
+            type = firstNonBlank(snapshot["type"].stringValue(), fallbackSnapshot["type"].stringValue()),
+            unit = firstNonBlank(snapshot["unit"].stringValue(), fallbackSnapshot["unit"].stringValue()),
+            stripe = stripe,
+            sortDate = parsedDueDate ?: parseMaintenanceDate(snapshot["updatedAt"].stringValue())
+        )
     }
 
     private val activeLeaseStartDate: String?
@@ -2995,6 +3169,38 @@ class TenantDataStore(
             }
         }
     }
+
+    private fun scheduleStatusFor(entry: ParkingLedgerEntry, dueDate: LocalDate): ScheduleStatus {
+        val today = LocalDate.now()
+        return when {
+            entry.isPaid -> ScheduleStatus(
+                label = L("status.paid"),
+                accentColor = DoorTreeTheme.paidText,
+                accentBackground = DoorTreeTheme.paidBackground
+            )
+            dueDate.isAfter(today) -> ScheduleStatus(
+                label = L("payments.schedule.status.upcoming"),
+                accentColor = DoorTreeTheme.dueText,
+                accentBackground = DoorTreeTheme.dueBackground
+            )
+            dueDate.isEqual(today) -> ScheduleStatus(
+                label = L("status.due"),
+                accentColor = DoorTreeTheme.pendingText,
+                accentBackground = DoorTreeTheme.pendingBackground
+            )
+            else -> ScheduleStatus(
+                label = L("status.overdue"),
+                accentColor = DoorTreeTheme.destructive,
+                accentBackground = DoorTreeTheme.destructive.copy(alpha = 0.14f)
+            )
+        }
+    }
+
+    private data class ScheduleStatus(
+        val label: String,
+        val accentColor: androidx.compose.ui.graphics.Color,
+        val accentBackground: androidx.compose.ui.graphics.Color
+    )
 
     private fun localizedMaintenanceCategory(rawCategory: String): String {
         return when (rawCategory.trim().lowercase(Locale.ROOT)) {
