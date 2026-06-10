@@ -15,6 +15,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.CreditCard
 import androidx.compose.material.icons.rounded.CreditScore
 import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Email
@@ -37,6 +38,7 @@ import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Opacity
 import androidx.compose.material.icons.rounded.Park
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Phone
 import androidx.compose.material.icons.rounded.Photo
 import androidx.compose.material.icons.rounded.PhotoCamera
 import androidx.compose.material.icons.rounded.Print
@@ -76,6 +78,7 @@ fun systemIcon(name: String): ImageVector {
         "arrow.up.right.square" -> Icons.Rounded.OpenInNew
         "paperplane.fill" -> Icons.Rounded.Send
         "envelope.fill", "envelope.badge.fill" -> Icons.Rounded.Email
+        "phone" -> Icons.Rounded.Phone
         "lock.fill" -> Icons.Rounded.Lock
         "lock.shield" -> Icons.Rounded.Shield
         "eye" -> Icons.Rounded.Visibility
@@ -90,6 +93,7 @@ fun systemIcon(name: String): ImageVector {
         "arrow.down.circle.fill" -> Icons.Rounded.Download
         "doc.viewfinder" -> Icons.Rounded.UploadFile
         "dollarsign.circle.fill", "building.columns.fill" -> Icons.Rounded.AccountBalance
+        "car.fill" -> Icons.Rounded.DirectionsCar
         "camera.fill" -> Icons.Rounded.PhotoCamera
         "photo", "photo.fill", "photo.on.rectangle", "photo.on.rectangle.angled" -> Icons.Rounded.Photo
         "drop.fill" -> Icons.Rounded.Opacity

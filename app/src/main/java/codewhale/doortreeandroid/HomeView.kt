@@ -2,6 +2,9 @@
 
 package codewhale.doortreeandroid
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,14 +13,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -38,7 +46,9 @@ fun HomeView(
     onOpenRequest: (MaintenanceRequestItem) -> Unit,
     onSelectProfile: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     var showingMaintenanceRequest by remember { mutableStateOf(false) }
+    var showingMaintenanceChoice by remember { mutableStateOf(false) }
     var showingNotificationCenter by remember { mutableStateOf(false) }
 
     RefreshableScreen(
@@ -102,34 +112,18 @@ fun HomeView(
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
-                    tenantDataStore.quickActions.take(2).forEach { item ->
-                        Box(modifier = Modifier.weight(1f)) {
-                            QuickActionCard(
-                                item = item,
-                                notificationCount = if (item.route == QuickActionRoute.Lease) tenantDataStore.unreadDocumentCount else 0,
-                                height = 128.dp
-                            ) {
-                                onSelectAction(item.route)
-                            }
-                        }
+            HomeQuickActionsGrid(
+                quickActions = tenantDataStore.quickActions,
+                unreadDocumentCount = tenantDataStore.unreadDocumentCount,
+                unreadChatCount = tenantDataStore.unreadChatCount,
+                onSelectAction = { route ->
+                    if (route == QuickActionRoute.Requests) {
+                        showingMaintenanceChoice = true
+                    } else {
+                        onSelectAction(route)
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
-                    tenantDataStore.quickActions.drop(2).forEach { item ->
-                        Box(modifier = Modifier.weight(1f)) {
-                            QuickActionCard(
-                                item = item,
-                                notificationCount = if (item.route == QuickActionRoute.Lease) tenantDataStore.unreadDocumentCount else 0,
-                                height = 128.dp
-                            ) {
-                                onSelectAction(item.route)
-                            }
-                        }
-                    }
-                }
-            }
+            )
 
             HomePaymentHistorySection(tenantDataStore = tenantDataStore)
             HomeRequestsSection(
@@ -149,6 +143,20 @@ fun HomeView(
         }
     }
 
+    if (showingMaintenanceChoice) {
+        MaintenanceActionChoiceDialog(
+            onDismiss = { showingMaintenanceChoice = false },
+            onCall = {
+                showingMaintenanceChoice = false
+                openMaintenancePhoneDialer(context)
+            },
+            onSubmit = {
+                showingMaintenanceChoice = false
+                showingMaintenanceRequest = true
+            }
+        )
+    }
+
     if (showingNotificationCenter) {
         FullHeightModalBottomSheet(onDismissRequest = { showingNotificationCenter = false }) {
             NotificationCenterSheetView(
@@ -160,7 +168,125 @@ fun HomeView(
 }
 
 @Composable
+private fun MaintenanceActionChoiceDialog(
+    onDismiss: () -> Unit,
+    onCall: () -> Unit,
+    onSubmit: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = systemIcon("wrench.and.screwdriver.fill"),
+                contentDescription = null,
+                tint = DoorTreeTheme.gradientStart
+            )
+        },
+        title = {
+            Text(
+                text = L("maintenance.choice.title"),
+                color = DoorTreeTheme.textPrimary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Text(
+                    text = L("maintenance.choice.message"),
+                    color = DoorTreeTheme.textSecondary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                GradientButton(
+                    title = L("maintenance.choice.submit"),
+                    icon = "wrench.and.screwdriver.fill",
+                    onClick = onSubmit
+                )
+                Button(
+                    onClick = onCall,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(systemIcon("phone"), contentDescription = null)
+                    Text(text = L("maintenance.choice.call"))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = L("cancel"))
+            }
+        },
+        containerColor = DoorTreeTheme.backgroundPrimary
+    )
+}
+
+private fun openMaintenancePhoneDialer(context: Context) {
+    val phoneIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+14388003102"))
+    runCatching { context.startActivity(phoneIntent) }
+}
+
+@Composable
+private fun HomeQuickActionsGrid(
+    quickActions: List<QuickActionItem>,
+    unreadDocumentCount: Int,
+    unreadChatCount: Int,
+    onSelectAction: (QuickActionRoute) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
+        quickActions.chunked(2).forEach { rowItems ->
+            Row(horizontalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
+                rowItems.forEach { item ->
+                    Box(modifier = Modifier.weight(1f)) {
+                        QuickActionCard(
+                            item = item,
+                            notificationCount = notificationCountFor(
+                                item = item,
+                                unreadDocumentCount = unreadDocumentCount,
+                                unreadChatCount = unreadChatCount
+                            ),
+                            height = 128.dp
+                        ) {
+                            onSelectAction(item.route)
+                        }
+                    }
+                }
+
+                if (rowItems.size == 1) {
+                    Box(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+private fun notificationCountFor(
+    item: QuickActionItem,
+    unreadDocumentCount: Int,
+    unreadChatCount: Int
+): Int = when (item.route) {
+    QuickActionRoute.Chat -> unreadChatCount
+    QuickActionRoute.Lease -> unreadDocumentCount
+    else -> 0
+}
+
+@Composable
 private fun HomePaymentHistorySection(tenantDataStore: TenantDataStore) {
+    var selectedPayment by remember { mutableStateOf<DashboardPaymentHistoryItem?>(null) }
+    var paymentHistoryPage by remember { mutableStateOf(0) }
+    val pageSize = 12
+    val visibleRows = 3
+    val rowHeight = 80.dp
+    val rowSpacing = 10.dp
+    val paymentHistory = tenantDataStore.dashboardPaymentHistory
+    val pageCount = maxOf(1, (paymentHistory.size + pageSize - 1) / pageSize)
+    val currentPage = paymentHistoryPage.coerceIn(0, pageCount - 1)
+    val visiblePaymentHistory = paymentHistory
+        .drop(currentPage * pageSize)
+        .take(pageSize)
+    val shouldScrollPaymentHistory = visiblePaymentHistory.size > visibleRows
+    val paymentHistoryMaxHeight = rowHeight * visibleRows + rowSpacing * (visibleRows - 1)
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -173,24 +299,70 @@ private fun HomePaymentHistorySection(tenantDataStore: TenantDataStore) {
             Text(text = L("home.payment_history"), color = DoorTreeTheme.textPrimary)
         }
 
-        if (tenantDataStore.paymentHistory.isEmpty()) {
+        if (paymentHistory.isEmpty()) {
             SectionPlaceholder(
                 systemName = "creditcard.trianglebadge.exclamationmark",
                 title = "No payment history yet",
-                message = "Rent payments will appear here once payments are recorded."
+                message = "Rent, parking, and maintenance invoice payments will appear here once they are recorded."
             )
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                tenantDataStore.paymentHistory.forEach { payment ->
-                    PaymentRow(
-                        payment = payment,
-                        titleOverride = "Rent",
-                        badgeForegroundOverride = if (payment.status == StatusBadgeStyle.Due) DoorTreeTheme.destructive else null,
-                        badgeBackgroundOverride = if (payment.status == StatusBadgeStyle.Due) DoorTreeTheme.destructive.copy(alpha = 0.14f) else null
+            Column(
+                modifier = if (shouldScrollPaymentHistory) {
+                    Modifier
+                        .heightIn(max = paymentHistoryMaxHeight)
+                        .verticalScroll(rememberScrollState())
+                } else {
+                    Modifier
+                },
+                verticalArrangement = Arrangement.spacedBy(rowSpacing)
+            ) {
+                visiblePaymentHistory.forEach { payment ->
+                    Box(modifier = Modifier.clickable { selectedPayment = payment }) {
+                        PaymentRow(
+                            payment = payment.paymentItem,
+                            badgeForegroundOverride = if (payment.status == StatusBadgeStyle.Due) DoorTreeTheme.destructive else null,
+                            badgeBackgroundOverride = if (payment.status == StatusBadgeStyle.Due) DoorTreeTheme.destructive.copy(alpha = 0.14f) else null
+                        )
+                    }
+                }
+            }
+
+            if (pageCount > 1) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = { paymentHistoryPage = maxOf(0, currentPage - 1) },
+                        enabled = currentPage > 0
+                    ) {
+                        Icon(systemIcon("chevron.left"), contentDescription = null)
+                    }
+
+                    Text(
+                        text = "${currentPage + 1} / $pageCount",
+                        color = DoorTreeTheme.textSecondary,
+                        modifier = Modifier.weight(1f),
+                        textAlign = TextAlign.Center
                     )
+
+                    Button(
+                        onClick = { paymentHistoryPage = minOf(pageCount - 1, currentPage + 1) },
+                        enabled = currentPage < pageCount - 1
+                    ) {
+                        Icon(systemIcon("chevron.right"), contentDescription = null)
+                    }
                 }
             }
         }
+    }
+
+    selectedPayment?.let { payment ->
+        PaymentHistoryDetailView(
+            item = payment,
+            onDismiss = { selectedPayment = null }
+        )
     }
 }
 

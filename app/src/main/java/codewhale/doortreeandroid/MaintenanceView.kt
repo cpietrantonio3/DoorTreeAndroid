@@ -1,5 +1,7 @@
 package codewhale.doortreeandroid
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -18,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,6 +37,7 @@ fun MaintenanceView(
     onOpenInvoice: (PendingInvoiceItem) -> Unit,
     onOpenRequest: (MaintenanceRequestItem) -> Unit
 ) {
+    val context = LocalContext.current
     val sortedActiveRequests = tenantDataStore.maintenanceRequests.sortedWith(
         compareBy<MaintenanceRequestItem>({ it.sortDate == null }, { it.sortDate }, { it.id })
     )
@@ -59,6 +64,20 @@ fun MaintenanceView(
                     fontSize = 28.sp
                 )
                 Spacer(modifier = Modifier.weight(1f))
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .liquidGlassSurface(cornerRadius = 16.dp, interactive = true, tint = DoorTreeTheme.gradientStart.copy(alpha = 0.18f))
+                        .clickable { openMaintenancePhoneDialer(context) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = systemIcon("phone"),
+                        contentDescription = "Call maintenance",
+                        tint = DoorTreeTheme.textPrimary
+                    )
+                }
+                Spacer(modifier = Modifier.size(12.dp))
                 Text(
                     text = L("maintenance.new_request"),
                     color = DoorTreeTheme.textPrimary,
@@ -154,6 +173,11 @@ fun MaintenanceView(
             }
         }
     }
+}
+
+private fun openMaintenancePhoneDialer(context: android.content.Context) {
+    val phoneIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+14388003102"))
+    runCatching { context.startActivity(phoneIntent) }
 }
 
 @Composable

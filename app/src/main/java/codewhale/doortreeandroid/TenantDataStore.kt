@@ -536,6 +536,8 @@ class TenantDataStore(
         private set
     var pendingInvoices by mutableStateOf<List<PendingInvoiceItem>>(emptyList())
         private set
+    var invoices by mutableStateOf<List<PendingInvoiceItem>>(emptyList())
+        private set
     var documents by mutableStateOf<List<DocumentItem>>(emptyList())
         private set
     var maintenanceRequests by mutableStateOf<List<MaintenanceRequestItem>>(emptyList())
@@ -591,7 +593,14 @@ class TenantDataStore(
 
     val quickActions: List<QuickActionItem>
         get() {
-            val actions = DoorTreeSampleData.quickActions.toMutableList()
+            val actions = DoorTreeSampleData.quickActions.map { action ->
+                if (action.route == QuickActionRoute.Chat) {
+                    action.copy(subtitle = chatQuickActionSubtitle)
+                } else {
+                    action
+                }
+            }.toMutableList()
+
             if (tenantRecord?.parkingInfo?.hasPrice == true) {
                 actions.add(
                     1.coerceAtMost(actions.size),
@@ -606,6 +615,13 @@ class TenantDataStore(
                 )
             }
             return actions
+        }
+
+    private val chatQuickActionSubtitle: String
+        get() = when (unreadChatCount) {
+            0 -> L("home.quick.chat.no_unread")
+            1 -> L("home.quick.chat.one_unread")
+            else -> LF("home.quick.chat.unread_count", unreadChatCount)
         }
 
     val paymentMethods: List<PaymentMethodItem>
@@ -761,11 +777,64 @@ class TenantDataStore(
                 )
             }
 
+    val dashboardPaymentHistory: List<DashboardPaymentHistoryItem>
+        get() {
+            val rentPayments = rentEntries
+                .filter { it.isPaid }
+                .map { entry ->
+                    (entry.sortDate ?: LocalDate.MIN) to DashboardPaymentHistoryItem(
+                        id = "rent-${entry.dueDateDisplay}-${entry.amount}",
+                        title = "Rent",
+                        date = entry.dueDateDisplay,
+                        amount = entry.amount,
+                        status = StatusBadgeStyle.Paid,
+                        source = DashboardPaymentHistorySource.Rent
+                    )
+                }
+            val parkingPayments = parkingEntries
+                .filter { it.isPaid }
+                .map { entry ->
+                    (entry.sortDate ?: LocalDate.MIN) to DashboardPaymentHistoryItem(
+                        id = "parking-${entry.dueDateDisplay}-${entry.amount}",
+                        title = "Parking",
+                        date = entry.dueDateDisplay,
+                        amount = entry.amount,
+                        status = StatusBadgeStyle.Paid,
+                        source = DashboardPaymentHistorySource.Parking
+                    )
+                }
+            val invoicePayments = invoices
+                .filter { it.isPaid }
+                .map { invoice ->
+                    (invoice.sortDate ?: LocalDate.MIN) to DashboardPaymentHistoryItem(
+                        id = "invoice-${invoice.id}",
+                        title = invoice.invoiceNumber.ifBlank { L("maintenance.invoice.title") },
+                        date = invoice.dueDate,
+                        amount = invoice.total,
+                        status = StatusBadgeStyle.Paid,
+                        source = DashboardPaymentHistorySource.Invoice(invoice)
+                    )
+                }
+
+            return (rentPayments + parkingPayments + invoicePayments)
+                .sortedByDescending { it.first }
+                .map { it.second }
+        }
+
     val completedPayments: List<PaymentItem>
         get() = paymentHistory.filter { it.status == StatusBadgeStyle.Paid }
 
     val unreadDocumentCount: Int
         get() = documents.count { it.shouldShowNotificationBadge }
+
+    val dueRentPaymentCount: Int
+        get() = rentEntries.count { !it.isPaid && it.statusStyle == StatusBadgeStyle.Due }
+
+    val dueParkingPaymentCount: Int
+        get() = parkingEntries.count { !it.isPaid && it.statusStyle == StatusBadgeStyle.Due }
+
+    val duePaymentCount: Int
+        get() = dueRentPaymentCount + dueParkingPaymentCount
 
     val rentScheduleEntries: List<RentScheduleEntry>
         get() = RentScheduleBuilder.entries(
@@ -1501,6 +1570,7 @@ class TenantDataStore(
             parkingEntries = emptyList()
             notificationPreferences = DoorTreeSampleData.notificationPreferences
             pendingInvoices = emptyList()
+            invoices = emptyList()
             documents = emptyList()
             maintenanceRequests = emptyList()
             chatSections = emptyList()
@@ -1526,6 +1596,7 @@ class TenantDataStore(
             parkingEntries = emptyList()
             notificationPreferences = DoorTreeSampleData.notificationPreferences
             pendingInvoices = emptyList()
+            invoices = emptyList()
             documents = emptyList()
             maintenanceRequests = emptyList()
             chatSections = emptyList()
@@ -1556,7 +1627,8 @@ class TenantDataStore(
         tenantRecord = parsedTenantRecord
         rentEntries = parseRentEntries(objectValue)
         parkingEntries = parseParkingEntries(objectValue)
-        pendingInvoices = parsePendingInvoices(objectValue)
+        invoices = parseInvoices(objectValue)
+        pendingInvoices = invoices.filter { it.isPending }
         documents = parseLeaseDocuments(
             renewalNoticesValue = objectValue["renewalNotices"],
             rl31NoticesValue = objectValue["RL31Notices"],
@@ -1680,6 +1752,7 @@ class TenantDataStore(
         parkingEntries = emptyList()
         notificationPreferences = DoorTreeSampleData.notificationPreferences
         pendingInvoices = emptyList()
+        invoices = emptyList()
         documents = emptyList()
         maintenanceRequests = emptyList()
         chatSections = emptyList()
@@ -2912,11 +2985,10 @@ class TenantDataStore(
         )
     }
 
-    private fun parsePendingInvoices(snapshot: JsonObject): List<PendingInvoiceItem> {
+    private fun parseInvoices(snapshot: JsonObject): List<PendingInvoiceItem> {
         val invoicesRoot = snapshot["invoices"] as? JsonObject ?: return emptyList()
 
         return invoiceSnapshots(invoicesRoot)
-            .filter { (_, invoiceObject) -> isPendingInvoice(invoiceObject) }
             .mapNotNull { (fallbackId, invoiceObject) ->
                 runCatching { invoiceFromSnapshot(fallbackId, invoiceObject) }.getOrNull()
             }
@@ -2997,7 +3069,9 @@ class TenantDataStore(
         val dueDate = formatDate(snapshot["dueDate"].stringValue())
         val createdAt = formatDateTime(snapshot["createdAt"].stringValue())
         val updatedAt = formatDateTime(snapshot["updatedAt"].stringValue())
-        val statusLabel = localizedInvoiceStatus(snapshot["status"].stringValue())
+        val statusRaw = snapshot["status"].stringValue()
+        val statusLabel = localizedInvoiceStatus(statusRaw)
+        val balanceValue = snapshot["balance"].doubleValue()
         val stripeSnapshot = snapshot["stripe"] as? JsonObject
         val paymentLinkUrl = stripeSnapshot?.get("paymentLinkUrl").stringValue()
         val stripe = if (stripeSnapshot == null && paymentLinkUrl.isBlank()) {
@@ -3023,6 +3097,7 @@ class TenantDataStore(
             dueDate = dueDate,
             createdAt = createdAt,
             updatedAt = updatedAt,
+            statusRaw = statusRaw,
             statusLabel = statusLabel,
             notes = snapshot["notes"].stringValue(),
             terms = snapshot["terms"].stringValue(),
@@ -3030,7 +3105,8 @@ class TenantDataStore(
             tpsAmount = formatCurrency(snapshot["tpsAmount"].doubleValue()),
             tvqAmount = formatCurrency(snapshot["tvqAmount"].doubleValue()),
             total = formatCurrency(snapshot["total"].doubleValue()),
-            balance = formatCurrency(snapshot["balance"].doubleValue()),
+            balanceValue = balanceValue,
+            balance = formatCurrency(balanceValue),
             lineItems = parseInvoiceLineItems(snapshot["lineItems"]),
             stripe = stripe,
             sortDate = parseLocalDate(snapshot["dueDate"].stringValue()) ?: parseLocalDate(snapshot["issueDate"].stringValue())

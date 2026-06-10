@@ -43,6 +43,7 @@ fun ContentView(
     var selectedRequest by remember { mutableStateOf<MaintenanceRequestItem?>(null) }
     val chatBadgeCount = if (selectedTab == DoorTreeTab.Chat) 0 else tenantDataStore.unreadChatCount
     val pendingInvoiceBadgeCount = tenantDataStore.pendingInvoices.size
+    val duePaymentBadgeCount = tenantDataStore.duePaymentCount
 
     LaunchedEffect(selectedTab) {
         tenantDataStore.setChatOpen(selectedTab == DoorTreeTab.Chat)
@@ -72,7 +73,11 @@ fun ContentView(
                             }
                         }
                     )
-                    DoorTreeTab.Payments -> PayRentView(tenantDataStore = tenantDataStore, mode = paymentViewMode)
+                    DoorTreeTab.Payments -> PayRentView(
+                        tenantDataStore = tenantDataStore,
+                        mode = paymentViewMode,
+                        onModeChange = { paymentViewMode = it }
+                    )
                     DoorTreeTab.Requests -> MaintenanceView(
                         tenantDataStore = tenantDataStore,
                         onNewRequest = { showingMaintenanceRequest = true },
@@ -91,6 +96,7 @@ fun ContentView(
             NavigationBar(containerColor = DoorTreeTheme.tabBarOverlay) {
                 DoorTreeTab.entries.forEach { tab ->
                     val badgeCount = when (tab) {
+                        DoorTreeTab.Payments -> duePaymentBadgeCount
                         DoorTreeTab.Requests -> pendingInvoiceBadgeCount
                         DoorTreeTab.Chat -> chatBadgeCount
                         else -> 0

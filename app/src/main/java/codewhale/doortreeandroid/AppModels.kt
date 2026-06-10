@@ -387,6 +387,30 @@ data class PaymentItem(
     val status: StatusBadgeStyle
 )
 
+sealed interface DashboardPaymentHistorySource {
+    data object Rent : DashboardPaymentHistorySource
+    data object Parking : DashboardPaymentHistorySource
+    data class Invoice(val invoice: PendingInvoiceItem) : DashboardPaymentHistorySource
+}
+
+data class DashboardPaymentHistoryItem(
+    val id: String,
+    val title: String,
+    val date: String,
+    val amount: String,
+    val status: StatusBadgeStyle,
+    val source: DashboardPaymentHistorySource
+) {
+    val paymentItem: PaymentItem
+        get() = PaymentItem(
+            id = id,
+            month = title,
+            date = date,
+            amount = amount,
+            status = status
+        )
+}
+
 data class MaintenanceRequestItem(
     val id: String = UUID.randomUUID().toString(),
     val title: String,
@@ -422,6 +446,7 @@ data class PendingInvoiceItem(
     val dueDate: String,
     val createdAt: String,
     val updatedAt: String,
+    val statusRaw: String,
     val statusLabel: String,
     val notes: String,
     val terms: String,
@@ -429,6 +454,7 @@ data class PendingInvoiceItem(
     val tpsAmount: String,
     val tvqAmount: String,
     val total: String,
+    val balanceValue: Double?,
     val balance: String,
     val lineItems: List<InvoiceLineItem>,
     val stripe: PendingInvoiceStripeDetails? = null,
@@ -438,6 +464,19 @@ data class PendingInvoiceItem(
         get() = stripe
             ?.takeIf { it.isActive && it.paymentLinkUrl.isNotBlank() }
             ?.paymentLinkUrl
+
+    val isPaid: Boolean
+        get() {
+            val normalizedStatus = statusRaw.trim().lowercase()
+            return normalizedStatus in setOf("paid", "completed", "complete") ||
+                (balanceValue?.let { it <= 0.0 } ?: false)
+        }
+
+    val isPending: Boolean
+        get() {
+            val normalizedStatus = statusRaw.trim().lowercase()
+            return normalizedStatus !in setOf("paid", "completed", "complete", "cancelled", "canceled", "void") && !isPaid
+        }
 }
 
 data class PendingInvoiceStripeDetails(

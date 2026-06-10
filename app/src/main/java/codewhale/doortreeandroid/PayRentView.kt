@@ -39,9 +39,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun PayRentView(
     tenantDataStore: TenantDataStore,
-    mode: PaymentViewMode = PaymentViewMode.Rent
+    mode: PaymentViewMode = PaymentViewMode.Rent,
+    onModeChange: (PaymentViewMode) -> Unit = {}
 ) {
-    val isParkingMode = mode == PaymentViewMode.Parking
+    var activeMode by remember { mutableStateOf(mode) }
+    val hasParking = tenantDataStore.tenantRecord?.parkingInfo != null || tenantDataStore.parkingEntries.isNotEmpty()
+    val isParkingMode = activeMode == PaymentViewMode.Parking
     val paymentMethods = if (isParkingMode) parkingPaymentMethods() else tenantDataStore.paymentMethods
     val scope = rememberCoroutineScope()
     var selectedMethodId by remember { mutableStateOf<String?>(null) }
@@ -55,9 +58,20 @@ fun PayRentView(
     val preferredSelectedMethodId =
         paymentMethodIdForKind(
             paymentMethods = paymentMethods,
-            kind = preferredSelectedPaymentKind(tenantDataStore)
-        ) ?: paymentMethods.firstOrNull { !isPaymentMethodDisabled(tenantDataStore, it.kind) }?.id
+            kind = if (isParkingMode) {
+                PaymentMethodItem.Kind.ManualMonthly
+            } else {
+                preferredSelectedPaymentKind(tenantDataStore)
+            }
+        ) ?: paymentMethods.firstOrNull { !isPaymentMethodDisabled(tenantDataStore, it.kind, activeMode) }?.id
             ?: paymentMethods.firstOrNull()?.id
+
+    fun resetPaymentSelection() {
+        selectedMethodId = null
+        hasUserSelectedMethod = false
+        lastSyncedPreferredMethodId = null
+        paymentFlowMessage = null
+    }
 
     suspend fun continuePaymentFlow(
         kind: PaymentMethodItem.Kind,
@@ -130,9 +144,24 @@ fun PayRentView(
         )
     }
 
+    LaunchedEffect(mode, hasParking) {
+        activeMode = if (hasParking) mode else PaymentViewMode.Rent
+        resetPaymentSelection()
+    }
+
+    LaunchedEffect(activeMode) {
+        if (!hasParking && activeMode == PaymentViewMode.Parking) {
+            activeMode = PaymentViewMode.Rent
+            return@LaunchedEffect
+        }
+
+        onModeChange(activeMode)
+        resetPaymentSelection()
+    }
+
     LaunchedEffect(preferredSelectedMethodId, paymentMethods) {
         val hasValidSelection = selectedMethodId != null && paymentMethods.any {
-            it.id == selectedMethodId && !isPaymentMethodDisabled(tenantDataStore, it.kind, mode)
+            it.id == selectedMethodId && !isPaymentMethodDisabled(tenantDataStore, it.kind, activeMode)
         }
         val preferredSelectionChanged = preferredSelectedMethodId != lastSyncedPreferredMethodId
 
@@ -158,13 +187,25 @@ fun PayRentView(
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             Text(
-                text = if (isParkingMode) "Pay Parking" else L("tab.payments"),
+                text = L("tab.payments"),
                 color = DoorTreeTheme.textPrimary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 28.sp
             )
 
-            PayRentHeroCard(tenantDataStore = tenantDataStore, mode = mode)
+            if (hasParking) {
+                PaymentModeSegmentedControl(
+                    activeMode = activeMode,
+                    rentBadgeCount = tenantDataStore.dueRentPaymentCount,
+                    parkingBadgeCount = tenantDataStore.dueParkingPaymentCount,
+                    onModeSelected = { selectedMode ->
+                        activeMode = selectedMode
+                        onModeChange(selectedMode)
+                    }
+                )
+            }
+
+            PayRentHeroCard(tenantDataStore = tenantDataStore, mode = activeMode)
 
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
@@ -187,7 +228,7 @@ fun PayRentView(
                         text = paymentPreferenceSummaryTitle(
                             tenantDataStore = tenantDataStore,
                             selectedMethodId = selectedMethodId,
-                            mode = mode
+                            mode = activeMode
                         ),
                         color = DoorTreeTheme.textPrimary,
                         fontWeight = FontWeight.SemiBold
@@ -196,14 +237,14 @@ fun PayRentView(
                         text = paymentPreferenceSummarySubtitle(
                             tenantDataStore = tenantDataStore,
                             selectedMethodId = selectedMethodId,
-                            mode = mode
+                            mode = activeMode
                         ),
                         color = DoorTreeTheme.textSecondary
                     )
                 }
 
                 paymentMethods.forEach { method ->
-                    val disabledReason = disabledReason(tenantDataStore, method.kind, mode)
+                    val disabledReason = disabledReason(tenantDataStore, method.kind, activeMode)
 
                     PaymentMethodRow(
                         method = method,
@@ -233,7 +274,7 @@ fun PayRentView(
                                         tenantDataStore.deactivateAutopayForOneTimePaymentIfNeeded()
                                     }
 
-                                    if (shouldApplySelectedPaymentMethodImmediately(tenantDataStore, method.kind, isStartingPaymentFlow, mode)) {
+                                    if (shouldApplySelectedPaymentMethodImmediately(tenantDataStore, method.kind, isStartingPaymentFlow, activeMode)) {
                                         continuePaymentFlow(method.kind)
                                     }
                                 }.onFailure { error ->
@@ -245,19 +286,19 @@ fun PayRentView(
                 }
             }
 
-            if (showsPrimaryActionButton(tenantDataStore, selectedMethodId, paymentMethods, mode)) {
+            if (showsPrimaryActionButton(tenantDataStore, selectedMethodId, paymentMethods, activeMode)) {
                 GradientButton(
                     title = primaryActionTitle(
                         tenantDataStore = tenantDataStore,
                         selectedMethodId = selectedMethodId,
                         paymentMethods = paymentMethods,
-                        mode = mode,
+                        mode = activeMode,
                         isStartingPaymentFlow = isStartingPaymentFlow
                     ),
-                    enabled = canStartPaymentFlow(tenantDataStore, selectedMethodId, paymentMethods, mode) && !isStartingPaymentFlow,
+                    enabled = canStartPaymentFlow(tenantDataStore, selectedMethodId, paymentMethods, activeMode) && !isStartingPaymentFlow,
                     onClick = {
                         val selectedMethod = paymentMethods.firstOrNull { it.id == selectedMethodId } ?: return@GradientButton
-                        val prompt = managementPromptFor(tenantDataStore, selectedMethod.kind, mode)
+                        val prompt = managementPromptFor(tenantDataStore, selectedMethod.kind, activeMode)
                         if (prompt != null) {
                             paymentFlowMessage = null
                             managementPrompt = prompt
@@ -274,7 +315,7 @@ fun PayRentView(
                 tenantDataStore = tenantDataStore,
                 selectedMethodId = selectedMethodId,
                 paymentMethods = paymentMethods,
-                mode = mode,
+                mode = activeMode,
                 paymentFlowMessage = paymentFlowMessage
             )?.let { message ->
                 Text(
@@ -373,6 +414,70 @@ fun PayRentView(
 }
 
 @Composable
+private fun PaymentModeSegmentedControl(
+    activeMode: PaymentViewMode,
+    rentBadgeCount: Int,
+    parkingBadgeCount: Int,
+    onModeSelected: (PaymentViewMode) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .liquidGlassSurface(cornerRadius = 16.dp, tint = DoorTreeTheme.barGlassTint)
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        PaymentModeSegment(
+            title = "Rent",
+            isSelected = activeMode == PaymentViewMode.Rent,
+            badgeCount = rentBadgeCount,
+            modifier = Modifier.weight(1f),
+            onClick = { onModeSelected(PaymentViewMode.Rent) }
+        )
+        PaymentModeSegment(
+            title = "Parking",
+            isSelected = activeMode == PaymentViewMode.Parking,
+            badgeCount = parkingBadgeCount,
+            modifier = Modifier.weight(1f),
+            onClick = { onModeSelected(PaymentViewMode.Parking) }
+        )
+    }
+}
+
+@Composable
+private fun PaymentModeSegment(
+    title: String,
+    isSelected: Boolean,
+    badgeCount: Int,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = modifier
+            .background(
+                color = if (isSelected) DoorTreeTheme.gradientStart.copy(alpha = 0.22f) else Color.Transparent,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(vertical = 9.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            color = DoorTreeTheme.textPrimary,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold
+        )
+        if (badgeCount > 0) {
+            NotificationCountBadge(
+                count = badgeCount,
+                modifier = Modifier.padding(start = 7.dp)
+            )
+        }
+    }
+}
+
+@Composable
 private fun PayRentHeroCard(
     tenantDataStore: TenantDataStore,
     mode: PaymentViewMode
@@ -453,9 +558,9 @@ private data class SavedPaymentManagementPrompt(
 private fun parkingPaymentMethods(): List<PaymentMethodItem> = listOf(
     PaymentMethodItem(
         id = "manual-parking",
-        title = "Open Payment Portal",
+        title = L("payments.method.manual.title"),
         subtitle = "Open the payment portal and pay parking manually.",
-        icon = "car.fill",
+        icon = "creditcard.fill",
         kind = PaymentMethodItem.Kind.ManualMonthly
     ),
     PaymentMethodItem(

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +24,7 @@ fun PaymentRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = 80.dp)
             .liquidGlassSurface(cornerRadius = 14.dp)
             .padding(14.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp)
