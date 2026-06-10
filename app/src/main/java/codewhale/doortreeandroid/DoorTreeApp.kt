@@ -3,6 +3,8 @@ package codewhale.doortreeandroid
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
+import java.math.BigDecimal
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -57,10 +59,10 @@ fun DoorTreeAndroidApp() {
     var didCheckEula by remember { mutableStateOf(false) }
     var didHandleEulaDecision by remember { mutableStateOf(false) }
     var hasAcceptedEula by remember { mutableStateOf(false) }
-    val database = remember { FirebaseDatabase.getInstance().reference }
+    val database = remember { FirebaseDatabase.getInstance(FirebaseConfig.databaseUrl).reference }
 
     LaunchedEffect(Unit) {
-        forceUpdateRequired = checkMinimumVersionRequirement(database)
+        checkMinimumVersionRequirement(database)?.let { forceUpdateRequired = it }
         minimumVersionCheckCompleted = true
     }
 
@@ -71,11 +73,11 @@ fun DoorTreeAndroidApp() {
     }
 
     DisposableEffect(lifecycleOwner) {
-            val observer = LifecycleEventObserver { _, event ->
-                if (event == Lifecycle.Event.ON_START) {
-                    coroutineScope.launch {
-                        forceUpdateRequired = checkMinimumVersionRequirement(database)
-                    }
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START) {
+                coroutineScope.launch {
+                    checkMinimumVersionRequirement(database)?.let { forceUpdateRequired = it }
+                }
             }
         }
 
@@ -246,26 +248,49 @@ fun DoorTreeAndroidApp() {
     }
 }
 
-private suspend fun checkMinimumVersionRequirement(database: com.google.firebase.database.DatabaseReference): Boolean {
+private suspend fun checkMinimumVersionRequirement(database: com.google.firebase.database.DatabaseReference): Boolean? {
     val currentVersion = BuildConfig.VERSION_NAME.trim()
     if (currentVersion.isEmpty()) {
-        return false
+        Log.d("DoorTreeVersionCheck", "Android current version is empty")
+        return null
     }
 
     val requiredVersion = runCatching {
         val snapshot = database.child("minimumRequiredVersionAndroid").get().await()
-        when (val value = snapshot.value) {
-            is String -> value
-            is Number -> value.toString()
-            else -> ""
-        }.trim()
-    }.getOrDefault("")
+        val normalized = versionString(snapshot.value)
+        Log.d("DoorTreeVersionCheck", "Android rawRequired=${snapshot.value} normalizedRequired=$normalized")
+        normalized
+    }.onFailure { error ->
+        Log.d("DoorTreeVersionCheck", "Android read failed for minimumRequiredVersionAndroid: ${error.localizedMessage}")
+    }.getOrNull() ?: return null
 
     if (requiredVersion.isEmpty()) {
+        Log.d("DoorTreeVersionCheck", "Android root key minimumRequiredVersionAndroid is missing or empty")
         return false
     }
 
-    return isVersionOlder(currentVersion, requiredVersion)
+    val needsUpdate = isVersionOlder(currentVersion, requiredVersion)
+    Log.d(
+        "DoorTreeVersionCheck",
+        "Android current=$currentVersion required=$requiredVersion key=minimumRequiredVersionAndroid needsUpdate=$needsUpdate"
+    )
+    return needsUpdate
+}
+
+private fun versionString(value: Any?): String {
+    return when (value) {
+        is String -> value
+        is Number -> numericVersionString(value)
+        else -> ""
+    }.trim()
+}
+
+private fun numericVersionString(value: Number): String {
+    return when (value) {
+        is Byte, is Short, is Int, is Long -> value.toLong().toString()
+        is Float, is Double -> BigDecimal.valueOf(value.toDouble()).stripTrailingZeros().toPlainString()
+        else -> value.toString()
+    }
 }
 
 private fun isVersionOlder(current: String, required: String): Boolean {
