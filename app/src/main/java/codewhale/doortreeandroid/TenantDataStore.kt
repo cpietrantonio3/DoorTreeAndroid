@@ -1130,10 +1130,44 @@ class TenantDataStore(
 
         scope.launch {
             val idToken = authSession.ensureValidIdToken()
+            val openedAt = Instant.now().toString()
+            val readEventMetadata = documentReadEventMetadata(document)
             val updated = idToken != null && restClient.patchDatabaseRoot(
                 idToken = idToken,
                 body = buildJsonObject {
                     put("users/$uid/$databasePath/read", JsonPrimitive(true))
+                    put("users/$uid/$databasePath/readAt", JsonPrimitive(openedAt))
+
+                    if (readEventMetadata != null) {
+                        val eventId = "${readEventMetadata.type}-${openedAt.replace(Regex("""[.#$/\[\]]"""), "-")}-${UUID.randomUUID().toString().take(8)}"
+                        val event = buildJsonObject {
+                            put("id", JsonPrimitive(eventId))
+                            put("type", JsonPrimitive(readEventMetadata.type))
+                            put("title", JsonPrimitive(readEventMetadata.title))
+                            put("category", JsonPrimitive(readEventMetadata.category))
+                            put("source", JsonPrimitive("android"))
+                            put("status", JsonPrimitive("read"))
+                            put("occurredAt", JsonPrimitive(openedAt))
+                            put("details", buildJsonObject {
+                                put("databasePath", JsonPrimitive(databasePath))
+                                put("filename", JsonPrimitive(document.filename))
+                                put("storageReference", JsonPrimitive(document.storageReference))
+                            })
+                        }
+                        val landlordUid = tenantRecord?.landlordUID?.trim().orEmpty()
+
+                        put("users/$uid/events/${readEventMetadata.type}", JsonPrimitive(openedAt))
+                        put("users/$uid/events/timeline/$eventId", event)
+
+                        if (landlordUid.isNotBlank()) {
+                            if (document.isRenewalNotice) {
+                                put("users/$landlordUid/renewalNotices/sent/$uid/read", JsonPrimitive(true))
+                                put("users/$landlordUid/renewalNotices/sent/$uid/readAt", JsonPrimitive(openedAt))
+                            }
+                            put("users/$landlordUid/tenants/$uid/events/${readEventMetadata.type}", JsonPrimitive(openedAt))
+                            put("users/$landlordUid/tenants/$uid/events/timeline/$eventId", event)
+                        }
+                    }
                 }
             )
 
@@ -1142,6 +1176,38 @@ class TenantDataStore(
                 debugMaintenanceRequestLog("Failed to mark document as read at $databasePath")
             }
         }
+    }
+
+    private data class DocumentReadEventMetadata(
+        val type: String,
+        val title: String,
+        val category: String
+    )
+
+    private fun documentReadEventMetadata(document: DocumentItem): DocumentReadEventMetadata? {
+        if (document.isRenewalNotice) {
+            return DocumentReadEventMetadata(
+                type = "rentIncreaseRead",
+                title = "Rent increase notice read",
+                category = "Lease"
+            )
+        }
+
+        val searchableText = listOf(
+            document.filename,
+            document.databasePath.orEmpty(),
+            document.storageReference
+        ).joinToString(" ").lowercase()
+
+        if ("rl31" in searchableText || "rl-31" in searchableText) {
+            return DocumentReadEventMetadata(
+                type = "rl31Read",
+                title = "RL-31 form read",
+                category = "Tax"
+            )
+        }
+
+        return null
     }
 
     suspend fun recordRenewalDecision(
@@ -1175,6 +1241,7 @@ class TenantDataStore(
 
             val idToken = authSession.ensureValidIdToken()
                 ?: throw IllegalStateException(L("payments.error.sign_in_again"))
+            val tenantReplyCreatedAt = Instant.now().toString()
             val updated = restClient.patchDatabaseRoot(
                 idToken = idToken,
                 body = buildJsonObject {
@@ -1182,7 +1249,7 @@ class TenantDataStore(
                     put("users/$uid/$databasePath/isActionTaken", JsonPrimitive(true))
                     put("users/$uid/$databasePath/read", JsonPrimitive(true))
                     put("users/$uid/$databasePath/tenantReplyPDFfile", JsonPrimitive(tenantReplyPath))
-                    put("users/$uid/$databasePath/tenantReplyCreatedAt", JsonPrimitive(Instant.now().toString()))
+                    put("users/$uid/$databasePath/tenantReplyCreatedAt", JsonPrimitive(tenantReplyCreatedAt))
                     signatureStoragePath?.let { path ->
                         put("users/$uid/$databasePath/signatureStoragePath", JsonPrimitive(path))
                     }
@@ -1191,6 +1258,86 @@ class TenantDataStore(
 
             if (!updated) {
                 throw IllegalStateException("Unable to update this renewal notice right now.")
+            }
+
+            val eventType = when (status.trim().lowercase()) {
+                "accept", "accepted" -> "rentIncreaseAccepted"
+                "refuse", "refused", "reject", "rejected" -> "rentIncreaseRefused"
+                else -> null
+            }
+            if (eventType != null) {
+                val eventId = "$eventType-${tenantReplyCreatedAt.replace(Regex("""[.#$/\[\]]"""), "-")}-${System.currentTimeMillis()}"
+                val event = buildJsonObject {
+                    put("id", JsonPrimitive(eventId))
+                    put("type", JsonPrimitive(eventType))
+                    put("title", JsonPrimitive(if (eventType == "rentIncreaseAccepted") "Rent increase accepted" else "Rent increase refused"))
+                    put("category", JsonPrimitive("Lease"))
+                    put("source", JsonPrimitive("android"))
+                    put("status", JsonPrimitive(if (eventType == "rentIncreaseAccepted") "accepted" else "refused"))
+                    put("occurredAt", JsonPrimitive(tenantReplyCreatedAt))
+                    put("details", buildJsonObject {
+                        put("databasePath", JsonPrimitive(databasePath))
+                        put("tenantReplyPDFfile", JsonPrimitive(tenantReplyPath))
+                        signatureStoragePath?.let { path -> put("signatureStoragePath", JsonPrimitive(path)) }
+                    })
+                }
+                val landlordUid = tenantRecord?.landlordUID?.trim().orEmpty()
+                runCatching {
+                    restClient.patchDatabaseRoot(
+                        idToken = idToken,
+                        body = buildJsonObject {
+                            put("users/$uid/events/$eventType", JsonPrimitive(tenantReplyCreatedAt))
+                            put("users/$uid/events/timeline/$eventId", event)
+                            if (landlordUid.isNotBlank()) {
+                                put("users/$landlordUid/renewalNotices/sent/$uid/status", JsonPrimitive(status))
+                                put("users/$landlordUid/renewalNotices/sent/$uid/isActionTaken", JsonPrimitive(true))
+                                put("users/$landlordUid/renewalNotices/sent/$uid/read", JsonPrimitive(true))
+                                put("users/$landlordUid/renewalNotices/sent/$uid/tenantReplyPDFfile", JsonPrimitive(tenantReplyPath))
+                                put("users/$landlordUid/renewalNotices/sent/$uid/tenantReplyCreatedAt", JsonPrimitive(tenantReplyCreatedAt))
+                                signatureStoragePath?.let { path ->
+                                    put("users/$landlordUid/renewalNotices/sent/$uid/signatureStoragePath", JsonPrimitive(path))
+                                }
+                                put("users/$landlordUid/tenants/$uid/events/$eventType", JsonPrimitive(tenantReplyCreatedAt))
+                                put("users/$landlordUid/tenants/$uid/events/timeline/$eventId", event)
+                            }
+                        }
+                    )
+                }
+            }
+
+            if (!signatureStoragePath.isNullOrBlank()) {
+                val eventType = "rentIncreaseSigned"
+                val eventId = "$eventType-${tenantReplyCreatedAt.replace(Regex("""[.#$/\[\]]"""), "-")}-${System.currentTimeMillis()}"
+                val event = buildJsonObject {
+                    put("id", JsonPrimitive(eventId))
+                    put("type", JsonPrimitive(eventType))
+                    put("title", JsonPrimitive("Rent increase notice signed"))
+                    put("category", JsonPrimitive("Lease"))
+                    put("source", JsonPrimitive("android"))
+                    put("status", JsonPrimitive("signed"))
+                    put("occurredAt", JsonPrimitive(tenantReplyCreatedAt))
+                    put("details", buildJsonObject {
+                        put("databasePath", JsonPrimitive(databasePath))
+                        put("decisionStatus", JsonPrimitive(status.trim().lowercase()))
+                        put("tenantReplyPDFfile", JsonPrimitive(tenantReplyPath))
+                        put("signatureStoragePath", JsonPrimitive(signatureStoragePath))
+                    })
+                }
+                val landlordUid = tenantRecord?.landlordUID?.trim().orEmpty()
+                runCatching {
+                    restClient.patchDatabaseRoot(
+                        idToken = idToken,
+                        body = buildJsonObject {
+                            put("users/$uid/events/$eventType", JsonPrimitive(tenantReplyCreatedAt))
+                            put("users/$uid/events/timeline/$eventId", event)
+                            if (landlordUid.isNotBlank()) {
+                                put("users/$landlordUid/renewalNotices/sent/$uid/signatureStoragePath", JsonPrimitive(signatureStoragePath))
+                                put("users/$landlordUid/tenants/$uid/events/$eventType", JsonPrimitive(tenantReplyCreatedAt))
+                                put("users/$landlordUid/tenants/$uid/events/timeline/$eventId", event)
+                            }
+                        }
+                    )
+                }
             }
 
             refreshedDocumentUrl?.let { url ->
@@ -2278,9 +2425,10 @@ class TenantDataStore(
                     "renewalPDFFile",
                     "renewalPdfFile",
                     "renewalPDF",
-                    "storagePath",
                     "downloadURL",
+                    "downloadUrl",
                     "url",
+                    "storagePath",
                     "file"
                 ),
                 isRenewalNotice = true
@@ -2313,9 +2461,10 @@ class TenantDataStore(
                     "RL-31PDFfile",
                     "RL-31PDFFile",
                     "rl31PDFfile",
-                    "storagePath",
                     "downloadURL",
+                    "downloadUrl",
                     "url",
+                    "storagePath",
                     "file"
                 ),
                 isRenewalNotice = false
@@ -2331,9 +2480,10 @@ class TenantDataStore(
                     "RL31PDFfile",
                     "RL31PDFFile",
                     "rl31PDFfile",
-                    "storagePath",
                     "downloadURL",
+                    "downloadUrl",
                     "url",
+                    "storagePath",
                     "file"
                 ),
                 isRenewalNotice = false
