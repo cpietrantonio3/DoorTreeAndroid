@@ -501,7 +501,8 @@ enum class QuickActionRoute {
     Parking,
     Requests,
     Chat,
-    Lease
+    Lease,
+    Notices
 }
 
 data class QuickActionItem(
@@ -628,6 +629,66 @@ data class DocumentItem(
             status = status
         )
     }
+}
+
+data class NoticeItem(
+    val id: String,
+    val title: String,
+    val date: String,
+    val fileName: String,
+    val language: String,
+    val noticePath: String,
+    val propertyId: String,
+    val propertyName: String,
+    val read: Boolean,
+    val recipientName: String,
+    val sentAt: String,
+    val status: String,
+    val storagePath: String,
+    val tenantDirectoryId: String,
+    val tenantUid: String,
+    val unitId: String,
+    val unitNumber: String,
+    val url: String?,
+    val databasePath: String,
+    val sortDate: LocalDate?
+) {
+    val displayTitle: String
+        get() = title.ifBlank {
+            if (propertyName.isBlank()) "Tenant Notice" else "$propertyName Notice"
+        }
+
+    val displayDate: String
+        get() = date.ifBlank { sentAt.ifBlank { "-" } }
+
+    val unitLabel: String
+        get() = when {
+            unitNumber.isNotBlank() -> "Unit $unitNumber"
+            unitId.isNotBlank() -> "Unit $unitId"
+            else -> "Unit -"
+        }
+
+    val isUnread: Boolean
+        get() = !read
+
+    val markingRead: NoticeItem
+        get() = copy(read = true)
+
+    val markingUnread: NoticeItem
+        get() = copy(read = false)
+
+    val documentItem: DocumentItem
+        get() = DocumentItem(
+            id = id,
+            filename = fileName.ifBlank { displayTitle },
+            subtitle = listOf(displayDate, unitLabel)
+                .filter { it.isNotBlank() && it != "-" }
+                .joinToString(" • "),
+            url = url,
+            storageReference = storagePath.ifBlank { noticePath },
+            databasePath = databasePath,
+            read = read
+        )
 }
 
 enum class NotificationCenterCategory(

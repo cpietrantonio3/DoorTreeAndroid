@@ -21,20 +21,28 @@ object DoorTreeSampleData {
             route = QuickActionRoute.Requests
         ),
         QuickActionItem(
-            title = L("mock.quick.chat.title"),
-            subtitle = L("mock.quick.chat.subtitle"),
-            icon = "bubble.left.and.bubble.right.fill",
-            iconColor = DoorTreeTheme.chatAccent,
-            iconBackground = DoorTreeTheme.chatAccentBackground.copy(alpha = 0.75f),
-            route = QuickActionRoute.Chat
-        ),
-        QuickActionItem(
             title = L("mock.quick.lease.title"),
             subtitle = L("mock.quick.lease.subtitle"),
             icon = "doc.text.fill",
             iconColor = DoorTreeTheme.leaseAccent,
             iconBackground = DoorTreeTheme.leaseAccentBackground.copy(alpha = 0.75f),
             route = QuickActionRoute.Lease
+        ),
+        QuickActionItem(
+            title = L("mock.quick.notices.title"),
+            subtitle = L("mock.quick.notices.subtitle"),
+            icon = "bell.badge.fill",
+            iconColor = DoorTreeTheme.gradientStart,
+            iconBackground = DoorTreeTheme.paidBackground.copy(alpha = 0.75f),
+            route = QuickActionRoute.Notices
+        ),
+        QuickActionItem(
+            title = L("mock.quick.chat.title"),
+            subtitle = L("mock.quick.chat.subtitle"),
+            icon = "bubble.left.and.bubble.right.fill",
+            iconColor = DoorTreeTheme.chatAccent,
+            iconBackground = DoorTreeTheme.chatAccentBackground.copy(alpha = 0.75f),
+            route = QuickActionRoute.Chat
         )
     )
 

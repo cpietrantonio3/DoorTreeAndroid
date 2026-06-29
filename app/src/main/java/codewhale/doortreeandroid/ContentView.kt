@@ -38,6 +38,8 @@ fun ContentView(
     var selectedTab by remember { mutableStateOf(DoorTreeTab.Home) }
     var paymentViewMode by remember { mutableStateOf(PaymentViewMode.Rent) }
     var showingLease by remember { mutableStateOf(false) }
+    var showingNotices by remember { mutableStateOf(false) }
+    var showingNotificationCenter by remember { mutableStateOf(false) }
     var showingMaintenanceRequest by remember { mutableStateOf(false) }
     var selectedInvoice by remember { mutableStateOf<PendingInvoiceItem?>(null) }
     var selectedRequest by remember { mutableStateOf<MaintenanceRequestItem?>(null) }
@@ -70,6 +72,7 @@ fun ContentView(
                                 QuickActionRoute.Requests -> showingMaintenanceRequest = true
                                 QuickActionRoute.Chat -> selectedTab = DoorTreeTab.Chat
                                 QuickActionRoute.Lease -> showingLease = true
+                                QuickActionRoute.Notices -> showingNotices = true
                             }
                         }
                     )
@@ -139,6 +142,22 @@ fun ContentView(
                 tenantDataStore = tenantDataStore,
                 onClose = { showingLease = false }
             )
+        }
+
+        if (showingNotices) {
+            NoticeView(
+                tenantDataStore = tenantDataStore,
+                onClose = { showingNotices = false }
+            )
+        }
+
+        if (showingNotificationCenter) {
+            FullHeightModalBottomSheet(onDismissRequest = { showingNotificationCenter = false }) {
+                NotificationCenterSheetView(
+                    tenantDataStore = tenantDataStore,
+                    onDismiss = { showingNotificationCenter = false }
+                )
+            }
         }
 
         selectedInvoice?.let { invoice ->

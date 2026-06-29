@@ -540,6 +540,8 @@ class TenantDataStore(
         private set
     var documents by mutableStateOf<List<DocumentItem>>(emptyList())
         private set
+    var notices by mutableStateOf<List<NoticeItem>>(emptyList())
+        private set
     var maintenanceRequests by mutableStateOf<List<MaintenanceRequestItem>>(emptyList())
         private set
     var chatSections by mutableStateOf<List<ChatSection>>(emptyList())
@@ -827,6 +829,9 @@ class TenantDataStore(
     val unreadDocumentCount: Int
         get() = documents.count { it.shouldShowNotificationBadge }
 
+    val unreadNoticeCount: Int
+        get() = notices.count { it.isUnread }
+
     val dueRentPaymentCount: Int
         get() = rentEntries.count { !it.isPaid && it.statusStyle == StatusBadgeStyle.Due }
 
@@ -985,10 +990,19 @@ class TenantDataStore(
         }
 
     val notificationCenterItems: List<NotificationCenterItem>
-        get() = emptyList()
+        get() = notices.map { notice ->
+            NotificationCenterItem(
+                id = "notice-${notice.id}",
+                title = notice.displayTitle,
+                message = "A tenant notice is available for ${notice.unitLabel}.",
+                timestamp = notice.displayDate,
+                category = NotificationCenterCategory.Reminder,
+                isUnread = notice.isUnread
+            )
+        }
 
     val unreadNotificationCount: Int
-        get() = notificationCenterItems.count { it.isUnread }
+        get() = unreadNoticeCount
 
     fun handleAuthState(uid: String?) {
         if (uid.isNullOrBlank()) {
@@ -1174,6 +1188,84 @@ class TenantDataStore(
             if (!updated) {
                 documents = previousDocuments
                 debugMaintenanceRequestLog("Failed to mark document as read at $databasePath")
+            }
+        }
+    }
+
+    fun markNoticeRead(notice: NoticeItem) {
+        val uid = activeUid ?: return
+        if (!notice.isUnread) {
+            return
+        }
+
+        val previousNotices = notices
+        notices = notices.map { item ->
+            if (item.id == notice.id) item.markingRead else item
+        }
+
+        scope.launch {
+            val idToken = authSession.ensureValidIdToken()
+            val openedAt = Instant.now().toString()
+            val updated = idToken != null && restClient.patchDatabaseRoot(
+                idToken = idToken,
+                body = buildJsonObject {
+                    put("users/$uid/${notice.databasePath}/read", JsonPrimitive(true))
+                    put("users/$uid/${notice.databasePath}/readAt", JsonPrimitive(openedAt))
+                }
+            )
+
+            if (!updated) {
+                notices = previousNotices
+                debugMaintenanceRequestLog("Failed to mark notice as read at ${notice.databasePath}")
+            }
+        }
+    }
+
+    fun markNoticeUnread(notice: NoticeItem) {
+        val uid = activeUid ?: return
+        if (notice.isUnread) {
+            return
+        }
+
+        val previousNotices = notices
+        notices = notices.map { item ->
+            if (item.id == notice.id) item.markingUnread else item
+        }
+
+        scope.launch {
+            val idToken = authSession.ensureValidIdToken()
+            val updated = idToken != null && restClient.patchDatabaseRoot(
+                idToken = idToken,
+                body = buildJsonObject {
+                    put("users/$uid/${notice.databasePath}/read", JsonPrimitive(false))
+                    put("users/$uid/${notice.databasePath}/readAt", JsonNull)
+                }
+            )
+
+            if (!updated) {
+                notices = previousNotices
+                debugMaintenanceRequestLog("Failed to mark notice as unread at ${notice.databasePath}")
+            }
+        }
+    }
+
+    fun deleteNotice(notice: NoticeItem) {
+        val uid = activeUid ?: return
+        val previousNotices = notices
+        notices = notices.filterNot { it.id == notice.id }
+
+        scope.launch {
+            val idToken = authSession.ensureValidIdToken()
+            val updated = idToken != null && restClient.patchDatabaseRoot(
+                idToken = idToken,
+                body = buildJsonObject {
+                    put("users/$uid/${notice.databasePath}", JsonNull)
+                }
+            )
+
+            if (!updated) {
+                notices = previousNotices
+                debugMaintenanceRequestLog("Failed to delete notice at ${notice.databasePath}")
             }
         }
     }
@@ -1719,6 +1811,7 @@ class TenantDataStore(
             pendingInvoices = emptyList()
             invoices = emptyList()
             documents = emptyList()
+            notices = emptyList()
             maintenanceRequests = emptyList()
             chatSections = emptyList()
             landlordInteracSettings = null
@@ -1745,6 +1838,7 @@ class TenantDataStore(
             pendingInvoices = emptyList()
             invoices = emptyList()
             documents = emptyList()
+            notices = emptyList()
             maintenanceRequests = emptyList()
             chatSections = emptyList()
             landlordInteracSettings = null
@@ -1781,6 +1875,7 @@ class TenantDataStore(
             rl31NoticesValue = objectValue["RL31Notices"],
             rl31Value = objectValue["RL31"]
         )
+        notices = parseNotices(objectValue["notices"])
         debugMaintenanceRequestLog("loadTenantRecord pendingInvoices count=${pendingInvoices.size}")
         val chatConversation = parseChatConversation(
             messagesRoot = objectValue["messages"] as? JsonObject,
@@ -1901,6 +1996,7 @@ class TenantDataStore(
         pendingInvoices = emptyList()
         invoices = emptyList()
         documents = emptyList()
+        notices = emptyList()
         maintenanceRequests = emptyList()
         chatSections = emptyList()
         landlordInteracSettings = null
@@ -2408,6 +2504,55 @@ class TenantDataStore(
         val fileKeys: List<String>,
         val isRenewalNotice: Boolean
     )
+
+    private suspend fun parseNotices(snapshotValue: JsonElement?): List<NoticeItem> {
+        val root = snapshotValue.asJsonObjectOrNull() ?: return emptyList()
+        if (root.isEmpty()) {
+            return emptyList()
+        }
+
+        return root.entries.mapNotNull { (noticeId, value) ->
+            val snapshot = value.asJsonObjectOrNull() ?: return@mapNotNull null
+            val downloadUrl = firstNonBlank(
+                snapshot["downloadUrl"].stringValue(),
+                snapshot["downloadURL"].stringValue()
+            )
+            val storagePath = snapshot["storagePath"].stringValue()
+            val noticePath = snapshot["noticePath"].stringValue()
+            val dateRaw = snapshot["date"].stringValue()
+            val sentAtRaw = snapshot["sentAt"].stringValue()
+            val fileName = firstNonBlank(
+                snapshot["fileName"].stringValue(),
+                snapshot["filename"].stringValue()
+            )
+            val sortDate = parseMaintenanceDate(sentAtRaw)
+                ?: parseLocalDate(dateRaw)
+                ?: parseMaintenanceDate(dateRaw)
+
+            NoticeItem(
+                id = noticeId,
+                title = snapshot["title"].stringValue(),
+                date = formatDate(dateRaw),
+                fileName = fileName.ifBlank { "Tenant Notice.pdf" },
+                language = snapshot["language"].stringValue(),
+                noticePath = noticePath,
+                propertyId = snapshot["propertyId"].stringValue(),
+                propertyName = snapshot["propertyName"].stringValue(),
+                read = snapshot["read"]?.jsonPrimitive?.booleanOrNull ?: false,
+                recipientName = snapshot["recipientName"].stringValue(),
+                sentAt = formatDateTime(sentAtRaw),
+                status = snapshot["status"].stringValue(),
+                storagePath = storagePath,
+                tenantDirectoryId = snapshot["tenantDirectoryId"].stringValue(),
+                tenantUid = snapshot["tenantUid"].stringValue(),
+                unitId = snapshot["unitId"].stringValue(),
+                unitNumber = snapshot["unitNumber"].stringValue(),
+                url = resolveLeaseDocumentUrl(firstNonBlank(downloadUrl, storagePath, noticePath)),
+                databasePath = "notices/$noticeId",
+                sortDate = sortDate
+            )
+        }.sortedByDescending { it.sortDate ?: LocalDate.MIN }
+    }
 
     private suspend fun parseLeaseDocuments(
         renewalNoticesValue: JsonElement?,

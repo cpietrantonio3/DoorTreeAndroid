@@ -116,6 +116,7 @@ fun HomeView(
                 quickActions = tenantDataStore.quickActions,
                 unreadDocumentCount = tenantDataStore.unreadDocumentCount,
                 unreadChatCount = tenantDataStore.unreadChatCount,
+                unreadNotificationCount = tenantDataStore.unreadNotificationCount,
                 onSelectAction = { route ->
                     if (route == QuickActionRoute.Requests) {
                         showingMaintenanceChoice = true
@@ -231,6 +232,7 @@ private fun HomeQuickActionsGrid(
     quickActions: List<QuickActionItem>,
     unreadDocumentCount: Int,
     unreadChatCount: Int,
+    unreadNotificationCount: Int,
     onSelectAction: (QuickActionRoute) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(DoorTreeTheme.cardSpacing)) {
@@ -243,7 +245,8 @@ private fun HomeQuickActionsGrid(
                             notificationCount = notificationCountFor(
                                 item = item,
                                 unreadDocumentCount = unreadDocumentCount,
-                                unreadChatCount = unreadChatCount
+                                unreadChatCount = unreadChatCount,
+                                unreadNotificationCount = unreadNotificationCount
                             ),
                             height = 128.dp
                         ) {
@@ -263,10 +266,12 @@ private fun HomeQuickActionsGrid(
 private fun notificationCountFor(
     item: QuickActionItem,
     unreadDocumentCount: Int,
-    unreadChatCount: Int
+    unreadChatCount: Int,
+    unreadNotificationCount: Int
 ): Int = when (item.route) {
     QuickActionRoute.Chat -> unreadChatCount
     QuickActionRoute.Lease -> unreadDocumentCount
+    QuickActionRoute.Notices -> unreadNotificationCount
     else -> 0
 }
 

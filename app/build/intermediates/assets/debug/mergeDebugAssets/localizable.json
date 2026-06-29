@@ -6057,6 +6057,52 @@
         }
       }
     },
+    "mock.quick.notices.subtitle": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Building updates and alerts"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mises à jour et alertes"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mises à jour et alertes"
+          }
+        }
+      }
+    },
+    "mock.quick.notices.title": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notices"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avis"
+          }
+        },
+        "fr-CA": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avis"
+          }
+        }
+      }
+    },
     "mock.quick.maintenance.subtitle": {
       "extractionState": "stale",
       "localizations": {
